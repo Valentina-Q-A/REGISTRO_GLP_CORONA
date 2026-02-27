@@ -1,0 +1,197 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║           SISTEMA DE MONITOREO GLP - LOCERÍA COLOMBIANA                      ║
+║                      Estructura del Proyecto                                 ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📁 monitor-glp/
+│
+├── 📄 index.html                    ← Página principal (Frontend)
+│   └── Contiene:
+│       • Header con título y logo
+│       • Visualización de 5 equipos con sliders
+│       • Formulario de registro
+│       • Resumen de datos actuales
+│
+├── 🖥️  server.js                    ← Servidor backend (Node.js + Express)
+│   └── Endpoints:
+│       • POST /save        → Guardar registro
+│       • GET /registros    → Obtener todos los registros
+│       • GET /download     → Descargar Excel
+│       • GET /health       → Estado del servidor
+│
+├── 📦 package.json                  ← Dependencias y scripts npm
+│   └── Dependencias:
+│       • express          → Framework web
+│       • body-parser      → Procesar JSON
+│       • xlsx             → Leer/escribir Excel
+│
+├── 📋 README.md                     ← Documentación completa
+├── 📖 INSTRUCCIONES.md              ← Guía rápida de uso
+├── 📊 registros.xlsx                ← Archivo Excel (se crea automáticamente)
+├── 🚫 .gitignore                    ← Archivos ignorados por Git
+│
+├── 📁 css/
+│   └── 📄 style.css                 ← Estilos de la aplicación
+│       └── Contiene:
+│           • Variables de colores azules
+│           • Estilos para equipos visuales
+│           • Estilos del formulario
+│           • Diseño responsive
+│           • Animaciones
+│
+├── 📁 js/
+│   └── 📄 app.js                    ← Lógica del frontend
+│       └── Funciones:
+│           • initializeSliders()    → Control de sliders
+│           • updateSummary()        → Actualizar resumen
+│           • saveData()             → Enviar al servidor
+│           • resetForm()            → Limpiar formulario
+│           • showAlert()            → Notificaciones
+│
+└── 📁 assets/                       ← Imágenes de equipos industriales
+    ├── 🖼️  tank.svg                 ← Tanque horizontal
+    ├── 🖼️  pump.svg                 ← Bomba centrífuga
+    ├── 🖼️  vaporizer.svg            ← Vaporizador (3 tubos)
+    ├── 🖼️  cisterna.svg             ← Camión cisterna
+    └── 🖼️  mixer.svg                ← Mezclador
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          FLUJO DE DATOS                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────┐
+│   NAVEGADOR     │
+│  (index.html)   │
+│                 │
+│  1. Usuario     │
+│     ajusta      │
+│     sliders     │
+│                 │
+│  2. Completa    │
+│     formulario  │
+│                 │
+│  3. Click       │
+│     "Guardar"   │
+└────────┬────────┘
+         │
+         │ HTTP POST /save
+         │ (JSON con datos)
+         ▼
+┌─────────────────┐
+│    SERVIDOR     │
+│   (server.js)   │
+│                 │
+│  1. Recibe      │
+│     datos       │
+│                 │
+│  2. Valida      │
+│     campos      │
+│                 │
+│  3. Guarda en   │
+│     Excel       │
+└────────┬────────┘
+         │
+         │ Escribe
+         ▼
+┌─────────────────┐
+│ registros.xlsx  │
+│                 │
+│ • Fecha         │
+│ • Hora          │
+│ • NivelTanque   │
+│ • PresionTanque │
+│ • TempTanque    │
+│ • ... etc       │
+│ • Encargado     │
+└─────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        EQUIPOS MONITOREADOS                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🔥 VAPORIZADOR
+   • Temperatura Vapor (50-76°C)
+   • Presión Vapor (90-100 PSI)
+
+🛢️  TANQUE PRINCIPAL
+   • Nivel (35-90%)
+   • Presión (70-100 PSI)
+   • Temperatura (0-100°C)
+
+💧 BOMBA CENTRÍFUGA
+   • Presión (100-110 PSI)
+
+🚛 CISTERNA / CAMIÓN TANQUE
+   • Nivel (0-100%)
+   • Capacidad (galones)
+   • Placa del vehículo
+
+⚙️  MEZCLADOR
+   • Presión Mezcla (8-12 PSI)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        COLORES DEL SISTEMA                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🔵 Azul Primario:    #0d3b66  (Fondo general)
+🔵 Azul Secundario:  #1e5f99  (Contenedores)
+🔵 Azul Acento:      #144d78  (Componentes)
+🟡 Amarillo:         #ffd166  (Destacados y botones)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      TECNOLOGÍAS UTILIZADAS                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Frontend:
+  • HTML5
+  • CSS3 (Variables CSS, Flexbox, Grid)
+  • JavaScript Vanilla (ES6+)
+
+Backend:
+  • Node.js v14+
+  • Express.js v4.18+
+  • body-parser v1.20+
+  • xlsx v0.18+ (SheetJS)
+
+Almacenamiento:
+  • Excel (.xlsx)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        COMANDOS PRINCIPALES                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Instalación:
+  $ npm install
+
+Ejecución:
+  $ npm start              # Modo producción
+  $ npm run dev            # Modo desarrollo (auto-reload)
+
+Acceso:
+  http://localhost:3000
+
+API:
+  POST   http://localhost:3000/save       # Guardar registro
+  GET    http://localhost:3000/registros  # Ver todos los registros
+  GET    http://localhost:3000/download   # Descargar Excel
+  GET    http://localhost:3000/health     # Estado del servidor
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              NOTAS                                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✓ El archivo registros.xlsx se crea automáticamente al guardar el primer registro
+✓ El sistema es responsive y funciona en móviles y tablets
+✓ Los datos se guardan localmente en el servidor
+✓ Se puede acceder desde otros dispositivos en la misma red
+✓ Todas las validaciones están implementadas en frontend y backend
+✓ Los colores azules son personalizables en /css/style.css
+✓ Las imágenes SVG se pueden reemplazar fácilmente
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        ¡Sistema listo para usar! 🎉
+
+═══════════════════════════════════════════════════════════════════════════════
