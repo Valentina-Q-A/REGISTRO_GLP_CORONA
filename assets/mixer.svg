@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Tapa superior -->
+  <rect x="50" y="30" width="100" height="8" fill="#666" stroke="#333" stroke-width="2" rx="2"/>
+  
+  <!-- Cuerpo del mezclador (trapecio) -->
+  <polygon points="60,40 140,40 160,140 40,140" fill="#ccc" stroke="#333" stroke-width="3"/>
+  <polygon points="65,45 135,45 155,135 45,135" fill="#ddd"/>
+  
+  <!-- Reflejos -->
+  <polygon points="70,50 120,50 130,100 70,100" fill="#fff" opacity="0.3"/>
+  
+  <!-- Líneas de refuerzo -->
+  <line x1="60" y1="70" x2="140" y2="70" stroke="#999" stroke-width="1"/>
+  <line x1="55" y1="100" x2="145" y2="100" stroke="#999" stroke-width="1"/>
+  
+  <!-- Motor superior -->
+  <rect x="85" y="15" width="30" height="20" fill="#666" stroke="#333" stroke-width="2" rx="2"/>
+  <text x="100" y="28" font-size="8" text-anchor="middle" fill="#FFD166" font-weight="bold">MOTOR</text>
+  
+  <!-- Eje del agitador -->
+  <rect x="98" y="35" width="4" height="80" fill="#555" stroke="#333" stroke-width="1"/>
+  
+  <!-- Aspa giratoria -->
+  <g transform="translate(100, 85)">
+    <line x1="-30" y1="0" x2="30" y2="0" stroke="#555" stroke-width="3"/>
+    <line x1="0" y1="-30" x2="0" y2="30" stroke="#555" stroke-width="3"/>
+    <circle cx="0" cy="0" r="5" fill="#333"/>
+  </g>
+  
+  <!-- Contenido líquido -->
+  <polygon points="50,110 150,110 155,135 45,135" fill="#4A90E2" opacity="0.5"/>
+  
+  <!-- Ventana de inspección -->
+  <circle cx="140" cy="80" r="12" fill="#87CEEB" stroke="#333" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Salida inferior -->
+  <rect x="96" y="140" width="8" height="20" fill="#666" stroke="#333" stroke-width="2"/>
+  
+  <!-- Válvula -->
+  <circle cx="100" cy="165" r="8" fill="#D32F2F" stroke="#333" stroke-width="2"/>
+  <circle cx="100" cy="165" r="4" fill="#F44336"/>
+  
+  <!-- Tuberías laterales -->
+  <rect x="10" y="65" width="40" height="10" fill="#888" stroke="#333" stroke-width="2"/>
+  <circle cx="50" cy="70" r="3" fill="#4A90E2"/>
+  
+  <rect x="150" y="75" width="40" height="10" fill="#888" stroke="#333" stroke-width="2"/>
+  <circle cx="150" cy="80" r="3" fill="#66BB6A"/>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150" fill="none">
+  <!-- Cabina del camión -->
+  <rect x="10" y="50" width="50" height="60" fill="#3A7BC8" stroke="#333" stroke-width="2" rx="5"/>
+  <rect x="15" y="55" width="40" height="25" fill="#87CEEB" stroke="#333" stroke-width="1"/>
+  
+  <!-- Conexión -->
+  <rect x="60" y="75" width="20" height="15" fill="#666" stroke="#333" stroke-width="2"/>
+  
+  <!-- Tanque cilíndrico -->
+  <ellipse cx="180" cy="85" rx="100" ry="40" fill="#ddd" stroke="#333" stroke-width="3"/>
+  <ellipse cx="180" cy="85" rx="90" ry="35" fill="#eee"/>
+  
+  <!-- Nivel de líquido -->
+  <ellipse cx="180" cy="100" rx="80" ry="25" fill="#4A90E2" opacity="0.6"/>
+  
+  <!-- Secciones del tanque -->
+  <line x1="120" y1="50" x2="120" y2="120" stroke="#999" stroke-width="2"/>
+  <line x1="180" y1="50" x2="180" y2="120" stroke="#999" stroke-width="2"/>
+  <line x1="240" y1="50" x2="240" y2="120" stroke="#999" stroke-width="2"/>
+  
+  <!-- Escalera -->
+  <line x1="265" y1="60" x2="265" y2="110" stroke="#555" stroke-width="2"/>
+  <line x1="265" y1="70" x2="275" y2="70" stroke="#555" stroke-width="1.5"/>
+  <line x1="265" y1="85" x2="275" y2="85" stroke="#555" stroke-width="1.5"/>
+  <line x1="265" y1="100" x2="275" y2="100" stroke="#555" stroke-width="1.5"/>
+  
+  <!-- Chasis -->
+  <rect x="10" y="115" width="270" height="5" fill="#444" stroke="#333" stroke-width="1"/>
+  
+  <!-- Ruedas delanteras -->
+  <circle cx="40" cy="125" r="10" fill="#333" stroke="#000" stroke-width="2"/>
+  <circle cx="40" cy="125" r="6" fill="#666"/>
+  
+  <!-- Ruedas traseras -->
+  <circle cx="220" cy="125" r="10" fill="#333" stroke="#000" stroke-width="2"/>
+  <circle cx="220" cy="125" r="6" fill="#666"/>
+  <circle cx="240" cy="125" r="10" fill="#333" stroke="#000" stroke-width="2"/>
+  <circle cx="240" cy="125" r="6" fill="#666"/>
+  
+  <!-- Válvulas inferiores -->
+  <rect x="145" y="120" width="8" height="12" fill="#666" stroke="#333" stroke-width="1"/>
+  <rect x="180" y="120" width="8" height="12" fill="#666" stroke="#333" stroke-width="1"/>
+  <rect x="215" y="120" width="8" height="12" fill="#666" stroke="#333" stroke-width="1"/>
+</svg>
