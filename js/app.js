@@ -8,7 +8,7 @@
 // ============================================
 
 //const API_URL = "https://glp-api.onrender.com";
-const UBIDOTS_TOKEN = "BBUS-EKjim7XDAmaYDMZjzu7SHJLY4H7xRK";
+const UBIDOTS_TOKEN = "BBUS-BBUS-rIxJ2AYc1v27kD3OCIpcBdmf2X83dP";
 
 const DEVICE = "planta-glp";
 
@@ -107,7 +107,7 @@ function setCurrentDateTime() {
 
 async function updateSummary() {
     try {
-        const response = await fetch(`${API_URL}/ultimo-registro`);
+        const API_URL = "https://industrial.api.ubidots.com/api/v1.6";
         //fetch('http://LJDCOLORADO:3000/ultimo-registro');
         
         if (!response.ok) {
@@ -239,7 +239,7 @@ function collectFormData() {
 
 async function saveData(data) {
 
-const TOKEN = "BBUS-EKjim7XDAmaYDMZjzu7SHJLY4H7xRK";
+const TOKEN = "BBUS-BBUS-rIxJ2AYc1v27kD3OCIpcBdmf2X83dP";
 
 const response = await fetch(
 "https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",
@@ -378,16 +378,9 @@ document.head.appendChild(style);
     try {
         const response = await fetch('http://LJDCOLORADO:3000/health');*/
 async function testServerConnection() {
-    try {
-        const response = await fetch(`${API_URL}/health`);
-        if (response.ok) {
-            console.log('✓ Conexión con servidor establecida');
-            return true;
-        }
-    } catch(err) {
-        console.error('✗ No se puede conectar con el servidor:', err);
-        return false;
-    }
+
+console.log("Sistema funcionando con Ubidots");
+
 }
 
 // Ejecutar test de conexión al cargar
