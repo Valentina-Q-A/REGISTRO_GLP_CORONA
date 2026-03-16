@@ -130,6 +130,57 @@ body {
     margin-bottom: 0;
 }
 
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.summary-item {
+    background: #1f2937;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.summary-item label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.summary-item .value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.registro-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-top: 10px;
+}
+
+.registro-table th {
+    background: #111827;
+    color: white;
+    padding: 6px;
+}
+
+.registro-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: center;
+}
+
+.input-error {
+    border: 2px solid #ff0000 !important;
+    background-color: #ffe5e5;
+    box-shadow: 0 0 5px red;
+}
+
 label {
     display: block;
     margin-bottom: 0.5rem;
