@@ -173,6 +173,8 @@ async function updateSummary() {
     }
 }
 
+
+
 // ============================================
 // MANEJO DEL FORMULARIO
 // ============================================
@@ -550,3 +552,10 @@ window.appFunctions = {
     collectFormData,
     testServerConnection
 };
+
+
+function abrirHistorico(){
+ 
+window.open("historico.html","_blank")
+ 
+}
