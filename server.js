@@ -61,41 +61,60 @@ function saveRecord(record) {
 
 async function sendToUbidots(data) {
 
-    const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
+const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
 
-    try {
+try {
 
-        await fetch("https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Auth-Token": TOKEN
-            },
-            body: JSON.stringify({
+await fetch("https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"X-Auth-Token":TOKEN
+},
+body:JSON.stringify({
 
-                nivel_tanque: data.NivelTanque,
-                presion_tanque: data.PresionTanque,
-                temp_tanque: data.TempTanque,
+nivel_tanque:{
+value:data.NivelTanque,
 
-                nivel_cisterna: data.NivelCisterna,
-                presion_bomba: data.PresionBomba,
+context:{
 
-                temp_vapor: data.TempVapor,
-                presion_vapor: data.PresionVapor,
+Fecha:data.Fecha,
+Hora:data.Hora,
 
-                presion_mezcla: data.PresionMezcla
+PresionTanque:data.PresionTanque,
+TempTanque:data.TempTanque,
 
-            })
+NivelCisterna:data.NivelCisterna,
+CapacidadCisterna:data.CapacidadCisterna,
+PlacaCisterna:data.PlacaCisterna,
 
-        });
+PresionBomba:data.PresionBomba,
 
-        console.log("Datos enviados a Ubidots");
+TempVapor:data.TempVapor,
+PresionVapor:data.PresionVapor,
 
-    } catch (err) {
+PresionMezcla:data.PresionMezcla,
 
-        console.error("Error enviando a Ubidots:", err);
+Observaciones:data.Observaciones,
+Encargado:data.Encargado,
 
-    }
+FechaServidor:data.FechaServidor
+
+}
+
+}
+
+})
+
+});
+
+console.log("Datos completos enviados a Ubidots");
+
+}catch(err){
+
+console.error("Error enviando a Ubidots:",err);
+
+}
 
 }
 
