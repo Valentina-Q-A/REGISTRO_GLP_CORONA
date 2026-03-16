@@ -61,7 +61,7 @@ function saveRecord(record) {
 
 async function sendToUbidots(data) {
 
-    const TOKEN = "BBUS-EKjim7XDAmaYDMZjzu7SHJLY4H7xRK";
+    const TOKEN = "BBUS-BBUS-rIxJ2AYc1v27kD3OCIpcBdmf2X83dP";
 
     try {
 
