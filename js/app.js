@@ -555,7 +555,14 @@ window.appFunctions = {
 
 
 function abrirHistorico(){
+window.abrirHistorico = function(){
  
 window.open("historico.html","_blank")
  
 }
+ 
+ 
+}
+
+
+ 
