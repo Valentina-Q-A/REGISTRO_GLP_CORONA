@@ -3,6 +3,16 @@
 // Locería Colombiana
 // ============================================
 
+// ============================================
+// CONFIGURACIÓN SERVIDOR API
+// ============================================
+
+//const API_URL = "https://glp-api.onrender.com";
+const UBIDOTS_TOKEN = "BBUS-rG9M2g1QCk4QWKLuQo6u0LrbctsjBy";
+const DEVICE = "planta-glp";
+
+
+
 // Configuración de sliders y sus valores
 const sliders = [
     {id: "nivelTanque", span: "nivelTanqueValue", unit: "%"},
@@ -33,20 +43,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeSliders() {
     sliders.forEach(s => {
-        const slider = document.getElementById(s.id);
+        const input = document.getElementById(s.id);
         const span = document.getElementById(s.span);
         
-        if (slider && span) {
-            // Actualizar valor inicial
-            span.textContent = slider.value + s.unit;
-            
-            // Listener para cambios en tiempo real
-            slider.addEventListener('input', () => {
-                span.textContent = slider.value + s.unit;
-                updateSummary();
+        if (input && span) {
+
+            span.textContent = input.value + s.unit;
+
+            input.addEventListener('input', () => {
+
+                span.textContent = input.value + s.unit;
+
+                validarRango(input); // validar en tiempo real
             });
+
+            // validar al cargar
+            validarRango(input);
         }
     });
+}
+
+function validarRango(input) {
+
+    const min = parseFloat(input.min);
+    const max = parseFloat(input.max);
+    const valor = parseFloat(input.value);
+
+    if (input.value === "") {
+        input.classList.remove("input-error");
+        return;
+    }
+
+    if (!isNaN(min) && valor < min || !isNaN(max) && valor > max) {
+        input.classList.add("input-error");
+    } else {
+        input.classList.remove("input-error");
+    }
 }
 
 // ============================================
@@ -72,25 +104,88 @@ function setCurrentDateTime() {
 // RESUMEN DE DATOS
 // ============================================
 
-function updateSummary() {
-    const summaryData = [
-        {label: "Nivel Tanque", value: document.getElementById('nivelTanque').value + "%"},
-        {label: "Presión Tanque", value: document.getElementById('presionTanque').value + " PSI"},
-        {label: "Temp Tanque", value: document.getElementById('tempTanque').value + " °C"},
-        {label: "Nivel Cisterna", value: document.getElementById('nivelCisterna').value + "%"},
-        {label: "Presión Bomba", value: document.getElementById('presionBomba').value + " PSI"},
-        {label: "Temp Vapor", value: document.getElementById('tempVapor').value + " °C"},
-        {label: "Presión Vapor", value: document.getElementById('presionVapor').value + " PSI"},
-        {label: "Presión Mezcla", value: document.getElementById('presionMezcla').value + " PSI"},
-    ];
-    
-    const summaryDisplay = document.getElementById('summaryDisplay');
-    summaryDisplay.innerHTML = summaryData.map(item => `
-        <div class="summary-item">
-            <label>${item.label}</label>
-            <div class="value">${item.value}</div>
+async function updateSummary() {
+    try {
+        const response = await fetch(`${API_URL}/ultimo-registro`);
+        //fetch('http://LJDCOLORADO:3000/ultimo-registro');
+        
+        if (!response.ok) {
+            throw new Error('No se pudo obtener el último registro');
+        }
+
+        const data = await response.json();
+        const summaryDisplay = document.getElementById('summaryDisplay');
+
+        if (!data) {
+            summaryDisplay.innerHTML = `
+                <div class="summary-item">
+                    <label>Sin registros aún</label>
+                    <div class="value">---</div>
+                </div>
+            `;
+            return;
+        }
+
+        summaryDisplay.innerHTML = `
+
+        <!-- ===================== -->
+        <!-- PANEL OPERATIVO -->
+        <!-- ===================== -->
+        
         </div>
-    `).join('');
+
+
+        <!-- ===================== -->
+        <!-- TABLA REGISTRO -->
+        <!-- ===================== -->
+
+        <div style="overflow-x:auto;">
+            <table class="registro-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>NivelTanque</th>
+                        <th>PresionTanque</th>
+                        <th>TempTanque</th>
+                        <th>NivelCisterna</th>
+                        <th>CapacidadCisterna</th>
+                        <th>PlacaCisterna</th>
+                        <th>PresionBomba</th>
+                        <th>TempVapor</th>
+                        <th>PresionVapor</th>
+                        <th>PresionMezcla</th>
+                        <th>Observaciones</th>
+                        <th>Encargado</th>
+                        <th>FechaServidor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>${data.Fecha || ''}</td>
+                        <td>${data.Hora || ''}</td>
+                        <td>${data.NivelTanque || ''}</td>
+                        <td>${data.PresionTanque || ''}</td>
+                        <td>${data.TempTanque || ''}</td>
+                        <td>${data.NivelCisterna || ''}</td>
+                        <td>${data.CapacidadCisterna || ''}</td>
+                        <td>${data.PlacaCisterna || ''}</td>
+                        <td>${data.PresionBomba || ''}</td>
+                        <td>${data.TempVapor || ''}</td>
+                        <td>${data.PresionVapor || ''}</td>
+                        <td>${data.PresionMezcla || ''}</td>
+                        <td>${data.Observaciones || ''}</td>
+                        <td>${data.Encargado || ''}</td>
+                        <td>${data.FechaServidor || ''}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        `;
+
+    } catch (err) {
+        console.error("Error cargando resumen:", err);
+    }
 }
 
 // ============================================
@@ -142,26 +237,45 @@ function collectFormData() {
 // ============================================
 
 async function saveData(data) {
-    try {
-        const response = await fetch('http://172.20.121.80:3000/save', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-            showAlert('✓ Registro guardado exitosamente en Excel', 'success');
-            resetForm();
-        } else {
-            const errorText = await response.text();
-            showAlert('Error al guardar el registro: ' + errorText, 'error');
-        }
-    } catch(err) {
-        console.error('Error de conexión:', err);
-        showAlert('Error de conexión con el servidor. Verifique que el servidor esté corriendo.', 'error');
-    }
+
+const TOKEN = "TU_TOKEN_UBIDOTS";
+
+const response = await fetch(
+"https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"X-Auth-Token": TOKEN
+},
+body: JSON.stringify({
+
+nivel_tanque: data.NivelTanque,
+presion_tanque: data.PresionTanque,
+temp_tanque: data.TempTanque,
+
+nivel_cisterna: data.NivelCisterna,
+presion_bomba: data.PresionBomba,
+
+temp_vapor: data.TempVapor,
+presion_vapor: data.PresionVapor,
+
+presion_mezcla: data.PresionMezcla
+
+})
+}
+);
+
+if(response.ok){
+
+showAlert("Registro enviado a Ubidots", "success");
+
+}else{
+
+showAlert("Error enviando datos", "error");
+
+}
+
 }
 
 // ============================================
@@ -259,9 +373,12 @@ document.head.appendChild(style);
 // ============================================
 
 // Función para verificar conexión con el servidor
+/*async function testServerConnection() {
+    try {
+        const response = await fetch('http://LJDCOLORADO:3000/health');*/
 async function testServerConnection() {
     try {
-        const response = await fetch('http://172.20.121.80:3000/health');
+        const response = await fetch(`${API_URL}/health`);
         if (response.ok) {
             console.log('✓ Conexión con servidor establecida');
             return true;
@@ -276,10 +393,10 @@ async function testServerConnection() {
 testServerConnection();
 
 // ============================================
-// EXPORTAR FUNCIONES (opcional)
+// EXPORTAR FUNCIONES 
 // ============================================
 
-// Si necesitas acceder a estas funciones desde la consola del navegador
+//acceder a estas funciones desde la consola del navegador
 window.appFunctions = {
     updateSummary,
     resetForm,
