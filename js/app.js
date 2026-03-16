@@ -8,7 +8,7 @@
 // ============================================
 
 //const API_URL = "https://glp-api.onrender.com";
-const UBIDOTS_TOKEN = "BBUS-BBUS-rIxJ2AYc1v27kD3OCIpcBdmf2X83dP";
+const UBIDOTS_TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
 
 const DEVICE = "planta-glp";
 
@@ -239,7 +239,7 @@ function collectFormData() {
 
 async function saveData(data) {
 
-const TOKEN = "BBUS-BBUS-rIxJ2AYc1v27kD3OCIpcBdmf2X83dP";
+const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
 
 const response = await fetch(
 "https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",
