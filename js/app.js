@@ -235,21 +235,21 @@ headers: {
 },
 
 body: JSON.stringify({
-    fecha: data.Fecha,
-    hora: data.Hora,
-    nivel_tanque: Number(data.NivelTanque),
-    presion_tanque: Number(data.PresionTanque),
-    temp_tanque: Number(data.TempTanque),
-    nivel_cisterna: Number(data.NivelCisterna),
-    capacidad_cisterna: Number(data.CapacidadCisterna),
-    placa_cisterna: data.PlacaCisterna,
-    presion_bomba: Number(data.PresionBomba),
-    temp_vapor: Number(data.TempVapor),
-    presion_vapor: Number(data.PresionVapor),
-    presion_mezcla: Number(data.PresionMezcla),
-    observaciones: data.Observaciones,
-    encargado: data.Encargado,
-    fecha_servidor: new Date().toISOString()
+    fecha: { value: data.Fecha },
+    hora: { value: data.Hora },
+    nivel_tanque: { value: Number(data.NivelTanque) },
+    presion_tanque: { value: Number(data.PresionTanque) },
+    temp_tanque: { value: Number(data.TempTanque) },
+    nivel_cisterna: { value: Number(data.NivelCisterna) },
+    capacidad_cisterna: { value: data.CapacidadCisterna },
+    placa_cisterna: { value: data.PlacaCisterna },
+    presion_bomba: { value: Number(data.PresionBomba) },
+    temp_vapor: { value: Number(data.TempVapor) },
+    presion_vapor: { value: Number(data.PresionVapor) },
+    presion_mezcla: { value: Number(data.PresionMezcla) },
+    observaciones: { value: data.Observaciones },
+    encargado: { value: data.Encargado },
+    fecha_servidor: { value: new Date().toISOString() }
 })
 }
 );
