@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Histórico GLP</title>
+
+<style>
+
+body{
+font-family:Arial;
+padding:40px;
+background:#f4f4f4;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#222;
+color:white;
+}
+
+button{
+padding:10px 20px;
+margin:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Histórico Planta GLP</h1>
+
+<input type="date" id="fecha">
+<button onclick="buscar()">Buscar</button>
+<button onclick="exportar()">Exportar Excel</button>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Fecha</th>
+<th>Hora</th>
+<th>NivelTanque</th>
+<th>PresionTanque</th>
+<th>TempTanque</th>
+<th>NivelCisterna</th>
+<th>CapacidadCisterna</th>
+<th>PlacaCisterna</th>
+<th>PresionBomba</th>
+<th>TempVapor</th>
+<th>PresionVapor</th>
+<th>PresionMezcla</th>
+<th>Observaciones</th>
+<th>Encargado</th>
+<th>FechaServidor</th>
+</tr>
+
+</thead>
+
+<tbody id="tabla">
+
+</tbody>
+
+</table>
+<script>
+
+const TOKEN="TU_TOKEN_UBIDOTS"
+const VARIABLE="nivel_tanque"
+
+async function buscar(){
+
+const fecha = document.getElementById("fecha").value
+
+const res = await fetch(
+`https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE}/values?page_size=100`,
+{
+headers:{
+"X-Auth-Token":TOKEN
+}
+})
+
+const data = await res.json()
+
+const tabla=document.getElementById("tabla")
+tabla.innerHTML=""
+
+data.results.forEach(r=>{
+
+const ctx = r.context || {}
+
+if(!fecha || ctx.Fecha===fecha){
+
+tabla.innerHTML+=`
+
+<tr>
+
+<td>${ctx.Fecha || ""}</td>
+<td>${ctx.Hora || ""}</td>
+<td>${r.value || ""}</td>
+<td>${ctx.PresionTanque || ""}</td>
+<td>${ctx.TempTanque || ""}</td>
+<td>${ctx.NivelCisterna || ""}</td>
+<td>${ctx.CapacidadCisterna || ""}</td>
+<td>${ctx.PlacaCisterna || ""}</td>
+<td>${ctx.PresionBomba || ""}</td>
+<td>${ctx.TempVapor || ""}</td>
+<td>${ctx.PresionVapor || ""}</td>
+<td>${ctx.PresionMezcla || ""}</td>
+<td>${ctx.Observaciones || ""}</td>
+<td>${ctx.Encargado || ""}</td>
+<td>${ctx.FechaServidor || ""}</td>
+
+</tr>
+
+`
+
+}
+
+})
+
+}
+
+</script>
+
+</body>
+</html>

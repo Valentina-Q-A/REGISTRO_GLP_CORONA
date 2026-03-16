@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <header class="main-header">
-            <h1>Sistema de Monitoreo y Despacho de Fluidos</h1>
+            <h1>REGISTRO OPERACIÓN DE PLANTA DE AIRE PROPANADO EN FORMA CONTINUA  (GLP)</h1>
             <p class="subtitle">Locería Colombiana - Planta GLP</p>
         </header>
 
@@ -21,12 +21,12 @@
                 <h3>Vaporizador</h3>
                 <div class="control-group">
                     <label>Temp Vapor (50-76°C)</label>
-                    <input type="range" id="tempVapor" min="50" max="76" value="63">
+                    <input type="number" id="tempVapor" min="50" max="76" value="63">
                     <span id="tempVaporValue" class="value-display">63 °C</span>
                 </div>
                 <div class="control-group">
-                    <label>Presión Vapor (90-100 PSI)</label>
-                    <input type="range" id="presionVapor" min="90" max="100" value="95">
+                    <label>Presión Vapor (90-125 PSI)</label>
+                    <input type="number" id="presionVapor" min="90" max="125" value="95">
                     <span id="presionVaporValue" class="value-display">95 PSI</span>
                 </div>
             </div>
@@ -37,17 +37,17 @@
                 <h3>Tanque Principal</h3>
                 <div class="control-group">
                     <label>Nivel Tanque (35-90%)</label>
-                    <input type="range" id="nivelTanque" min="35" max="90" value="50">
+                    <input type="number" id="nivelTanque" min="35" max="90" value="50">
                     <span id="nivelTanqueValue" class="value-display">50%</span>
                 </div>
                 <div class="control-group">
                     <label>Presión Tanque (70-100 PSI)</label>
-                    <input type="range" id="presionTanque" min="70" max="100" value="85">
+                    <input type="number" id="presionTanque" min="70" max="100" value="85">
                     <span id="presionTanqueValue" class="value-display">85 PSI</span>
                 </div>
                 <div class="control-group">
                     <label>Temperatura Tanque (0-100°C)</label>
-                    <input type="range" id="tempTanque" min="0" max="100" value="50">
+                    <input type="number" id="tempTanque" min="0" max="100" value="18">
                     <span id="tempTanqueValue" class="value-display">50 °C</span>
                 </div>
             </div>
@@ -55,10 +55,10 @@
             <!-- Bomba -->
             <div class="component">
                 <img src="assets/pump.svg" alt="Bomba" class="component-img">
-                <h3>Bomba Centrífuga</h3>
+                <h3>Bomba</h3>
                 <div class="control-group">
                     <label>Presión Bomba (100-110 PSI)</label>
-                    <input type="range" id="presionBomba" min="100" max="110" value="105">
+                    <input type="number" id="presionBomba" min="100" max="110" value="105">
                     <span id="presionBombaValue" class="value-display">105 PSI</span>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                 <h3>Cisterna / Camión Tanque</h3>
                 <div class="control-group">
                     <label>Nivel Cisterna (0-100%)</label>
-                    <input type="range" id="nivelCisterna" min="0" max="100" value="50">
+                    <input type="number" id="nivelCisterna" min="0" max="100" value="50">
                     <span id="nivelCisternaValue" class="value-display">50%</span>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                 <h3>Mezclador</h3>
                 <div class="control-group">
                     <label>Presión Mezcla (8-12 PSI)</label>
-                    <input type="range" id="presionMezcla" min="8" max="12" value="10">
+                    <input type="number" id="presionMezcla" min="8" max="12" value="10">
                     <span id="presionMezclaValue" class="value-display">10 PSI</span>
                 </div>
             </div>
@@ -107,7 +107,7 @@
                     <input type="number" id="capacidadCisterna" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label for="placaCisterna">Placa Cisterna *</label>
+                    <label for="placaCisterna">Placa Cisterna * NOTA: SI ES LA MISMA PLACA PONER 0</label>
                     <input type="text" id="placaCisterna" required placeholder="ABC-123">
                 </div>
             </div>
@@ -137,9 +137,9 @@
     </div>
 
     <footer>
-        <p>© 2026 Locería Colombiana - Sistema de Monitoreo de Fluidos</p>
+        <p>© 2026 Locería Colombiana - Maria Valentina Quiroga Alzate</p>
     </footer>
 
-    <script src="js/app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
