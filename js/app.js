@@ -105,74 +105,81 @@ function setCurrentDateTime() {
 // RESUMEN DE DATOS
 // ============================================
 
+
+
 async function updateSummary() {
-    try {
-        const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
-        const DEVICE = "planta-glp";
-
-        const response = await fetch(
-            `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}/?token=${TOKEN}`
-        );
-
-        const data = await response.json();
-
-        const summaryDisplay = document.getElementById('summaryDisplay');
-
-        if (!data) {
-            summaryDisplay.innerHTML = "<p>Sin registros aún</p>";
-            return;
+ 
+    const TOKEN = UBIDOTS_TOKEN;
+ 
+    const res = await fetch(
+    "https://industrial.api.ubidots.com/api/v1.6/variables/nivel_tanque/values?page_size=1",
+    {
+        headers:{
+            "X-Auth-Token":TOKEN
         }
-
-        // Mostrar tabla con todas las variables
-        summaryDisplay.innerHTML = `
-        <div style="overflow-x:auto;">
-            <table class="registro-table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Hora</th>
-                        <th>NivelTanque</th>
-                        <th>PresionTanque</th>
-                        <th>TempTanque</th>
-                        <th>NivelCisterna</th>
-                        <th>CapacidadCisterna</th>
-                        <th>PlacaCisterna</th>
-                        <th>PresionBomba</th>
-                        <th>TempVapor</th>
-                        <th>PresionVapor</th>
-                        <th>PresionMezcla</th>
-                        <th>Observaciones</th>
-                        <th>Encargado</th>
-                        <th>FechaServidor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>${new Date(data.fecha.value).toLocaleDateString() || ''}</td>
-                        <td>${new Date(data.hora.value).toLocaleTimeString() || ''}</td>
-                        <td>${data.nivel_tanque.value || ''}</td>
-                        <td>${data.presion_tanque.value || ''}</td>
-                        <td>${data.temp_tanque.value || ''}</td>
-                        <td>${data.nivel_cisterna.value || ''}</td>
-                        <td>${data.capacidad_cisterna.value || ''}</td>
-                        <td>${data.placa_cisterna.value || ''}</td>
-                        <td>${data.presion_bomba.value || ''}</td>
-                        <td>${data.temp_vapor.value || ''}</td>
-                        <td>${data.presion_vapor.value || ''}</td>
-                        <td>${data.presion_mezcla.value || ''}</td>
-                        <td>${data.observaciones.value || ''}</td>
-                        <td>${data.encargado.value || ''}</td>
-                        <td>${new Date(data.fecha_servidor.value).toLocaleString() || ''}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        `;
-    } catch (err) {
-        console.error("Error cargando resumen:", err);
-    }
+    });
+ 
+    const data = await res.json();
+ 
+    const r = data.results[0];
+ 
+    const ctx = r.context || {};
+ 
+    const summaryDisplay = document.getElementById("summaryDisplay");
+ 
+    summaryDisplay.innerHTML = `
+ 
+<table class="registro-table">
+ 
+<thead>
+ 
+<tr>
+<th>Fecha</th>
+<th>Hora</th>
+<th>NivelTanque</th>
+<th>PresionTanque</th>
+<th>TempTanque</th>
+<th>NivelCisterna</th>
+<th>CapacidadCisterna</th>
+<th>PlacaCisterna</th>
+<th>PresionBomba</th>
+<th>TempVapor</th>
+<th>PresionVapor</th>
+<th>PresionMezcla</th>
+<th>Observaciones</th>
+<th>Encargado</th>
+</tr>
+ 
+</thead>
+ 
+<tbody>
+ 
+<tr>
+ 
+<td>${ctx.Fecha || ""}</td>
+<td>${ctx.Hora || ""}</td>
+<td>${r.value || ""}</td>
+<td>${ctx.PresionTanque || ""}</td>
+<td>${ctx.TempTanque || ""}</td>
+<td>${ctx.NivelCisterna || ""}</td>
+<td>${ctx.CapacidadCisterna || ""}</td>
+<td>${ctx.PlacaCisterna || ""}</td>
+<td>${ctx.PresionBomba || ""}</td>
+<td>${ctx.TempVapor || ""}</td>
+<td>${ctx.PresionVapor || ""}</td>
+<td>${ctx.PresionMezcla || ""}</td>
+<td>${ctx.Observaciones || ""}</td>
+<td>${ctx.Encargado || ""}</td>
+ 
+</tr>
+ 
+</tbody>
+ 
+</table>
+ 
+`;
+ 
 }
-
 
 
 // ============================================
@@ -555,12 +562,8 @@ window.appFunctions = {
 
 
 function abrirHistorico(){
-window.abrirHistorico = function(){
  
 window.open("historico.html","_blank")
- 
-}
- 
  
 }
 
