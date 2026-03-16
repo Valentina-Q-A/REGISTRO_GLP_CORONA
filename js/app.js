@@ -107,39 +107,24 @@ function setCurrentDateTime() {
 
 async function updateSummary() {
     try {
-        const API_URL = "https://industrial.api.ubidots.com/api/v1.6";
-        //fetch('http://LJDCOLORADO:3000/ultimo-registro');
-        
-        if (!response.ok) {
-            throw new Error('No se pudo obtener el último registro');
-        }
+        const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
+        const DEVICE = "planta-glp";
+
+        const response = await fetch(
+            `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}/?token=${TOKEN}`
+        );
 
         const data = await response.json();
+
         const summaryDisplay = document.getElementById('summaryDisplay');
 
         if (!data) {
-            summaryDisplay.innerHTML = `
-                <div class="summary-item">
-                    <label>Sin registros aún</label>
-                    <div class="value">---</div>
-                </div>
-            `;
+            summaryDisplay.innerHTML = "<p>Sin registros aún</p>";
             return;
         }
 
+        // Mostrar tabla con todas las variables
         summaryDisplay.innerHTML = `
-
-        <!-- ===================== -->
-        <!-- PANEL OPERATIVO -->
-        <!-- ===================== -->
-        
-        </div>
-
-
-        <!-- ===================== -->
-        <!-- TABLA REGISTRO -->
-        <!-- ===================== -->
-
         <div style="overflow-x:auto;">
             <table class="registro-table">
                 <thead>
@@ -163,27 +148,26 @@ async function updateSummary() {
                 </thead>
                 <tbody>
                     <tr>
-                        <td>${data.Fecha || ''}</td>
-                        <td>${data.Hora || ''}</td>
-                        <td>${data.NivelTanque || ''}</td>
-                        <td>${data.PresionTanque || ''}</td>
-                        <td>${data.TempTanque || ''}</td>
-                        <td>${data.NivelCisterna || ''}</td>
-                        <td>${data.CapacidadCisterna || ''}</td>
-                        <td>${data.PlacaCisterna || ''}</td>
-                        <td>${data.PresionBomba || ''}</td>
-                        <td>${data.TempVapor || ''}</td>
-                        <td>${data.PresionVapor || ''}</td>
-                        <td>${data.PresionMezcla || ''}</td>
-                        <td>${data.Observaciones || ''}</td>
-                        <td>${data.Encargado || ''}</td>
-                        <td>${data.FechaServidor || ''}</td>
+                        <td>${new Date(data.fecha.value).toLocaleDateString() || ''}</td>
+                        <td>${new Date(data.hora.value).toLocaleTimeString() || ''}</td>
+                        <td>${data.nivel_tanque.value || ''}</td>
+                        <td>${data.presion_tanque.value || ''}</td>
+                        <td>${data.temp_tanque.value || ''}</td>
+                        <td>${data.nivel_cisterna.value || ''}</td>
+                        <td>${data.capacidad_cisterna.value || ''}</td>
+                        <td>${data.placa_cisterna.value || ''}</td>
+                        <td>${data.presion_bomba.value || ''}</td>
+                        <td>${data.temp_vapor.value || ''}</td>
+                        <td>${data.presion_vapor.value || ''}</td>
+                        <td>${data.presion_mezcla.value || ''}</td>
+                        <td>${data.observaciones.value || ''}</td>
+                        <td>${data.encargado.value || ''}</td>
+                        <td>${new Date(data.fecha_servidor.value).toLocaleString() || ''}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         `;
-
     } catch (err) {
         console.error("Error cargando resumen:", err);
     }
@@ -249,20 +233,23 @@ headers: {
 "Content-Type": "application/json",
 "X-Auth-Token": TOKEN
 },
+
 body: JSON.stringify({
-
-nivel_tanque: data.NivelTanque,
-presion_tanque: data.PresionTanque,
-temp_tanque: data.TempTanque,
-
-nivel_cisterna: data.NivelCisterna,
-presion_bomba: data.PresionBomba,
-
-temp_vapor: data.TempVapor,
-presion_vapor: data.PresionVapor,
-
-presion_mezcla: data.PresionMezcla
-
+    fecha: data.Fecha,
+    hora: data.Hora,
+    nivel_tanque: Number(data.NivelTanque),
+    presion_tanque: Number(data.PresionTanque),
+    temp_tanque: Number(data.TempTanque),
+    nivel_cisterna: Number(data.NivelCisterna),
+    capacidad_cisterna: Number(data.CapacidadCisterna),
+    placa_cisterna: data.PlacaCisterna,
+    presion_bomba: Number(data.PresionBomba),
+    temp_vapor: Number(data.TempVapor),
+    presion_vapor: Number(data.PresionVapor),
+    presion_mezcla: Number(data.PresionMezcla),
+    observaciones: data.Observaciones,
+    encargado: data.Encargado,
+    fecha_servidor: new Date().toISOString()
 })
 }
 );
