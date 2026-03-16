@@ -235,21 +235,187 @@ headers: {
 },
 
 body: JSON.stringify({
-    fecha: { value: data.Fecha },
-    hora: { value: data.Hora },
-    nivel_tanque: { value: Number(data.NivelTanque) },
-    presion_tanque: { value: Number(data.PresionTanque) },
-    temp_tanque: { value: Number(data.TempTanque) },
-    nivel_cisterna: { value: Number(data.NivelCisterna) },
-    capacidad_cisterna: { value: data.CapacidadCisterna },
-    placa_cisterna: { value: data.PlacaCisterna },
-    presion_bomba: { value: Number(data.PresionBomba) },
-    temp_vapor: { value: Number(data.TempVapor) },
-    presion_vapor: { value: Number(data.PresionVapor) },
-    presion_mezcla: { value: Number(data.PresionMezcla) },
-    observaciones: { value: data.Observaciones },
-    encargado: { value: data.Encargado },
-    fecha_servidor: { value: new Date().toISOString() }
+ 
+nivel_tanque: {
+
+  value: Number(data.NivelTanque),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+presion_tanque: {
+
+  value: Number(data.PresionTanque),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+temp_tanque: {
+
+  value: Number(data.TempTanque),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+nivel_cisterna: {
+
+  value: Number(data.NivelCisterna),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+capacidad_cisterna: {
+
+  value: Number(data.CapacidadCisterna),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+presion_bomba: {
+
+  value: Number(data.PresionBomba),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+temp_vapor: {
+
+  value: Number(data.TempVapor),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+presion_vapor: {
+
+  value: Number(data.PresionVapor),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+ 
+presion_mezcla: {
+
+  value: Number(data.PresionMezcla),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+}
+ 
 })
 }
 );
