@@ -43,6 +43,7 @@ cursor:pointer;
 
 <input type="date" id="fecha">
 <button onclick="buscar()">Buscar</button>
+<button onclick="cargarHistorico()">Reset</button>
 <button onclick="exportar()">Exportar Excel</button>
 
 <table>
@@ -78,7 +79,6 @@ cursor:pointer;
 
 const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA"
 
-// IDs reales de tus variables (los sacas de Ubidots)
 const VARIABLES = {
     nivel_tanque: "69b833f69262f7bf99220dce",
     presion_tanque: "69b833f6798ed144d84f49d6",
@@ -91,12 +91,12 @@ const VARIABLES = {
     presion_mezcla: "69b833f69262f7bf99220dd0"
 }
 
-
+// 👉 almacenamiento global
+let DATA_GLOBAL = []
 
 // ============================================
-// CARGAR TODO EL HISTÓRICO (PAGINADO)
+// TRAER DATOS
 // ============================================
-
 
 async function getData(variableId){
 
@@ -123,19 +123,21 @@ return all
 
 }
 
+// ============================================
+// CARGAR HISTÓRICO
+// ============================================
 
 async function cargarHistorico(){
 
 const keys = Object.keys(VARIABLES)
 const dataset = {}
 
-// traer todas las variables
 for(let key of keys){
 dataset[key] = await getData(VARIABLES[key])
 }
 
 // ============================================
-// UNIR POR TIMESTAMP
+// MERGE POR TIMESTAMP (MEJORADO)
 // ============================================
 
 let registros = {}
@@ -148,8 +150,14 @@ const t = r.timestamp
 if(!registros[t]){
 registros[t] = {
 timestamp: t,
-context: r.context || {}
+context: {}
 }
+}
+
+// 🔥 fusionar contextos correctamente
+registros[t].context = {
+...registros[t].context,
+...(r.context || {})
 }
 
 registros[t][key] = r.value
@@ -160,17 +168,18 @@ registros[t][key] = r.value
 // convertir a array
 let final = Object.values(registros)
 
-// ordenar
+// ordenar correctamente
 final.sort((a,b)=> b.timestamp - a.timestamp)
 
-// render
+// guardar global
+DATA_GLOBAL = final
+
 renderTabla(final)
 
 }
 
-
 // ============================================
-// RENDER TABLA
+// RENDER
 // ============================================
 
 function renderTabla(data){
@@ -206,44 +215,22 @@ tabla.innerHTML += `
 }
 
 // ============================================
-// INIT
+// BUSCAR (CORREGIDO)
 // ============================================
 
-window.onload = cargarHistorico
-
-// ============================================
-// BUSCAR POR FECHA (FILTRO LOCAL)
-// ============================================
-
-async function buscar(){
+function buscar(){
 
 const fecha = document.getElementById("fecha").value
 
-let url = `https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE}/values?page_size=100`
-let allData = []
-
-while(url){
-
-const res = await fetch(url,{
-headers:{
-"X-Auth-Token":TOKEN
-}
-})
-
-const data = await res.json()
-
-if(data.results){
-allData = allData.concat(data.results)
+if(!fecha){
+renderTabla(DATA_GLOBAL)
+return
 }
 
-url = data.next
-
-}
-
-// filtrar por fecha
-const filtrados = allData.filter(r=>{
+// 🔥 filtrar sobre datos ya cargados
+const filtrados = DATA_GLOBAL.filter(r=>{
 const ctx = r.context || {}
-return !fecha || ctx.Fecha === fecha
+return ctx.Fecha === fecha
 })
 
 // ordenar
@@ -254,7 +241,7 @@ renderTabla(filtrados)
 }
 
 // ============================================
-// EXPORTAR A EXCEL
+// EXPORTAR
 // ============================================
 
 function exportar(){
@@ -271,7 +258,7 @@ link.click()
 }
 
 // ============================================
-// AUTOLOAD
+// INIT
 // ============================================
 
 window.onload = cargarHistorico
