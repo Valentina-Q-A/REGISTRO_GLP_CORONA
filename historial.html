@@ -241,10 +241,10 @@ url = data.next
 }
 
 // filtrar por fecha
-/*const filtrados = allData.filter(r=>{
+const filtrados = allData.filter(r=>{
 const ctx = r.context || {}
 return !fecha || ctx.Fecha === fecha
-})*/
+})
 
 // ordenar
 filtrados.sort((a,b)=> b.timestamp - a.timestamp)
