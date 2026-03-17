@@ -110,9 +110,11 @@ function setCurrentDateTime() {
 async function updateSummary() {
  
     const TOKEN = UBIDOTS_TOKEN;
+
+    const VARIABLE_ID = "69b833f69262f7bf99220dce" //nivel_tanque
  
     const res = await fetch(
-    "https://industrial.api.ubidots.com/api/v1.6/variables/nivel_tanque/values?page_size=1",
+    "https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE_ID}/values?page_size=1",
     {
         headers:{
             "X-Auth-Token":TOKEN
@@ -120,6 +122,11 @@ async function updateSummary() {
     });
  
     const data = await res.json();
+
+    if (!data.results || data.results.length==0){
+        document.getElementById("summaryDisplay").innerHTML="Sin registros"
+        return
+    }
  
     const r = data.results[0];
  
