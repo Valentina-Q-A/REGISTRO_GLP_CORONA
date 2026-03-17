@@ -77,41 +77,97 @@ cursor:pointer;
 // ============================================
 
 const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA"
-const VARIABLE = "69b833f69262f7bf99220dce"
+
+// IDs reales de tus variables (los sacas de Ubidots)
+const VARIABLES = {
+    nivel_tanque: "69b833f69262f7bf99220dce",
+    presion_tanque: "69b833f6798ed144d84f49d6",
+    temp_tanque: "69b833f708cdbf1964279361",
+    nivel_cisterna: "69b833f65c235679d0956380",
+    capacidad_cisterna: "69b854621374e4f453511b88",
+    presion_bomba: "69b833f69262f7bf99220dcf",
+    temp_vapor: "69b833f726b206f5ab7e3187",
+    presion_vapor: "69b833f7798ed144d84f49d7",
+    presion_mezcla: "69b833f69262f7bf99220dd0"
+}
+
+
 
 // ============================================
 // CARGAR TODO EL HISTÓRICO (PAGINADO)
 // ============================================
 
-async function cargarHistorico(){
 
-let url = `https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE}/values?page_size=100`
-let allData = []
+async function getData(variableId){
+
+let url = `https://industrial.api.ubidots.com/api/v1.6/variables/${variableId}/values?page_size=100`
+let all = []
 
 while(url){
 
 const res = await fetch(url,{
-headers:{
-"X-Auth-Token":TOKEN
-}
+headers:{ "X-Auth-Token":TOKEN }
 })
 
 const data = await res.json()
 
 if(data.results){
-allData = allData.concat(data.results)
+all = all.concat(data.results)
 }
 
-url = data.next // siguiente página
+url = data.next
 
 }
 
-// ordenar por fecha descendente
-allData.sort((a,b)=> b.timestamp - a.timestamp)
-
-renderTabla(allData)
+return all
 
 }
+
+
+async function cargarHistorico(){
+
+const keys = Object.keys(VARIABLES)
+const dataset = {}
+
+// traer todas las variables
+for(let key of keys){
+dataset[key] = await getData(VARIABLES[key])
+}
+
+// ============================================
+// UNIR POR TIMESTAMP
+// ============================================
+
+let registros = {}
+
+keys.forEach(key=>{
+dataset[key].forEach(r=>{
+
+const t = r.timestamp
+
+if(!registros[t]){
+registros[t] = {
+timestamp: t,
+context: r.context || {}
+}
+}
+
+registros[t][key] = r.value
+
+})
+})
+
+// convertir a array
+let final = Object.values(registros)
+
+// ordenar
+final.sort((a,b)=> b.timestamp - a.timestamp)
+
+// render
+renderTabla(final)
+
+}
+
 
 // ============================================
 // RENDER TABLA
@@ -130,16 +186,16 @@ tabla.innerHTML += `
 <tr>
 <td>${ctx.Fecha || ""}</td>
 <td>${ctx.Hora || ""}</td>
-<td>${r.value || ""}</td>
-<td>${ctx.PresionTanque || ""}</td>
-<td>${ctx.TempTanque || ""}</td>
-<td>${ctx.NivelCisterna || ""}</td>
-<td>${ctx.CapacidadCisterna || ""}</td>
+<td>${r.nivel_tanque || ""}</td>
+<td>${r.presion_tanque || ""}</td>
+<td>${r.temp_tanque || ""}</td>
+<td>${r.nivel_cisterna || ""}</td>
+<td>${r.capacidad_cisterna || ""}</td>
 <td>${ctx.PlacaCisterna || ""}</td>
-<td>${ctx.PresionBomba || ""}</td>
-<td>${ctx.TempVapor || ""}</td>
-<td>${ctx.PresionVapor || ""}</td>
-<td>${ctx.PresionMezcla || ""}</td>
+<td>${r.presion_bomba || ""}</td>
+<td>${r.temp_vapor || ""}</td>
+<td>${r.presion_vapor || ""}</td>
+<td>${r.presion_mezcla || ""}</td>
 <td>${ctx.Observaciones || ""}</td>
 <td>${ctx.Encargado || ""}</td>
 <td>${new Date(r.timestamp).toLocaleString()}</td>
@@ -148,6 +204,12 @@ tabla.innerHTML += `
 })
 
 }
+
+// ============================================
+// INIT
+// ============================================
+
+window.onload = cargarHistorico
 
 // ============================================
 // BUSCAR POR FECHA (FILTRO LOCAL)
