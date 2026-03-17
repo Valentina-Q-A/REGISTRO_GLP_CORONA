@@ -439,7 +439,7 @@ presion_mezcla: {
 }
 );
 
-if(response.ok){
+/*if(response.ok){
 
 showAlert("Registro enviado a Ubidots", "success");
 
@@ -449,11 +449,70 @@ showAlert("Error enviando datos", "error");
 
 }
 
+}*/
+
+if(response.ok){
+
+    showAlert("Registro enviado a Ubidots", "success");
+
+    // actualización inmediata (UX pro)
+    updateSummaryLocal(data);
+
+    // luego sincronizas con Ubidots
+    setTimeout(() => {
+        updateSummary();
+    }, 1500);
+
+}
 }
 
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
+function updateSummaryLocal(data){
+
+    document.getElementById("summaryDisplay").innerHTML = `
+    <table class="registro-table">
+    <thead>
+    <tr>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>NivelTanque</th>
+        <th>PresionTanque</th>
+        <th>TempTanque</th>
+        <th>NivelCisterna</th>
+        <th>CapacidadCisterna</th>
+        <th>PlacaCisterna</th>
+        <th>PresionBomba</th>
+        <th>TempVapor</th>
+        <th>PresionVapor</th>
+        <th>PresionMezcla</th>
+        <th>Observaciones</th>
+        <th>Encargado</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>${data.Fecha}</td>
+        <td>${data.Hora}</td>
+        <td>${data.NivelTanque}</td>
+        <td>${data.PresionTanque}</td>
+        <td>${data.TempTanque}</td>
+        <td>${data.NivelCisterna}</td>
+        <td>${data.CapacidadCisterna}</td>
+        <td>${data.PlacaCisterna}</td>
+        <td>${data.PresionBomba}</td>
+        <td>${data.TempVapor}</td>
+        <td>${data.PresionVapor}</td>
+        <td>${data.PresionMezcla}</td>
+        <td>${data.Observaciones}</td>
+        <td>${data.Encargado}</td>
+    </tr>
+    </tbody>
+    </table>
+    `;
+}
+
 
 function resetForm() {
     const form = document.getElementById('glpForm');
