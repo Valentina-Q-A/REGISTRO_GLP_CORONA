@@ -200,7 +200,7 @@ tabla.innerHTML += `
 <td>${r.presion_tanque || ""}</td>
 <td>${r.temp_tanque || ""}</td>
 <td>${r.nivel_cisterna || ""}</td>
-<td>${r.capacidad_cisterna || ""}</td>
+<td>${r.capacidad_cisterna ?? ""}</td>
 <td>${ctx.PlacaCisterna || ""}</td>
 <td>${r.presion_bomba || ""}</td>
 <td>${r.temp_vapor || ""}</td>
