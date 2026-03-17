@@ -5,7 +5,6 @@
 <title>Histórico GLP</title>
 
 <style>
-
 body{
 font-family:Arial;
 padding:40px;
@@ -32,8 +31,8 @@ color:white;
 button{
 padding:10px 20px;
 margin:10px;
+cursor:pointer;
 }
-
 </style>
 
 </head>
@@ -47,9 +46,7 @@ margin:10px;
 <button onclick="exportar()">Exportar Excel</button>
 
 <table>
-
 <thead>
-
 <tr>
 <th>Fecha</th>
 <th>Hora</th>
@@ -67,26 +64,33 @@ margin:10px;
 <th>Encargado</th>
 <th>FechaServidor</th>
 </tr>
-
 </thead>
 
-<tbody id="tabla">
-
-</tbody>
+<tbody id="tabla"></tbody>
 
 </table>
+
 <script>
 
-const TOKEN="BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA"
-const VARIABLE = "69b833f69262f7bf99220dc" //"nivel_tanque"
+// ============================================
+// CONFIG
+// ============================================
 
-async function buscar(){
+const TOKEN = "BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA"
+const VARIABLE = "69b833f69262f7bf99220dce"
 
-const fecha = document.getElementById("fecha").value
+// ============================================
+// CARGAR TODO EL HISTÓRICO (PAGINADO)
+// ============================================
 
-const res = await fetch(
-`https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE}/values?page_size=100`,
-{
+async function cargarHistorico(){
+
+let url = `https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE}/values?page_size=100`
+let allData = []
+
+while(url){
+
+const res = await fetch(url,{
 headers:{
 "X-Auth-Token":TOKEN
 }
@@ -94,19 +98,36 @@ headers:{
 
 const data = await res.json()
 
-const tabla=document.getElementById("tabla")
-tabla.innerHTML=""
+if(data.results){
+allData = allData.concat(data.results)
+}
 
-data.results.forEach(r=>{
+url = data.next // siguiente página
+
+}
+
+// ordenar por fecha descendente
+allData.sort((a,b)=> b.timestamp - a.timestamp)
+
+renderTabla(allData)
+
+}
+
+// ============================================
+// RENDER TABLA
+// ============================================
+
+function renderTabla(data){
+
+const tabla = document.getElementById("tabla")
+tabla.innerHTML = ""
+
+data.forEach(r=>{
 
 const ctx = r.context || {}
 
-if(!fecha || ctx.Fecha===fecha){
-
-tabla.innerHTML+=`
-
+tabla.innerHTML += `
 <tr>
-
 <td>${ctx.Fecha || ""}</td>
 <td>${ctx.Hora || ""}</td>
 <td>${r.value || ""}</td>
@@ -121,17 +142,77 @@ tabla.innerHTML+=`
 <td>${ctx.PresionMezcla || ""}</td>
 <td>${ctx.Observaciones || ""}</td>
 <td>${ctx.Encargado || ""}</td>
-<td>${ctx.FechaServidor || ""}</td>
-
+<td>${new Date(r.timestamp).toLocaleString()}</td>
 </tr>
-
 `
-
-}
-
 })
 
 }
+
+// ============================================
+// BUSCAR POR FECHA (FILTRO LOCAL)
+// ============================================
+
+async function buscar(){
+
+const fecha = document.getElementById("fecha").value
+
+let url = `https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE}/values?page_size=100`
+let allData = []
+
+while(url){
+
+const res = await fetch(url,{
+headers:{
+"X-Auth-Token":TOKEN
+}
+})
+
+const data = await res.json()
+
+if(data.results){
+allData = allData.concat(data.results)
+}
+
+url = data.next
+
+}
+
+// filtrar por fecha
+const filtrados = allData.filter(r=>{
+const ctx = r.context || {}
+return !fecha || ctx.Fecha === fecha
+})
+
+// ordenar
+filtrados.sort((a,b)=> b.timestamp - a.timestamp)
+
+renderTabla(filtrados)
+
+}
+
+// ============================================
+// EXPORTAR A EXCEL
+// ============================================
+
+function exportar(){
+
+let tabla = document.getElementById("tabla").outerHTML
+
+let url = 'data:application/vnd.ms-excel,' + encodeURIComponent(tabla)
+
+let link = document.createElement("a")
+link.href = url
+link.download = "historico_glp.xls"
+link.click()
+
+}
+
+// ============================================
+// AUTOLOAD
+// ============================================
+
+window.onload = cargarHistorico
 
 </script>
 
