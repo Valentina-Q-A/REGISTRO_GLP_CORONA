@@ -158,9 +158,15 @@ body {
 
 .registro-table {
     width: 100%;
+    min-width: 1100px; /* un poco más grande por tantas columnas */
     border-collapse: collapse;
     font-size: 0.8rem;
     margin-top: 10px;
+}
+
+.registro-table th,
+.registro-table td {
+    white-space: nowrap; /* CLAVE: no rompe texto */
 }
 
 .registro-table th {
@@ -174,6 +180,15 @@ body {
     padding: 6px;
     text-align: center;
 }
+
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;   /* scroll horizontal */
+    margin-top: 10px;
+}
+
+
 
 .input-error {
     border: 2px solid #ff0000 !important;
