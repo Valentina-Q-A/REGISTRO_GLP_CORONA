@@ -111,7 +111,7 @@ async function updateSummary() {
  
     const TOKEN = UBIDOTS_TOKEN;
 
-    const VARIABLE_ID = "69b833f69262f7bf99220dce" //nivel_tanque
+    const VARIABLE_ID = "69b9845f00fab5d8ef22b54d" //nivel_tanque
  
     const res = await fetch(
 `https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE_ID}/values?page_size=1`,
