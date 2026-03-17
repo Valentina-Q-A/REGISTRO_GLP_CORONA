@@ -130,7 +130,14 @@
         <!-- Resumen de datos -->
         <div class="summary-section">
             <h2>Resumen de Datos Actuales</h2>
+            <!-- Contenedor del slider -->
+            <div class="control-group" style="margin-bottom:20px;">
+                <label for="sliderGeneral">Ajuste General</label>
+                <input type="range" id="sliderGeneral" min="0" max="100" value="50">
+                <span id="sliderValue" class="value-display">50</span>
+            </div>
             <div id="summaryDisplay" class="summary-grid">
+                <div class="table-container">
                 <!-- Se llenará dinámicamente con JavaScript -->
             </div>
         </div>
