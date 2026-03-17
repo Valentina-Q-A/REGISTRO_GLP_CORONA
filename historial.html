@@ -247,12 +247,49 @@ renderTabla(filtrados)
 
 function exportar(){
 
-let tabla = document.getElementById("tabla").outerHTML
+let filas = []
 
-let url = 'data:application/vnd.ms-excel,' + encodeURIComponent(tabla)
+// encabezados
+filas.push([
+"Fecha","Hora","NivelTanque","PresionTanque","TempTanque",
+"NivelCisterna","CapacidadCisterna","PlacaCisterna",
+"PresionBomba","TempVapor","PresionVapor","PresionMezcla",
+"Observaciones","Encargado","FechaServidor"
+])
+
+// recorrer datos
+DATA_GLOBAL.forEach(r=>{
+
+const ctx = r.context || {}
+
+filas.push([
+ctx.Fecha || "",
+ctx.Hora || "",
+r.nivel_tanque ?? "",
+r.presion_tanque ?? "",
+r.temp_tanque ?? "",
+r.nivel_cisterna ?? "",
+r.capacidad_cisterna,
+ctx.PlacaCisterna || "",
+r.presion_bomba ?? "",
+r.temp_vapor ?? "",
+r.presion_vapor ?? "",
+r.presion_mezcla ?? "",
+ctx.Observaciones || "",
+ctx.Encargado || "",
+new Date(r.timestamp).toLocaleString()
+])
+
+})
+
+// convertir a texto tipo Excel (CSV con tabulación)
+let contenido = filas.map(f => f.join("\t")).join("\n")
+
+// crear archivo
+let blob = new Blob([contenido], { type: "application/vnd.ms-excel" })
 
 let link = document.createElement("a")
-link.href = url
+link.href = URL.createObjectURL(blob)
 link.download = "historico_glp.xls"
 link.click()
 
