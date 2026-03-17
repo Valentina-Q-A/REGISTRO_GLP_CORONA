@@ -567,12 +567,8 @@ window.appFunctions = {
     testServerConnection
 };
 
-
 function abrirHistorico(){
- 
-window.open("/historial.html","_blank")
- 
+    window.open("https://Valentina-Q-A.github.io/REGISTRO_GLP_CORONA/historial.html","_blank")
 }
-
 
  
