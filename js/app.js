@@ -570,7 +570,7 @@ window.appFunctions = {
 
 function abrirHistorico(){
  
-window.open("historial.html","_blank")
+window.open("/historial.html","_blank")
  
 }
 
