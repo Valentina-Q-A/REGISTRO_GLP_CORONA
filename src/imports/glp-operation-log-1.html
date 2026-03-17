@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Operación Planta GLP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Operación - Planta GLP</h1>
+
+        <!-- Contenedor visual para tanques, cisternas, bombas, vapor -->
+        <div class="visual-container">
+            <!-- Ejemplo de espacios para imágenes: reemplaza src por tus imágenes -->
+            <div class="component">
+                <img src="tanque.png" alt="Tanque" class="component-img">
+                <label>Nivel Tanque (35-90%)</label>
+                <input type="range" id="nivelTanque" min="35" max="90" value="50">
+                <span id="nivelTanqueValue">50%</span>
+            </div>
+
+            <div class="component">
+                <img src="cisterna.png" alt="Cisterna" class="component-img">
+                <label>Nivel Cisterna (%)</label>
+                <input type="range" id="nivelCisterna" min="0" max="100" value="50">
+                <span id="nivelCisternaValue">50%</span>
+            </div>
+
+            <div class="component">
+                <img src="bomba.png" alt="Bomba" class="component-img">
+                <label>Presión Bomba (100-110 PSI)</label>
+                <input type="range" id="presionBomba" min="100" max="110" value="105">
+                <span id="presionBombaValue">105 PSI</span>
+            </div>
+
+            <div class="component">
+                <img src="vaporizador.png" alt="Vapor" class="component-img">
+                <label>Temp Vapor Vaporizador 1 (50-76°C)</label>
+                <input type="range" id="tempVapor" min="50" max="76" value="63">
+                <span id="tempVaporValue">63 °C</span>
+            </div>
+        </div>
+
+        <!-- Campos de formulario -->
+        <form id="glpForm">
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="fecha" required>
+                <label>Hora</label>
+                <input type="time" id="hora" required>
+            </div>
+
+            <div class="form-group">
+                <label>Presión Tanque (70-100 PSI)</label>
+                <input type="range" id="presionTanque" min="70" max="100" value="85">
+                <span id="presionTanqueValue">85 PSI</span>
+            </div>
+
+            <div class="form-group">
+                <label>Temperatura Tanque (°C)</label>
+                <input type="range" id="tempTanque" min="0" max="100" value="50">
+                <span id="tempTanqueValue">50 °C</span>
+            </div>
+
+            <div class="form-group">
+                <label>Capacidad Cisterna (GL)</label>
+                <input type="number" id="capacidadCisterna" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label>Placa Cisterna</label>
+                <input type="text" id="placaCisterna" required>
+            </div>
+
+            <div class="form-group">
+                <label>Presión Vapor Vaporizador 1 (90-100 PSI)</label>
+                <input type="range" id="presionVapor" min="90" max="100" value="95">
+                <span id="presionVaporValue">95 PSI</span>
+            </div>
+
+            <div class="form-group">
+                <label>Presión Mezcla (8-12 PSI)</label>
+                <input type="range" id="presionMezcla" min="8" max="12" value="10">
+                <span id="presionMezclaValue">10 PSI</span>
+            </div>
+
+            <div class="form-group">
+                <label>Observaciones</label>
+                <textarea id="observaciones"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Encargado *</label>
+                <input type="text" id="encargado" required>
+            </div>
+
+            <button type="submit">Enviar Registro</button>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
