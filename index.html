@@ -131,19 +131,19 @@
         <div class="summary-section">
             <h2>Resumen de Datos Actuales</h2>
 
-            <!-- Contenedor del slider -->
-            <div class="control-group" style="margin-bottom:20px;">
-                <label for="sliderGeneral">Ajuste General</label>
-                <input type="range" id="sliderGeneral" min="0" max="100" value="50">
-                <span id="sliderValue" class="value-display">50</span>
-            </div>
-
-            <!-- Contenedor donde se llenarán los datos dinámicamente -->
-            <div id="summaryDisplay" class="summary-grid table-container">
-                <!-- Los items del resumen se crearán aquí vía JS -->
+            <div id="summaryDisplay" class="summary-grid">
+                <!-- Contenedor de la tabla con scroll -->
+                <div class="table-wrapper">
+                    <table id="summaryTable">
+                        <!-- Filas y columnas se llenarán dinámicamente -->
+                    </table>
+                </div>
             </div>
         </div>
+
         <div style="text-align:center;margin-top:30px;">
+            <!-- Aquí puedes poner botones, texto u otros elementos centrados -->
+        </div>
         
         <button onclick="abrirHistorico()" style="
         padding:12px 25px;
