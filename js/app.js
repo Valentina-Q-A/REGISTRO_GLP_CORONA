@@ -108,84 +108,87 @@ function setCurrentDateTime() {
 
 
 async function updateSummary() {
- 
+
     const TOKEN = UBIDOTS_TOKEN;
+    const DEVICE = "planta-glp";
 
-    const VARIABLE_ID = "69b9845f00fab5d8ef22b54d" //nivel_tanque
- 
-    const res = await fetch(
-`https://industrial.api.ubidots.com/api/v1.6/variables/${VARIABLE_ID}/values?page_size=1`,
-{
-    headers:{
-        "X-Auth-Token":TOKEN
-    }
-});
- 
-    const data = await res.json();
+    // lista de variables
+    const variables = [
+        "nivel_tanque",
+        "presion_tanque",
+        "temp_tanque",
+        "nivel_cisterna",
+        "capacidad_cisterna",
+        "presion_bomba",
+        "temp_vapor",
+        "presion_vapor",
+        "presion_mezcla"
+    ];
 
-    if (!data.results || data.results.length==0){
-        document.getElementById("summaryDisplay").innerHTML="Sin registros"
-        return
+    let datos = {};
+
+    //traer todas las variables
+    for (let v of variables) {
+
+        const res = await fetch(
+            `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}/${v}/values?page_size=1`,
+            {
+                headers: { "X-Auth-Token": TOKEN }
+            }
+        );
+
+        const data = await res.json();
+
+        if (data.results && data.results.length > 0) {
+            datos[v] = data.results[0];
+        } else {
+            datos[v] = { value: "", context: {} };
+        }
     }
- 
-    const r = data.results[0];
- 
-    const ctx = r.context || {};
- 
-    const summaryDisplay = document.getElementById("summaryDisplay");
- 
-    summaryDisplay.innerHTML = `
- 
-<table class="registro-table">
- 
-<thead>
- 
-<tr>
-<th>Fecha</th>
-<th>Hora</th>
-<th>NivelTanque</th>
-<th>PresionTanque</th>
-<th>TempTanque</th>
-<th>NivelCisterna</th>
-<th>CapacidadCisterna</th>
-<th>PlacaCisterna</th>
-<th>PresionBomba</th>
-<th>TempVapor</th>
-<th>PresionVapor</th>
-<th>PresionMezcla</th>
-<th>Observaciones</th>
-<th>Encargado</th>
-</tr>
- 
-</thead>
- 
-<tbody>
- 
-<tr>
- 
-<td>${ctx.Fecha || ""}</td>
-<td>${ctx.Hora || ""}</td>
-<td>${r.value || ""}</td>
-<td>${ctx.PresionTanque || ""}</td>
-<td>${ctx.TempTanque || ""}</td>
-<td>${ctx.NivelCisterna || ""}</td>
-<td>${ctx.CapacidadCisterna || ""}</td>
-<td>${ctx.PlacaCisterna || ""}</td>
-<td>${ctx.PresionBomba || ""}</td>
-<td>${ctx.TempVapor || ""}</td>
-<td>${ctx.PresionVapor || ""}</td>
-<td>${ctx.PresionMezcla || ""}</td>
-<td>${ctx.Observaciones || ""}</td>
-<td>${ctx.Encargado || ""}</td>
- 
-</tr>
- 
-</tbody>
- 
-</table>
- 
-`;
- 
+
+    //usamos el context de una sola (todas son iguales)
+    const ctx = datos["nivel_tanque"].context || {};
+
+    document.getElementById("summaryDisplay").innerHTML = `
+    <table class="registro-table">
+    <thead>
+    <tr>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>NivelTanque</th>
+        <th>PresionTanque</th>
+        <th>TempTanque</th>
+        <th>NivelCisterna</th>
+        <th>CapacidadCisterna</th>
+        <th>PlacaCisterna</th>
+        <th>PresionBomba</th>
+        <th>TempVapor</th>
+        <th>PresionVapor</th>
+        <th>PresionMezcla</th>
+        <th>Observaciones</th>
+        <th>Encargado</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>${ctx.Fecha || ""}</td>
+        <td>${ctx.Hora || ""}</td>
+        <td>${datos.nivel_tanque.value || ""}</td>
+        <td>${datos.presion_tanque.value || ""}</td>
+        <td>${datos.temp_tanque.value || ""}</td>
+        <td>${datos.nivel_cisterna.value || ""}</td>
+        <td>${datos.capacidad_cisterna.value || ""}</td>
+        <td>${ctx.PlacaCisterna || ""}</td>
+        <td>${datos.presion_bomba.value || ""}</td>
+        <td>${datos.temp_vapor.value || ""}</td>
+        <td>${datos.presion_vapor.value || ""}</td>
+        <td>${datos.presion_mezcla.value || ""}</td>
+        <td>${ctx.Observaciones || ""}</td>
+        <td>${ctx.Encargado || ""}</td>
+    </tr>
+    </tbody>
+    </table>
+    `;
 }
 
 
