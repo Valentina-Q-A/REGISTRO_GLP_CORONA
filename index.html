@@ -130,20 +130,14 @@
         <!-- Resumen de datos -->
         <div class="summary-section">
             <h2>Resumen de Datos Actuales</h2>
-
+            <!-- Contenedor del slider -->
+        
             <div id="summaryDisplay" class="summary-grid">
-                <!-- Contenedor de la tabla con scroll -->
-                <div class="table-wrapper">
-                    <table id="summaryTable">
-                        <!-- Filas y columnas se llenarán dinámicamente -->
-                    </table>
-                </div>
+                <div class="table-container" style="width: 100%; max-width: 600px; overflow-x: auto;"></div>
+                <!-- Se llenará dinámicamente con JavaScript -->
             </div>
         </div>
-
         <div style="text-align:center;margin-top:30px;">
-            <!-- Aquí puedes poner botones, texto u otros elementos centrados -->
-        </div>
         
         <button onclick="abrirHistorico()" style="
         padding:12px 25px;
