@@ -246,7 +246,7 @@ async function saveData(data) {
 const TOKEN = "BBUS-etSh1XzuTj9VZAJIuZLswp9CPxFBTM";
 
 const response = await fetch(
-"https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp
+"https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",
 {
 method: "POST",
 headers: {
