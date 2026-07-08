@@ -20,6 +20,8 @@ const sliders = [
     {id: "presionTanque", span: "presionTanqueValue", unit: " PSI"},
     {id: "tempTanque", span: "tempTanqueValue", unit: " °C"},
     {id: "nivelCisterna", span: "nivelCisternaValue", unit: "%"},
+    {id: "presionCisterna", span: "presionCisternaValue", unit: " PSI"},
+    {id: "tempCisterna", span: "tempCisternaValue", unit: " °C"},
     {id: "presionBomba", span: "presionBombaValue", unit: " PSI"},
     {id: "tempVapor", span: "tempVaporValue", unit: " °C"},
     {id: "presionVapor", span: "presionVaporValue", unit: " PSI"},
@@ -118,6 +120,8 @@ async function updateSummary() {
         "presion_tanque",
         "temp_tanque",
         "nivel_cisterna",
+        "presion_cisterna",
+        "temp_cisterna",
         "capacidad_cisterna",
         "presion_bomba",
         "temp_vapor",
@@ -159,6 +163,8 @@ async function updateSummary() {
         <th>PresionTanque</th>
         <th>TempTanque</th>
         <th>NivelCisterna</th>
+        <th>PresionCisterna</th>
+        <th>TempCisterna</th>
         <th>CapacidadCisterna</th>
         <th>PlacaCisterna</th>
         <th>PresionBomba</th>
@@ -177,6 +183,8 @@ async function updateSummary() {
         <td>${datos.presion_tanque.value || ""}</td>
         <td>${datos.temp_tanque.value || ""}</td>
         <td>${datos.nivel_cisterna.value || ""}</td>
+        <td>${datos.presion_cisterna.value || ""}</td>
+        <td>${datos.temp_cisterna.value || ""}</td>
         
         <td>${r.capacidad_cisterna ?? ""}</td>
         <td>${ctx.PlacaCisterna || ""}</td>
@@ -226,6 +234,8 @@ function collectFormData() {
         PresionTanque: document.getElementById('presionTanque').value,
         TempTanque: document.getElementById('tempTanque').value,
         NivelCisterna: document.getElementById('nivelCisterna').value,
+        PresionCisterna: document.getElementById('presionCisterna').value,
+        TempCisterna: document.getElementById('tempCisterna').value,
         CapacidadCisterna: document.getElementById('capacidadCisterna').value,
         PlacaCisterna: document.getElementById('placaCisterna').value,
         PresionBomba: document.getElementById('presionBomba').value,
@@ -319,6 +329,46 @@ temp_tanque: {
 nivel_cisterna: {
 
   value: Number(data.NivelCisterna),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+
+presion_cisterna: {
+
+  value: Number(data.PresionCisterna),
+
+  context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
+
+},
+
+temp_cisterna: {
+
+  value: Number(data.TempCisterna),
 
   context: {
 
@@ -482,6 +532,8 @@ function updateSummaryLocal(data){
         <th>PresionTanque</th>
         <th>TempTanque</th>
         <th>NivelCisterna</th>
+        <th>PresionCisterna</th>
+        <th>TempCisterna</th>
         <th>CapacidadCisterna</th>
         <th>PlacaCisterna</th>
         <th>PresionBomba</th>
@@ -500,6 +552,8 @@ function updateSummaryLocal(data){
         <td>${data.PresionTanque}</td>
         <td>${data.TempTanque}</td>
         <td>${data.NivelCisterna}</td>
+        <td>${data.PresionCisterna}</td>
+        <td>${data.TempCisterna}</td>
         <td>${data.CapacidadCisterna}</td>
         <td>${data.PlacaCisterna}</td>
         <td>${data.PresionBomba}</td>
