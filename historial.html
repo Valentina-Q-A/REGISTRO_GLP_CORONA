@@ -56,6 +56,8 @@ cursor:pointer;
 <th>PresionTanque</th>
 <th>TempTanque</th>
 <th>NivelCisterna</th>
+<th>PresionCisterna</th>
+<th>TempCisterna</th>
 <th>CapacidadCisterna</th>
 <th>PlacaCisterna</th>
 <th>PresionBomba</th>
@@ -85,13 +87,13 @@ const VARIABLES = {
     presion_tanque: "69c2b0e000a7ca2c376872f1",
     temp_tanque: "69c2a6179c18013ea16383e5",
     nivel_cisterna: "69c2a62f45c5fcfe4bad3384",
+    presion_cisterna: "6a4e5fdc63db9441a85dcbb0",
+    temp_cisterna: "6a4e5fd11b4b877cc189e6a6",
     capacidad_cisterna: "69c2a647bd8a77f94450feb1",
     presion_bomba: "69c2a66053a41a747f3a2129",
     temp_vapor: "69c2a6779933011f71ff918d",
     presion_vapor: "69c2a68c9933011f71ff918e",
-    presion_mezcla: "69c2a6a3cfe705dda9e03c76",
-    presion_cisterna: "6a4e5fdc63db9441a85dcbb0",
-    temp_cisterna: "6a4e5fd11b4b877cc189e6a6"
+    presion_mezcla: "69c2a6a3cfe705dda9e03c76"
 }
 
 // 👉 almacenamiento global
@@ -202,6 +204,9 @@ tabla.innerHTML += `
 <td>${r.presion_tanque || ""}</td>
 <td>${r.temp_tanque || ""}</td>
 <td>${r.nivel_cisterna || ""}</td>
+<td>${r.presion_cisterna || ""}</td>
+<td>${r.temp_cisterna || ""}</td>
+<td>${r.nivel_cisterna || ""}</td>
 <td>${r.capacidad_cisterna}</td>
 <td>${ctx.PlacaCisterna || ""}</td>
 <td>${r.presion_bomba || ""}</td>
@@ -254,7 +259,7 @@ let filas = []
 // encabezados
 filas.push([
 "Fecha","Hora","NivelTanque","PresionTanque","TempTanque",
-"NivelCisterna","CapacidadCisterna","PlacaCisterna",
+"NivelCisterna","PresionCisterna", "TempCisterna","CapacidadCisterna","PlacaCisterna",
 "PresionBomba","TempVapor","PresionVapor","PresionMezcla",
 "Observaciones","Encargado","FechaServidor"
 ])
@@ -271,6 +276,8 @@ r.nivel_tanque ?? "",
 r.presion_tanque ?? "",
 r.temp_tanque ?? "",
 r.nivel_cisterna ?? "",
+r.presion_cisterna ?? "",
+r.temp_cisterna ?? "",
 r.capacidad_cisterna,
 ctx.PlacaCisterna || "",
 r.presion_bomba ?? "",
