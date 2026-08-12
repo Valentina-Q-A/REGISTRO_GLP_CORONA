@@ -14,7 +14,9 @@ const DEVICE = "planta-glp";
 
 
 
-// Configuración de sliders y sus valores
+// Configuración de Variables y sus valores
+
+// Sliders
 const sliders = [
     {id: "nivelTanque", span: "nivelTanqueValue", unit: "%"},
     {id: "presionTanque", span: "presionTanqueValue", unit: " PSI"},
@@ -28,6 +30,11 @@ const sliders = [
     {id: "presionMezcla", span: "presionMezclaValue", unit: " PSI"},
 ];
 
+//Booleanos
+const booleans = [
+    {id: "capuchon", span: "capuchonValue"}
+];
+
 // ============================================
 // INICIALIZACIÓN
 // ============================================
@@ -35,15 +42,17 @@ const sliders = [
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     initializeSliders();
+    initializeBooleans();
     setCurrentDateTime();
     updateSummary();
     initializeForm();
 });
 
 // ============================================
-// FUNCIONES DE SLIDERS
+// FUNCIONES DE VARIABLES
 // ============================================
 
+// ================ SLIDERS ===================
 function initializeSliders() {
     sliders.forEach(s => {
         const input = document.getElementById(s.id);
@@ -82,6 +91,28 @@ function validarRango(input) {
     } else {
         input.classList.remove("input-error");
     }
+}
+// ================ BOOLEANS ===================
+function initializeBooleans() {
+
+    booleans.forEach(b => {
+
+        const input = document.getElementById(b.id);
+        const span = document.getElementById(b.span);
+
+        if (input && span) {
+
+            // Estado inicial
+            span.textContent = input.checked ? "Sí" : "No";
+
+            // Detectar cambios
+            input.addEventListener('change', () => {
+
+                span.textContent = input.checked ? "Sí" : "No";
+
+            });
+        }
+    });
 }
 
 // ============================================
@@ -126,7 +157,8 @@ async function updateSummary() {
         "presion_bomba",
         "temp_vapor",
         "presion_vapor",
-        "presion_mezcla"
+        "presion_mezcla",
+        "capuchon"
     ];
 
     let datos = {};
@@ -171,6 +203,7 @@ async function updateSummary() {
         <th>TempVapor</th>
         <th>PresionVapor</th>
         <th>PresionMezcla</th>
+        <th>Capuchon</th>
         <th>Observaciones</th>
         <th>Encargado</th>
     </tr>
@@ -182,16 +215,21 @@ async function updateSummary() {
         <td>${datos.nivel_tanque.value || ""}</td>
         <td>${datos.presion_tanque.value || ""}</td>
         <td>${datos.temp_tanque.value || ""}</td>
+        
         <td>${datos.nivel_cisterna.value || ""}</td>
         <td>${datos.presion_cisterna.value || ""}</td>
         <td>${datos.temp_cisterna.value || ""}</td>
-        
-        <td>${r.capacidad_cisterna ?? ""}</td>
+    
+        <td>${datos.capacidad_cisterna ?? ""}</td>
         <td>${ctx.PlacaCisterna || ""}</td>
         <td>${datos.presion_bomba.value || ""}</td>
+        
         <td>${datos.temp_vapor.value || ""}</td>
         <td>${datos.presion_vapor.value || ""}</td>
+        
         <td>${datos.presion_mezcla.value || ""}</td>
+        <td>${datos.capuchon.value || ""}</td>
+        
         <td>${ctx.Observaciones || ""}</td>
         <td>${ctx.Encargado || ""}</td>
     </tr>
@@ -242,6 +280,7 @@ function collectFormData() {
         TempVapor: document.getElementById('tempVapor').value,
         PresionVapor: document.getElementById('presionVapor').value,
         PresionMezcla: document.getElementById('presionMezcla').value,
+        Capuchon: document.getElementById('capuchon').checked,
         Observaciones: document.getElementById('observaciones').value,
         Encargado: document.getElementById('encargado').value.trim()
     };
@@ -482,8 +521,25 @@ presion_mezcla: {
 
     Observaciones: data.Observaciones
 
-  }
+  },
 
+capuchon: {
+
+    value: data.Capuchon ? 1 : 0,
+
+    context: {
+
+    Fecha: data.Fecha,
+
+    Hora: data.Hora,
+
+    Encargado: data.Encargado,
+
+    PlacaCisterna: data.PlacaCisterna,
+
+    Observaciones: data.Observaciones
+
+  }
 }
  
 })
@@ -540,6 +596,7 @@ function updateSummaryLocal(data){
         <th>TempVapor</th>
         <th>PresionVapor</th>
         <th>PresionMezcla</th>
+        <th>Capuchon</th>
         <th>Observaciones</th>
         <th>Encargado</th>
     </tr>
@@ -560,6 +617,7 @@ function updateSummaryLocal(data){
         <td>${data.TempVapor}</td>
         <td>${data.PresionVapor}</td>
         <td>${data.PresionMezcla}</td>
+        <td>${datos.capuchon.value === 1 ? "Sí" : "No"}</td>        
         <td>${data.Observaciones}</td>
         <td>${data.Encargado}</td>
     </tr>
@@ -578,6 +636,17 @@ function resetForm() {
     document.getElementById('observaciones').value = '';
     document.getElementById('encargado').value = '';
     
+    // Resetear booleanos
+    booleans.forEach(b => {
+    const input = document.getElementById(b.id);
+    const span = document.getElementById(b.span);
+
+    if (input && span) {
+        input.checked = false;
+        span.textContent = "No";
+    }
+        
+});
     // Restablecer fecha y hora actuales
     setCurrentDateTime();
     
