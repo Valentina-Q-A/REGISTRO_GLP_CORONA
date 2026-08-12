@@ -282,47 +282,6 @@ textarea {
     padding: 0.25rem 0.75rem;
     border-radius: 5px;
 }
-.toggle {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
-}
-
-.toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #ccc;
-    border-radius: 26px;
-    transition: 0.3s;
-}
-
-.slider::before {
-    content: "";
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    left: 3px;
-    top: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: 0.3s;
-}
-
-.toggle input:checked + .slider {
-    background-color: #2196F3;
-}
-
-.toggle input:checked + .slider::before {
-    transform: translateX(24px);
-}
 
 /* Botón submit */
 .btn-submit {
