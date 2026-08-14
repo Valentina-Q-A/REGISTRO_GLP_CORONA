@@ -17,9 +17,9 @@ const DEVICE = "planta-glp";
 const sliders = [
     {
         id: VARIABLES.nivel_tanque.field,
-        span: "nivelTanqueValue",
+        span: VARIABLES.nivel_tanque.valueDisplay,
         unit: VARIABLES.nivel_tanque.unit
-    },    
+    },
     {id: "presionTanque", span: "presionTanqueValue", unit: " PSI"},
     {id: "tempTanque", span: "tempTanqueValue", unit: " °C"},
     {id: "nivelCisterna", span: "nivelCisternaValue", unit: "%"},

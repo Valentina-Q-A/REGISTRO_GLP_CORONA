@@ -7,9 +7,13 @@ const VARIABLES = {
     nivel_tanque: {
         type: "number",
         control: "slider",
+
         field: "nivelTanque",
+        valueDisplay: "nivelTanqueValue",
+
         label: "Nivel Tanque",
         unit: "%",
+
         min: 0,
         max: 100
     },
