@@ -13,10 +13,13 @@ const UBIDOTS_TOKEN = "BBUS-etSh1XzuTj9VZAJIuZLswp9CPxFBTM";
 const DEVICE = "planta-glp";
 
 
-
 // Configuración de sliders y sus valores
 const sliders = [
-    {id: "nivelTanque", span: "nivelTanqueValue", unit: "%"},
+    {
+        id: VARIABLES.nivel_tanque.field,
+        span: "nivelTanqueValue",
+        unit: VARIABLES.nivel_tanque.unit
+    },    
     {id: "presionTanque", span: "presionTanqueValue", unit: " PSI"},
     {id: "tempTanque", span: "tempTanqueValue", unit: " °C"},
     {id: "nivelCisterna", span: "nivelCisternaValue", unit: "%"},
