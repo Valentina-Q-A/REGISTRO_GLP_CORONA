@@ -112,8 +112,6 @@ function setCurrentDateTime() {
 async function updateSummary() {
 
     const TOKEN = UBIDOTS_TOKEN;
-    const DEVICE = "planta-glp";
-
     // lista de variables
     const variables = [
         "nivel_tanque",
