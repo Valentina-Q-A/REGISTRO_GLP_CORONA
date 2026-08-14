@@ -185,8 +185,7 @@ async function updateSummary() {
         <td>${datos.nivel_cisterna.value || ""}</td>
         <td>${datos.presion_cisterna.value || ""}</td>
         <td>${datos.temp_cisterna.value || ""}</td>
-        
-        <td>${r.capacidad_cisterna ?? ""}</td>
+        <td>${datos.capacidad_cisterna.value || ""}</td>
         <td>${ctx.PlacaCisterna || ""}</td>
         <td>${datos.presion_bomba.value || ""}</td>
         <td>${datos.temp_vapor.value || ""}</td>
