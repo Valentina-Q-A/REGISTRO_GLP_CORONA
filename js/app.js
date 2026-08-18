@@ -13,22 +13,18 @@ const UBIDOTS_TOKEN = "BBUS-etSh1XzuTj9VZAJIuZLswp9CPxFBTM";
 const DEVICE = "planta-glp";
 
 
-// Configuración de sliders y sus valores
-const sliders = [
-    {
-        id: VARIABLES.nivel_tanque.field,
-        span: VARIABLES.nivel_tanque.valueDisplay,
-        unit: VARIABLES.nivel_tanque.unit
-    },
-    {id: "presionTanque", span: "presionTanqueValue", unit: " PSI"},
-    {id: "tempTanque", span: "tempTanqueValue", unit: " °C"},
-    {id: "nivelCisterna", span: "nivelCisternaValue", unit: "%"},
-    {id: "presionCisterna", span: "presionCisternaValue", unit: " PSI"},
-    {id: "tempCisterna", span: "tempCisternaValue", unit: " °C"},
-    {id: "presionBomba", span: "presionBombaValue", unit: " PSI"},
-    {id: "tempVapor", span: "tempVaporValue", unit: " °C"},
-    {id: "presionVapor", span: "presionVaporValue", unit: " PSI"},
-    {id: "presionMezcla", span: "presionMezclaValue", unit: " PSI"},
+// Configuración de controles y sus valores
+const controls = [
+    VARIABLES.nivel_tanque,
+    VARIABLES.presion_tanque,
+    VARIABLES.temp_tanque,
+    VARIABLES.nivel_cisterna,
+    VARIABLES.presion_cisterna,
+    VARIABLES.temp_cisterna,
+    VARIABLES.presion_bomba,
+    VARIABLES.temp_vapor,
+    VARIABLES.presion_vapor,
+    VARIABLES.presion_mezcla,
 ];
 
 // ============================================
@@ -37,33 +33,46 @@ const sliders = [
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    initializeSliders();
+    initializeControls();
     setCurrentDateTime();
     updateSummary();
     initializeForm();
 });
 
 // ============================================
-// FUNCIONES DE SLIDERS
+// FUNCIONES AUXILIARES
 // ============================================
 
-function initializeSliders() {
-    sliders.forEach(s => {
-        const input = document.getElementById(s.id);
-        const span = document.getElementById(s.span);
-        
+function initializeControls() {
+    controls.forEach(s => {
+
+        const isCentralized = Boolean(s.field);
+
+        const field = isCentralized ? s.field : s.id;
+        const valueDisplay = isCentralized ? s.valueDisplay : s.span;
+        const unit = s.unit || "";
+
+        const input = document.getElementById(field);
+        const span = document.getElementById(valueDisplay);
+
         if (input && span) {
 
-            span.textContent = input.value + s.unit;
+            // Aplicar configuración centralizada
+            if (isCentralized) {
+                input.min = s.min;
+                input.max = s.max;
+                input.step = s.step;
+                input.value = s.defaultValue;
+            }
+
+            span.textContent = input.value + unit;
 
             input.addEventListener('input', () => {
-
-                span.textContent = input.value + s.unit;
-
-                validarRango(input); // validar en tiempo real
+                span.textContent = input.value + unit;
+                validarRango(input);
             });
 
-            // validar al cargar
+            // Validar al cargar
             validarRango(input);
         }
     });
@@ -109,7 +118,6 @@ function setCurrentDateTime() {
 // ============================================
 // RESUMEN DE DATOS
 // ============================================
-
 
 
 async function updateSummary() {
@@ -200,6 +208,44 @@ async function updateSummary() {
     `;
 }
 
+function resetForm() {
+    const form = document.getElementById('glpForm');
+
+    // Resetear campos de texto
+    document.getElementById('capacidadCisterna').value = '';
+    document.getElementById('placaCisterna').value = '';
+    document.getElementById('observaciones').value = '';
+    document.getElementById('encargado').value = '';
+
+    // Restablecer fecha y hora actuales
+    setCurrentDateTime();
+
+    // Restablecer controles numéricos
+    controls.forEach(s => {
+
+        const isCentralized = Boolean(s.field);
+
+        const field = isCentralized ? s.field : s.id;
+        const valueDisplay = isCentralized ? s.valueDisplay : s.span;
+        const unit = s.unit || "";
+
+        const input = document.getElementById(field);
+        const span = document.getElementById(valueDisplay);
+
+        if (input && span) {
+
+            if (isCentralized) {
+                input.value = s.defaultValue;
+            }
+
+            span.textContent = input.value + unit;
+            validarRango(input);
+        }
+    });
+
+    // Actualizar resumen
+    updateSummary();
+}
 
 // ============================================
 // MANEJO DEL FORMULARIO
@@ -562,31 +608,6 @@ function updateSummaryLocal(data){
     `;
 }
 
-
-function resetForm() {
-    const form = document.getElementById('glpForm');
-    
-    // Resetear campos de texto
-    document.getElementById('capacidadCisterna').value = '';
-    document.getElementById('placaCisterna').value = '';
-    document.getElementById('observaciones').value = '';
-    document.getElementById('encargado').value = '';
-    
-    // Restablecer fecha y hora actuales
-    setCurrentDateTime();
-    
-    // Actualizar displays de sliders
-    sliders.forEach(s => {
-        const slider = document.getElementById(s.id);
-        const span = document.getElementById(s.span);
-        if (slider && span) {
-            span.textContent = slider.value + s.unit;
-        }
-    });
-    
-    // Actualizar resumen
-    updateSummary();
-}
 
 function showAlert(message, type = 'info') {
     // Crear elemento de alerta personalizado
