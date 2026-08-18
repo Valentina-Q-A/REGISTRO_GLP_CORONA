@@ -49,6 +49,14 @@ const VARIABLES = {
         step: 1,
         defaultValue: 19
     },
+    cisterna_habilitada: {
+        type: "boolean",
+        control: "toggle",
+
+        field: "cisternaHabilitada",
+
+        label: "¿Ingresar datos de cisterna?"
+    },
     nivel_cisterna: {
         type: "number",
         control: "number",

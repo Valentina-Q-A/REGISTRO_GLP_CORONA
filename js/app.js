@@ -34,6 +34,7 @@ const controls = [
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     initializeControls();
+    initializeCisterna();
     setCurrentDateTime();
     updateSummary();
     initializeForm();
@@ -96,6 +97,35 @@ function validarRango(input) {
     }
 }
 
+function initializeCisterna() {
+
+    const toggle = document.getElementById('cisternaHabilitada');
+    const fields = document.getElementById('cisternaFields');
+
+    if (!toggle || !fields) {
+        return;
+    }
+
+    const inputs = fields.querySelectorAll('input');
+
+    function updateState() {
+
+        const enabled = toggle.checked;
+
+        fields.style.display = enabled ? '' : 'none';
+        inputs.forEach(input => {
+            input.disabled = !enabled;
+        });
+
+        document.getElementById('capacidadCisterna').required = enabled;
+        document.getElementById('placaCisterna').required = enabled;
+    }
+
+    toggle.addEventListener('change', updateState);
+
+    // Estado inicial
+    updateState();
+}
 // ============================================
 // FUNCIONES DE FECHA Y HORA
 // ============================================
@@ -276,6 +306,7 @@ function collectFormData() {
     return {
         Fecha: document.getElementById('fecha').value,
         Hora: document.getElementById('hora').value,
+        CisternaHabilitada: document.getElementById('cisternaHabilitada').checked,
         NivelTanque: document.getElementById('nivelTanque').value,
         PresionTanque: document.getElementById('presionTanque').value,
         TempTanque: document.getElementById('tempTanque').value,

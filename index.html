@@ -63,24 +63,46 @@
                 </div>
             </div>
 
-            <!-- Cisterna -->
+           <!-- Cisterna -->
             <div class="component">
                 <img src="assets/cisterna.svg" alt="Cisterna" class="component-img">
                 <h3>Cisterna / Camión Tanque</h3>
+
                 <div class="control-group">
-                    <label>Nivel Cisterna (0-100%)</label>
-                    <input type="number" id="nivelCisterna" min="0" max="100" value="0">
-                    <span id="nivelCisternaValue" class="value-display">0%</span>
+                    <label for="cisternaHabilitada">¿Desea Ingresar datos de cisterna?</label>
+                    <input type="checkbox" id="cisternaHabilitada">
                 </div>
-                <div class="control-group">
-                    <label>Presión Cisterna (90-140 PSI)</label>
-                    <input type="number" id="presionCisterna" min="90" max="1400" value="110">
-                    <span id="presionCisternaValue" class="value-display">110 PSI</span>
-                </div>
-                <div class="control-group">
-                    <label>Temperatura Cisterna (16-30°C)</label>
-                    <input type="number" id="tempCisterna" min="16" max="30" value="22">
-                    <span id="tempCisternaValue" class="value-display">22 °C</span>
+
+                <div id="cisternaFields">
+
+                    <div class="control-group">
+                        <label for="nivelCisterna">Nivel Cisterna (0-100%)</label>
+                        <input type="number" id="nivelCisterna" min="0" max="100" value="0">
+                        <span id="nivelCisternaValue" class="value-display">0%</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="presionCisterna">Presión Cisterna (90-140 PSI)</label>
+                        <input type="number" id="presionCisterna" min="90" max="140" value="110">
+                        <span id="presionCisternaValue" class="value-display">110 PSI</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="tempCisterna">Temperatura Cisterna (16-30°C)</label>
+                        <input type="number" id="tempCisterna" min="16" max="30" value="22">
+                        <span id="tempCisternaValue" class="value-display">22 °C</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="capacidadCisterna">Capacidad Cisterna (GL) *</label>
+                        <input type="number" id="capacidadCisterna" required>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="placaCisterna">Placa Cisterna * NOTA: SI ES LA MISMA PLACA PONER 0</label>
+                        <input type="text" id="placaCisterna" required placeholder="ABC-123">
+                    </div>
+
                 </div>
             </div>
 
