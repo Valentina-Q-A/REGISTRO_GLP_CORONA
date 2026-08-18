@@ -324,242 +324,80 @@ function collectFormData() {
     };
 }
 
+function createVariablePayload(value, data) {
+    return {
+        value: Number(value),
+        context: {
+            Fecha: data.Fecha,
+            Hora: data.Hora,
+            Encargado: data.Encargado,
+            PlacaCisterna: data.PlacaCisterna,
+            Observaciones: data.Observaciones
+        }
+    };
+}
+
+function buildPayload(data) {
+    const payload = {
+        nivel_tanque:
+            createVariablePayload(data.NivelTanque, data),
+
+        presion_tanque:
+            createVariablePayload(data.PresionTanque, data),
+
+        temp_tanque:
+            createVariablePayload(data.TempTanque, data),
+
+        presion_bomba:
+            createVariablePayload(data.PresionBomba, data),
+
+        temp_vapor:
+            createVariablePayload(data.TempVapor, data),
+
+        presion_vapor:
+            createVariablePayload(data.PresionVapor, data),
+
+        presion_mezcla:
+            createVariablePayload(data.PresionMezcla, data)
+    };
+
+    if (data.CisternaHabilitada) {
+        payload.nivel_cisterna =
+            createVariablePayload(data.NivelCisterna, data);
+
+        payload.presion_cisterna =
+            createVariablePayload(data.PresionCisterna, data);
+
+        payload.temp_cisterna =
+            createVariablePayload(data.TempCisterna, data);
+
+        payload.capacidad_cisterna =
+            createVariablePayload(data.CapacidadCisterna, data);
+    }
+
+    return payload;
+}
+
 async function saveData(data) {
-
-const response = await fetch(
-`https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}`,
-{
-method: "POST",
-headers: {
-"Content-Type": "application/json",
-"X-Auth-Token": UBIDOTS_TOKEN
-},
-
-body: JSON.stringify({
- 
-nivel_tanque: {
-
-  value: Number(data.NivelTanque),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-presion_tanque: {
-
-  value: Number(data.PresionTanque),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-temp_tanque: {
-
-  value: Number(data.TempTanque),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-nivel_cisterna: {
-
-  value: Number(data.NivelCisterna),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
-
-presion_cisterna: {
-
-  value: Number(data.PresionCisterna),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
-
-temp_cisterna: {
-
-  value: Number(data.TempCisterna),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-capacidad_cisterna: {
-
-  value: Number(data.CapacidadCisterna),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-presion_bomba: {
-
-  value: Number(data.PresionBomba),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-temp_vapor: {
-
-  value: Number(data.TempVapor),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-presion_vapor: {
-
-  value: Number(data.PresionVapor),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-},
- 
-presion_mezcla: {
-
-  value: Number(data.PresionMezcla),
-
-  context: {
-
-    Fecha: data.Fecha,
-
-    Hora: data.Hora,
-
-    Encargado: data.Encargado,
-
-    PlacaCisterna: data.PlacaCisterna,
-
-    Observaciones: data.Observaciones
-
-  }
-
-}
- 
-})
-}
+    const payload = buildPayload(data);
+
+    console.log("Payload preparado:", payload);
+
+    /*
+    const response = await fetch(
+    `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}`,
+    {
+        method: "POST",
+        headers: {
+        "Content-Type": "application/json",
+        "X-Auth-Token": UBIDOTS_TOKEN
+    },
+
+    body: JSON.stringify(payload)
+
+    }
 );
+*/
 
 /*if(response.ok){
 
@@ -573,19 +411,20 @@ showAlert("Error enviando datos", "error");
 
 }*/
 
-if(response.ok){
+    if(response.ok){
 
-    showAlert("Registro enviado a Ubidots", "success");
+        showAlert("Registro enviado a Ubidots", "success");
 
-    // actualización inmediata (UX pro)
-    updateSummaryLocal(data);
+        // actualización inmediata (UX pro)
+        updateSummaryLocal(data);
 
-    // luego sincronizas con Ubidots
-    setTimeout(() => {
-        updateSummary();
-    }, 1500);
+        // luego sincronizas con Ubidots
+        setTimeout(() => {
+            updateSummary();
+        }, 1500);
 
-}
+    }
+    return payload;
 }
 
 // ============================================
@@ -727,7 +566,8 @@ window.appFunctions = {
     updateSummary,
     resetForm,
     collectFormData,
-    testServerConnection
+    testServerConnection,
+    buildPayload
 };
 
 function abrirHistorico(){
