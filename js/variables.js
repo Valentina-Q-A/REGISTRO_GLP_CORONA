@@ -162,6 +162,56 @@ const VARIABLES = {
         step: 1,
         defaultValue: 10
     },
+    estado_operacion: {
+        type: "select",
+        control: "select",
+
+        field: "estadoOperacion",
+
+        label: "Estado de operación",
+
+        options: [
+            {
+                value: "inicia_trasego",
+                label: "Inicia trasego"
+            },
+            {
+                value: "finaliza_trasego",
+                label: "Finaliza trasego"
+            },
+            {
+                value: "sin_novedad",
+                label: "Sin novedad"
+            }
+        ]
+    },
+    pendientes: {
+        type: "multiselect",
+        control: "checkbox",
+
+        field: "pendientes",
+
+        label: "Pendientes",
+
+        options: [
+            {
+                value: "bomba_1_apagada",
+                label: "Bomba 1 apagada"
+            },
+            {
+                value: "bomba_2_apagada",
+                label: "Bomba 2 apagada"
+            },
+            {
+                value: "sin_cisterna",
+                label: "Sin cisterna"
+            },
+            {
+                value: "otro",
+                label: "Otro"
+            }
+        ]
+    },
     observaciones: {
         type: "text",
         control: "textarea",

@@ -303,10 +303,15 @@ function initializeForm() {
 }
 
 function collectFormData() {
+    const pendientes = Array.from(
+        document.querySelectorAll('input[name="pendientes"]:checked')
+        ).map(input => input.value);
     return {
         Fecha: document.getElementById('fecha').value,
         Hora: document.getElementById('hora').value,
         CisternaHabilitada: document.getElementById('cisternaHabilitada').checked,
+        EstadoOperacion: document.getElementById('estadoOperacion').value,
+        Pendientes: pendientes,
         NivelTanque: document.getElementById('nivelTanque').value,
         PresionTanque: document.getElementById('presionTanque').value,
         TempTanque: document.getElementById('tempTanque').value,

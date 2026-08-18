@@ -117,11 +117,50 @@
                 </div>
             </div>
         </div>
-
         <!-- Formulario de registro -->
         <form id="glpForm" class="registro-form">
             <h2>Registro de Operación</h2>
-            
+            <!-- Estado de Operación -->
+            <div class="form-row registro-opciones">
+
+                <div class="form-group">
+                    <label for="estadoOperacion">ESTADO DE OPERACIÓN</label>
+
+                    <select id="estadoOperacion">
+                        <option value="inicia_trasego">Inicia trasego</option>
+                        <option value="finaliza_trasego">Finaliza trasego</option>
+                        <option value="sin_novedad">Sin novedad</option>
+                    </select>
+                </div>
+
+                <!-- Pendientes -->
+                <div class="form-group">
+                    <label>PENDIENTES</label>
+
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="pendientes" value="bomba_1_apagada">
+                            Bomba 1 apagada
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="pendientes" value="bomba_2_apagada">
+                            Bomba 2 apagada
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="pendientes" value="sin_cisterna">
+                            Sin cisterna
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="pendientes" value="otro">
+                            Otro
+                        </label>
+                    </div>
+                </div>
+
+            </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="fecha">Fecha *</label>
@@ -130,17 +169,6 @@
                 <div class="form-group">
                     <label for="hora">Hora *</label>
                     <input type="time" id="hora" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="capacidadCisterna">Capacidad Cisterna (GL) *</label>
-                    <input type="number" id="capacidadCisterna" required>
-                </div>
-                <div class="form-group">
-                    <label for="placaCisterna">Placa Cisterna * NOTA: SI ES LA MISMA PLACA PONER 0</label>
-                    <input type="text" id="placaCisterna" required placeholder="ABC-123">
                 </div>
             </div>
 
