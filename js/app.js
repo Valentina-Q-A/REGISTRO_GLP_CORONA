@@ -35,6 +35,7 @@ const controls = [
 document.addEventListener('DOMContentLoaded', function() {
     initializeControls();
     initializeCisterna();
+    initializeOtroPendiente();
     setCurrentDateTime();
     updateSummary();
     initializeForm();
@@ -302,16 +303,48 @@ function initializeForm() {
     });
 }
 
+function initializeOtroPendiente() {
+
+    const checkbox = document.getElementById('pendienteOtro');
+    const container = document.getElementById('otroPendienteContainer');
+    const input = document.getElementById('otroPendiente');
+
+    if (!checkbox || !container || !input) {
+        return;
+    }
+
+    function updateState() {
+
+        const enabled = checkbox.checked;
+
+        container.style.display = enabled ? '' : 'none';
+        input.disabled = !enabled;
+        input.required = enabled;
+
+        if (!enabled) {
+            input.value = '';
+        }
+    }
+
+    checkbox.addEventListener('change', updateState);
+
+    // Estado inicial
+    updateState();
+}
+
 function collectFormData() {
     const pendientes = Array.from(
         document.querySelectorAll('input[name="pendientes"]:checked')
         ).map(input => input.value);
+    const otroPendiente = document.getElementById('otroPendiente').value.trim();
+
     return {
         Fecha: document.getElementById('fecha').value,
         Hora: document.getElementById('hora').value,
         CisternaHabilitada: document.getElementById('cisternaHabilitada').checked,
         EstadoOperacion: document.getElementById('estadoOperacion').value,
         Pendientes: pendientes,
+        OtroPendiente: otroPendiente,
         NivelTanque: document.getElementById('nivelTanque').value,
         PresionTanque: document.getElementById('presionTanque').value,
         TempTanque: document.getElementById('tempTanque').value,

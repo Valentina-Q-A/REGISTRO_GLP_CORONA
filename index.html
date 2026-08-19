@@ -153,10 +153,20 @@
                             Sin cisterna
                         </label>
 
-                        <label>
-                            <input type="checkbox" name="pendientes" value="otro">
+                       <label>
+                            <input type="checkbox" id="pendienteOtro" name="pendientes" value="otro">
                             Otro
                         </label>
+
+                        <div id="otroPendienteContainer" class="otro-pendiente-container" style="display: none;">
+                            <label for="otroPendiente">Descripción del pendiente</label>
+                            <input
+                                type="text"
+                                id="otroPendiente"
+                                placeholder="Describa la novedad"
+                                disabled
+                            >
+                        </div>
                     </div>
                 </div>
 
