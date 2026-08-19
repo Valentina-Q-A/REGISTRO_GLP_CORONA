@@ -362,6 +362,46 @@ function collectFormData() {
     };
 }
 
+function buildRecord(data) {
+    return {
+        Fecha: data.Fecha,
+        Hora: data.Hora,
+
+        EstadoOperacion: data.EstadoOperacion,
+
+        Pendientes: data.Pendientes,
+        OtroPendiente: data.OtroPendiente,
+
+        CisternaHabilitada: data.CisternaHabilitada,
+
+        Variables: {
+            NivelTanque: Number(data.NivelTanque),
+            PresionTanque: Number(data.PresionTanque),
+            TempTanque: Number(data.TempTanque),
+
+            PresionBomba: Number(data.PresionBomba),
+
+            TempVapor: Number(data.TempVapor),
+            PresionVapor: Number(data.PresionVapor),
+
+            PresionMezcla: Number(data.PresionMezcla)
+        },
+
+        Cisterna: data.CisternaHabilitada
+            ? {
+                Nivel: Number(data.NivelCisterna),
+                Presion: Number(data.PresionCisterna),
+                Temperatura: Number(data.TempCisterna),
+                Capacidad: Number(data.CapacidadCisterna),
+                Placa: data.PlacaCisterna
+            }
+            : null,
+
+        Encargado: data.Encargado,
+        Observaciones: data.Observaciones
+    };
+}
+
 function createVariablePayload(value, data) {
     return {
         value: Number(value),
@@ -605,7 +645,8 @@ window.appFunctions = {
     resetForm,
     collectFormData,
     testServerConnection,
-    buildPayload
+    buildPayload,
+    buildRecord
 };
 
 function abrirHistorico(){
