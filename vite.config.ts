@@ -10,10 +10,22 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+
   resolve: {
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+
+  server: {
+    proxy: {
+      '/save': 'http://localhost:3000',
+      '/registros': 'http://localhost:3000',
+      '/historial': 'http://localhost:3000',
+      '/ultimo-registro': 'http://localhost:3000',
+      '/exportar': 'http://localhost:3000',
+      '/health': 'http://localhost:3000',
     },
   },
 

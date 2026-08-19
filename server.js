@@ -138,9 +138,7 @@ app.post('/save', (req, res) => {
         data.FechaServidor = new Date().toLocaleString('es-CO');
 
         saveRecord(data);
-
-        sendToUbidots(data);
-
+        /*sendToUbidots(data);*/
         res.status(200).json({
             success: true,
             message: "Registro guardado correctamente"

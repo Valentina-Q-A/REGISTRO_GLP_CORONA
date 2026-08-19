@@ -149,94 +149,83 @@ function setCurrentDateTime() {
 // ============================================
 // RESUMEN DE DATOS
 // ============================================
-
-
 async function updateSummary() {
 
-    const TOKEN = UBIDOTS_TOKEN;
-    // lista de variables
-    const variables = [
-        "nivel_tanque",
-        "presion_tanque",
-        "temp_tanque",
-        "nivel_cisterna",
-        "presion_cisterna",
-        "temp_cisterna",
-        "capacidad_cisterna",
-        "presion_bomba",
-        "temp_vapor",
-        "presion_vapor",
-        "presion_mezcla"
-    ];
+    try {
 
-    let datos = {};
+        const response = await fetch('/ultimo-registro');
 
-    //traer todas las variables
-    for (let v of variables) {
-
-        const res = await fetch(
-            `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}/${v}/values?page_size=1`,
-            {
-                headers: { "X-Auth-Token": TOKEN }
-            }
-        );
-
-        const data = await res.json();
-
-        if (data.results && data.results.length > 0) {
-            datos[v] = data.results[0];
-        } else {
-            datos[v] = { value: "", context: {} };
+        if (!response.ok) {
+            throw new Error('No se pudo obtener el último registro');
         }
+
+        const last = await response.json();
+
+        if (!last) {
+            document.getElementById('summaryDisplay').innerHTML =
+                '<p>No hay registros anteriores</p>';
+            return;
+        }
+
+        document.getElementById('summaryDisplay').innerHTML = `
+        <table class="registro-table">
+        <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado de operación</th>
+            <th>Pendientes</th>
+            <th>Otro pendiente</th>
+            <th>Nivel Tanque</th>
+            <th>Presión Tanque</th>
+            <th>Temp Tanque</th>
+            <th>Nivel Cisterna</th>
+            <th>Presión Cisterna</th>
+            <th>Temp Cisterna</th>
+            <th>Capacidad Cisterna</th>
+            <th>Placa Cisterna</th>
+            <th>Presión Bomba</th>
+            <th>Temp Vapor</th>
+            <th>Presión Vapor</th>
+            <th>Presión Mezcla</th>
+            <th>Observaciones</th>
+            <th>Encargado</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+            <td>${last.Fecha || ""}</td>
+            <td>${last.Hora || ""}</td>
+            <td>${last.EstadoOperacion || ""}</td>
+            <td>${Array.isArray(last.Pendientes) ? last.Pendientes.join(", ") : ""}</td>
+            <td>${last.OtroPendiente || ""}</td>
+            <td>${last.Variables?.NivelTanque ?? ""}</td>
+            <td>${last.Variables?.PresionTanque ?? ""}</td>
+            <td>${last.Variables?.TempTanque ?? ""}</td>
+            <td>${last.Cisterna?.Nivel ?? ""}</td>
+            <td>${last.Cisterna?.Presion ?? ""}</td>
+            <td>${last.Cisterna?.Temperatura ?? ""}</td>
+            <td>${last.Cisterna?.Capacidad ?? ""}</td>
+            <td>${last.Cisterna?.Placa ?? ""}</td>
+            <td>${last.Variables?.PresionBomba ?? ""}</td>
+            <td>${last.Variables?.TempVapor ?? ""}</td>
+            <td>${last.Variables?.PresionVapor ?? ""}</td>
+            <td>${last.Variables?.PresionMezcla ?? ""}</td>
+            <td>${last.Observaciones || ""}</td>
+            <td>${last.Encargado || ""}</td>
+        </tr>
+        </tbody>
+        </table>
+        `;
+
+    } catch (err) {
+
+        console.error("Error cargando último registro:", err);
+
+        document.getElementById('summaryDisplay').innerHTML =
+            '<p>Error cargando el último registro</p>';
     }
-
-    //usamos el context de una sola (todas son iguales)
-    const ctx = datos["nivel_tanque"].context || {};
-
-    document.getElementById("summaryDisplay").innerHTML = `
-    <table class="registro-table">
-    <thead>
-    <tr>
-        <th>Fecha</th>
-        <th>Hora</th>
-        <th>NivelTanque</th>
-        <th>PresionTanque</th>
-        <th>TempTanque</th>
-        <th>NivelCisterna</th>
-        <th>PresionCisterna</th>
-        <th>TempCisterna</th>
-        <th>CapacidadCisterna</th>
-        <th>PlacaCisterna</th>
-        <th>PresionBomba</th>
-        <th>TempVapor</th>
-        <th>PresionVapor</th>
-        <th>PresionMezcla</th>
-        <th>Observaciones</th>
-        <th>Encargado</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>${ctx.Fecha || ""}</td>
-        <td>${ctx.Hora || ""}</td>
-        <td>${datos.nivel_tanque.value || ""}</td>
-        <td>${datos.presion_tanque.value || ""}</td>
-        <td>${datos.temp_tanque.value || ""}</td>
-        <td>${datos.nivel_cisterna.value || ""}</td>
-        <td>${datos.presion_cisterna.value || ""}</td>
-        <td>${datos.temp_cisterna.value || ""}</td>
-        <td>${datos.capacidad_cisterna.value || ""}</td>
-        <td>${ctx.PlacaCisterna || ""}</td>
-        <td>${datos.presion_bomba.value || ""}</td>
-        <td>${datos.temp_vapor.value || ""}</td>
-        <td>${datos.presion_vapor.value || ""}</td>
-        <td>${datos.presion_mezcla.value || ""}</td>
-        <td>${ctx.Observaciones || ""}</td>
-        <td>${ctx.Encargado || ""}</td>
-    </tr>
-    </tbody>
-    </table>
-    `;
 }
 
 function resetForm() {
@@ -457,52 +446,38 @@ function buildPayload(data) {
 }
 
 async function saveData(data) {
-    const payload = buildPayload(data);
+    console.log("Registro preparado:", data);
 
-    console.log("Payload preparado:", payload);
+    try {
+        const response = await fetch("/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
 
-    /*
-    const response = await fetch(
-    `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}`,
-    {
-        method: "POST",
-        headers: {
-        "Content-Type": "application/json",
-        "X-Auth-Token": UBIDOTS_TOKEN
-    },
+        const result = await response.json();
 
-    body: JSON.stringify(payload)
+        if (!response.ok) {
+            throw new Error(result.message || "Error guardando el registro");
+        }
 
-    }
-);
-*/
+        console.log("Registro guardado:", result);
 
-/*if(response.ok){
+        showAlert("Registro guardado correctamente", "success");
 
-showAlert("Registro enviado a Ubidots", "success");
-
-}else{
-
-showAlert("Error enviando datos", "error");
-
-}
-
-}*/
-
-    if(response.ok){
-
-        showAlert("Registro enviado a Ubidots", "success");
-
-        // actualización inmediata (UX pro)
+        // Actualizar el resumen local inmediatamente
         updateSummaryLocal(data);
 
-        // luego sincronizas con Ubidots
-        setTimeout(() => {
-            updateSummary();
-        }, 1500);
+        return result;
 
+    } catch (error) {
+        console.error("Error guardando registro:", error);
+        showAlert("Error guardando el registro", "error");
+
+        throw error;
     }
-    return payload;
 }
 
 // ============================================
