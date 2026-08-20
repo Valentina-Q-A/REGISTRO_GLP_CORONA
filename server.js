@@ -31,25 +31,77 @@ const excelFilePath = path.join(__dirname, 'registros.xlsx');
 // ============================================
 
 function saveRecord(record) {
+
     let workbook;
     let worksheet;
+    let data = [];
+
+    // ============================================
+    // CONVERTIR REGISTRO ESTRUCTURADO A FILA PLANA
+    // ============================================
+
+    const flatRecord = {
+        Fecha: record.Fecha,
+        Hora: record.Hora,
+
+        EstadoOperacion: record.EstadoOperacion,
+
+        Pendientes: Array.isArray(record.Pendientes)
+            ? record.Pendientes.join(", ")
+            : "",
+
+        OtroPendiente: record.OtroPendiente || "",
+
+        CisternaHabilitada: record.CisternaHabilitada,
+
+        NivelTanque: record.Variables?.NivelTanque ?? "",
+        PresionTanque: record.Variables?.PresionTanque ?? "",
+        TempTanque: record.Variables?.TempTanque ?? "",
+
+        PresionBomba: record.Variables?.PresionBomba ?? "",
+        TempVapor: record.Variables?.TempVapor ?? "",
+        PresionVapor: record.Variables?.PresionVapor ?? "",
+        PresionMezcla: record.Variables?.PresionMezcla ?? "",
+
+        NivelCisterna: record.Cisterna?.Nivel ?? "",
+        PresionCisterna: record.Cisterna?.Presion ?? "",
+        TempCisterna: record.Cisterna?.Temperatura ?? "",
+        CapacidadCisterna: record.Cisterna?.Capacidad ?? "",
+        PlacaCisterna: record.Cisterna?.Placa ?? "",
+
+        Observaciones: record.Observaciones || "",
+        Encargado: record.Encargado || "",
+        FechaServidor: record.FechaServidor || ""
+    };
+
+    // ============================================
+    // CARGAR HISTÓRICO EXISTENTE
+    // ============================================
 
     if (fs.existsSync(excelFilePath)) {
 
         workbook = XLSX.readFile(excelFilePath);
         worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-        let data = XLSX.utils.sheet_to_json(worksheet);
-        data.push(record);
+        data = XLSX.utils.sheet_to_json(worksheet);
 
-        worksheet = XLSX.utils.json_to_sheet(data, { skipHeader: false });
+        data.push(flatRecord);
+
+        worksheet = XLSX.utils.json_to_sheet(data);
+
         workbook.Sheets[workbook.SheetNames[0]] = worksheet;
 
     } else {
 
         workbook = XLSX.utils.book_new();
-        worksheet = XLSX.utils.json_to_sheet([record]);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Registros');
+
+        worksheet = XLSX.utils.json_to_sheet([flatRecord]);
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            'Registros'
+        );
     }
 
     XLSX.writeFile(workbook, excelFilePath);
@@ -58,8 +110,6 @@ function saveRecord(record) {
 // ============================================
 // ENVIAR DATOS A UBIDOTS
 // ============================================
-
-
 
 async function sendToUbidots(data){
 
@@ -125,6 +175,9 @@ console.error("Error enviando a Ubidots:",err);
 app.post('/save', (req, res) => {
 
     const data = req.body;
+
+    console.log("DATOS RECIBIDOS EN /save:");
+    console.log(JSON.stringify(data, null, 2));
 
     if (!data) {
         return res.status(400).json({
@@ -216,9 +269,66 @@ app.get('/ultimo-registro', (req, res) => {
         return res.json(null);
     }
 
-    const ultimoRegistro = data[data.length - 1];
+    const ultimo = data[data.length - 1];
 
-    res.json(ultimoRegistro);
+    // ============================================
+    // RECONSTRUIR REGISTRO ESTRUCTURADO
+    // ============================================
+
+    const pendientes = ultimo.Pendientes
+        ? String(ultimo.Pendientes)
+            .split(",")
+            .map(p => p.trim())
+            .filter(Boolean)
+        : [];
+
+    const cisternaHabilitada =
+        ultimo.CisternaHabilitada === true ||
+        ultimo.CisternaHabilitada === "true";
+
+    const registro = {
+
+        Fecha: ultimo.Fecha ?? "",
+        Hora: ultimo.Hora ?? "",
+
+        EstadoOperacion: ultimo.EstadoOperacion ?? "",
+
+        Pendientes: pendientes,
+
+        OtroPendiente: ultimo.OtroPendiente ?? "",
+
+        CisternaHabilitada: cisternaHabilitada,
+
+        Variables: {
+            NivelTanque: ultimo.NivelTanque ?? "",
+            PresionTanque: ultimo.PresionTanque ?? "",
+            TempTanque: ultimo.TempTanque ?? "",
+
+            PresionBomba: ultimo.PresionBomba ?? "",
+
+            TempVapor: ultimo.TempVapor ?? "",
+            PresionVapor: ultimo.PresionVapor ?? "",
+            PresionMezcla: ultimo.PresionMezcla ?? ""
+        },
+
+        Cisterna: cisternaHabilitada
+            ? {
+                Nivel: ultimo.NivelCisterna ?? "",
+                Presion: ultimo.PresionCisterna ?? "",
+                Temperatura: ultimo.TempCisterna ?? "",
+                Capacidad: ultimo.CapacidadCisterna ?? "",
+                Placa: ultimo.PlacaCisterna ?? ""
+            }
+            : null,
+
+        Observaciones: ultimo.Observaciones ?? "",
+
+        Encargado: ultimo.Encargado ?? "",
+
+        FechaServidor: ultimo.FechaServidor ?? ""
+    };
+
+    res.json(registro);
 });
 
 async function loadLastRecord() {
