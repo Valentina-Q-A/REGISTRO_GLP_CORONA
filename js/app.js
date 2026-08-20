@@ -167,56 +167,356 @@ async function updateSummary() {
             return;
         }
 
-        document.getElementById('summaryDisplay').innerHTML = `
-        <table class="registro-table">
-        <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estado de operación</th>
-            <th>Pendientes</th>
-            <th>Otro pendiente</th>
-            <th>Nivel Tanque</th>
-            <th>Presión Tanque</th>
-            <th>Temp Tanque</th>
-            <th>Nivel Cisterna</th>
-            <th>Presión Cisterna</th>
-            <th>Temp Cisterna</th>
-            <th>Capacidad Cisterna</th>
-            <th>Placa Cisterna</th>
-            <th>Presión Bomba</th>
-            <th>Temp Vapor</th>
-            <th>Presión Vapor</th>
-            <th>Presión Mezcla</th>
-            <th>Observaciones</th>
-            <th>Encargado</th>
-        </tr>
-        </thead>
+const estadoLabels = {
+    inicia_trasego: "Inicia trasego",
+    finaliza_trasego: "Finaliza trasego",
+    sin_novedad: "Sin novedad"
+};
 
-        <tbody>
-        <tr>
-            <td>${last.Fecha || ""}</td>
-            <td>${last.Hora || ""}</td>
-            <td>${last.EstadoOperacion || ""}</td>
-            <td>${Array.isArray(last.Pendientes) ? last.Pendientes.join(", ") : ""}</td>
-            <td>${last.OtroPendiente || ""}</td>
-            <td>${last.Variables?.NivelTanque ?? ""}</td>
-            <td>${last.Variables?.PresionTanque ?? ""}</td>
-            <td>${last.Variables?.TempTanque ?? ""}</td>
-            <td>${last.Cisterna?.Nivel ?? ""}</td>
-            <td>${last.Cisterna?.Presion ?? ""}</td>
-            <td>${last.Cisterna?.Temperatura ?? ""}</td>
-            <td>${last.Cisterna?.Capacidad ?? ""}</td>
-            <td>${last.Cisterna?.Placa ?? ""}</td>
-            <td>${last.Variables?.PresionBomba ?? ""}</td>
-            <td>${last.Variables?.TempVapor ?? ""}</td>
-            <td>${last.Variables?.PresionVapor ?? ""}</td>
-            <td>${last.Variables?.PresionMezcla ?? ""}</td>
-            <td>${last.Observaciones || ""}</td>
-            <td>${last.Encargado || ""}</td>
-        </tr>
-        </tbody>
-        </table>
+const pendienteLabels = {
+    bomba_1_apagada: "Bomba 1 apagada",
+    bomba_2_apagada: "Bomba 2 apagada",
+    sin_cisterna: "Sin cisterna"
+};
+
+const estadoOperacion =
+    estadoLabels[last.EstadoOperacion] || last.EstadoOperacion || "";
+
+const pendientes = Array.isArray(last.Pendientes)
+    ? last.Pendientes
+        .filter(p => p !== "otro")
+        .map(p => pendienteLabels[p] || p)
+    : [];
+
+if (last.Pendientes?.includes("otro") && last.OtroPendiente) {
+    pendientes.push(last.OtroPendiente);
+}
+
+const pendientesHTML = pendientes.length
+    ? pendientes.map(p => `<div class="pending-item">${p}</div>`).join("")
+    : `<div class="pending-none">Sin pendientes</div>`;
+
+document.getElementById('summaryDisplay').innerHTML = `
+    <div class="summary-panel">
+
+        <div class="summary-header">
+            <h3>Último registro</h3>
+            <span>${last.Fecha || ""} · ${last.Hora || ""}</span>
+        </div>
+
+        <div class="summary-section">
+            <h4>Estado de operación</h4>
+            <div class="operation-status">
+                ${estadoOperacion}
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h4>Pendientes</h4>
+            <div class="pending-list">
+                ${pendientesHTML}
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h4>Variables de operación</h4>
+
+            <div class="summary-grid">
+
+                <div>
+                    <span>Nivel tanque</span>
+                    <strong>${last.Variables?.NivelTanque ?? ""} %</strong>
+                </div>
+
+                <div>
+                    <span>Presión tanque</span>
+                    <strong>${last.Variables?.PresionTanque ?? ""} PSI</strong>
+                </div>
+
+                <div>
+                    <span>Temperatura tanque</span>
+                    <strong>${last.Variables?.TempTanque ?? ""} °C</strong>
+                </div>
+
+                <div>
+                    <span>Presión bomba</span>
+                    <strong>${last.Variables?.PresionBomba ?? ""} PSI</strong>
+                </div>
+
+                <div>
+                    <span>Temperatura vapor</span>
+                    <strong>${last.Variables?.TempVapor ?? ""} °C</strong>
+                </div>
+
+                <div>
+                    <span>Presión vapor</span>
+                    <strong>${last.Variables?.PresionVapor ?? ""} PSI</strong>
+                </div>
+
+                <div>
+                    <span>Presión mezcla</span>
+                    <strong>${last.Variables?.PresionMezcla ?? ""} PSI</strong>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+`;
+
+} catch (err) {
+
+        console.error("Error cargando último registro:", err);
+
+        document.getElementById('summaryDisplay').innerHTML =
+            '<p>Error cargando el último registro</p>';
+    }
+}
+
+async function updateSummary() {
+
+    try {
+
+        const response = await fetch('/ultimo-registro');
+
+        if (!response.ok) {
+            throw new Error('No se pudo obtener el último registro');
+        }
+
+        const last = await response.json();
+
+        if (!last) {
+            document.getElementById('summaryDisplay').innerHTML =
+                '<p>No hay registros anteriores</p>';
+            return;
+        }
+
+        // ============================================
+        // TRADUCIR ESTADO DE OPERACIÓN
+        // ============================================
+
+        const estadoLabels = {
+            inicia_trasego: "Inicia trasego",
+            finaliza_trasego: "Finaliza trasego",
+            sin_novedad: "Sin novedad"
+        };
+
+        const pendienteLabels = {
+            bomba_1_apagada: "Bomba 1 apagada",
+            bomba_2_apagada: "Bomba 2 apagada",
+            sin_cisterna: "Sin cisterna"
+        };
+
+        const estadoOperacion =
+            estadoLabels[last.EstadoOperacion] ||
+            last.EstadoOperacion ||
+            "";
+
+        // ============================================
+        // PENDIENTES
+        // ============================================
+
+        const pendientes = Array.isArray(last.Pendientes)
+            ? last.Pendientes
+                .filter(p => p !== "otro")
+                .map(p => pendienteLabels[p] || p)
+            : [];
+
+        if (
+            Array.isArray(last.Pendientes) &&
+            last.Pendientes.includes("otro") &&
+            last.OtroPendiente
+        ) {
+            pendientes.push(last.OtroPendiente);
+        }
+
+        const pendientesHTML = pendientes.length
+            ? pendientes
+                .map(p => `<div class="pending-item">${p}</div>`)
+                .join("")
+            : `<div class="pending-none">Sin pendientes</div>`;
+
+        // ============================================
+        // CISTERNA
+        // ============================================
+
+        let cisternaHTML = "";
+
+        if (last.CisternaHabilitada && last.Cisterna) {
+
+            cisternaHTML = `
+                <div class="summary-section">
+
+                    <h4>Datos de cisterna</h4>
+
+                    <div class="summary-grid">
+
+                        <div>
+                            <span>Nivel cisterna</span>
+                            <strong>${last.Cisterna.Nivel ?? ""} %</strong>
+                        </div>
+
+                        <div>
+                            <span>Presión cisterna</span>
+                            <strong>${last.Cisterna.Presion ?? ""} PSI</strong>
+                        </div>
+
+                        <div>
+                            <span>Temperatura cisterna</span>
+                            <strong>${last.Cisterna.Temperatura ?? ""} °C</strong>
+                        </div>
+
+                        <div>
+                            <span>Capacidad cisterna</span>
+                            <strong>${last.Cisterna.Capacidad ?? ""}</strong>
+                        </div>
+
+                        <div>
+                            <span>Placa cisterna</span>
+                            <strong>${last.Cisterna.Placa ?? ""}</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+        }
+
+        // ============================================
+        // RESUMEN
+        // ============================================
+
+        document.getElementById('summaryDisplay').innerHTML = `
+
+            <div class="summary-panel">
+
+                <div class="summary-header">
+
+                    <h3>Último registro</h3>
+
+                    <span>
+                        ${last.Fecha || ""} · ${last.Hora || ""}
+                    </span>
+
+                </div>
+
+                <!-- ESTADO -->
+
+                <div class="summary-section">
+
+                    <h4>Estado de operación</h4>
+
+                    <div class="operation-status">
+                        ${estadoOperacion}
+                    </div>
+
+                </div>
+
+                <!-- PENDIENTES -->
+
+                <div class="summary-section">
+
+                    <h4>Pendientes</h4>
+
+                    <div class="pending-list">
+                        ${pendientesHTML}
+                    </div>
+
+                </div>
+
+                <!-- VARIABLES PRINCIPALES -->
+
+                <div class="summary-section">
+
+                    <h4>Variables de operación</h4>
+
+                    <div class="summary-grid">
+
+                        <div>
+                            <span>Nivel tanque</span>
+                            <strong>
+                                ${last.Variables?.NivelTanque ?? ""} %
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Presión tanque</span>
+                            <strong>
+                                ${last.Variables?.PresionTanque ?? ""} PSI
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Temperatura tanque</span>
+                            <strong>
+                                ${last.Variables?.TempTanque ?? ""} °C
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Presión bomba</span>
+                            <strong>
+                                ${last.Variables?.PresionBomba ?? ""} PSI
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Temperatura vapor</span>
+                            <strong>
+                                ${last.Variables?.TempVapor ?? ""} °C
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Presión vapor</span>
+                            <strong>
+                                ${last.Variables?.PresionVapor ?? ""} PSI
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Presión mezcla</span>
+                            <strong>
+                                ${last.Variables?.PresionMezcla ?? ""} PSI
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CISTERNA -->
+
+                ${cisternaHTML}
+
+                <!-- INFORMACIÓN DEL REGISTRO -->
+
+                <div class="summary-section">
+
+                    <h4>Información del registro</h4>
+
+                    <div class="summary-grid">
+
+                        <div>
+                            <span>Encargado</span>
+                            <strong>
+                                ${last.Encargado || ""}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Observaciones</span>
+                            <strong>
+                                ${last.Observaciones || ""}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
         `;
 
     } catch (err) {
@@ -224,7 +524,7 @@ async function updateSummary() {
         console.error("Error cargando último registro:", err);
 
         document.getElementById('summaryDisplay').innerHTML =
-            '<p>Error cargando el último registro</p>';
+            '<p>No se pudo cargar el último registro</p>';
     }
 }
 
@@ -446,7 +746,10 @@ function buildPayload(data) {
 }
 
 async function saveData(data) {
-    console.log("Registro preparado:", data);
+
+    const record = buildRecord(data);
+
+    console.log("Registro preparado:", record);
 
     try {
         const response = await fetch("/save", {
@@ -454,7 +757,7 @@ async function saveData(data) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(record)
         });
 
         const result = await response.json();
@@ -468,7 +771,7 @@ async function saveData(data) {
         showAlert("Registro guardado correctamente", "success");
 
         // Actualizar el resumen local inmediatamente
-        updateSummaryLocal(data);
+        updateSummaryLocal(record);
 
         return result;
 
@@ -479,7 +782,6 @@ async function saveData(data) {
         throw error;
     }
 }
-
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
