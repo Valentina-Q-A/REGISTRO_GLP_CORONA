@@ -12,20 +12,10 @@ const UBIDOTS_TOKEN = "BBUS-etSh1XzuTj9VZAJIuZLswp9CPxFBTM";
 
 const DEVICE = "planta-glp";
 
+let ultimoRegistro = null;
 
 // Configuración de controles y sus valores
-const controls = [
-    VARIABLES.nivel_tanque,
-    VARIABLES.presion_tanque,
-    VARIABLES.temp_tanque,
-    VARIABLES.nivel_cisterna,
-    VARIABLES.presion_cisterna,
-    VARIABLES.temp_cisterna,
-    VARIABLES.presion_bomba,
-    VARIABLES.temp_vapor,
-    VARIABLES.presion_vapor,
-    VARIABLES.presion_mezcla,
-];
+const controls = getVariablesByCategory("proceso");
 
 // ============================================
 // INICIALIZACIÓN
@@ -72,6 +62,7 @@ function initializeControls() {
             input.addEventListener('input', () => {
                 span.textContent = input.value + unit;
                 validarRango(input);
+                mostrarComparativo();
             });
 
             // Validar al cargar
@@ -161,129 +152,7 @@ async function updateSummary() {
 
         const last = await response.json();
 
-        if (!last) {
-            document.getElementById('summaryDisplay').innerHTML =
-                '<p>No hay registros anteriores</p>';
-            return;
-        }
-
-const estadoLabels = {
-    inicia_trasego: "Inicia trasego",
-    finaliza_trasego: "Finaliza trasego",
-    sin_novedad: "Sin novedad"
-};
-
-const pendienteLabels = {
-    bomba_1_apagada: "Bomba 1 apagada",
-    bomba_2_apagada: "Bomba 2 apagada",
-    sin_cisterna: "Sin cisterna"
-};
-
-const estadoOperacion =
-    estadoLabels[last.EstadoOperacion] || last.EstadoOperacion || "";
-
-const pendientes = Array.isArray(last.Pendientes)
-    ? last.Pendientes
-        .filter(p => p !== "otro")
-        .map(p => pendienteLabels[p] || p)
-    : [];
-
-if (last.Pendientes?.includes("otro") && last.OtroPendiente) {
-    pendientes.push(last.OtroPendiente);
-}
-
-const pendientesHTML = pendientes.length
-    ? pendientes.map(p => `<div class="pending-item">${p}</div>`).join("")
-    : `<div class="pending-none">Sin pendientes</div>`;
-
-document.getElementById('summaryDisplay').innerHTML = `
-    <div class="summary-panel">
-
-        <div class="summary-header">
-            <h3>Último registro</h3>
-            <span>${last.Fecha || ""} · ${last.Hora || ""}</span>
-        </div>
-
-        <div class="summary-section">
-            <h4>Estado de operación</h4>
-            <div class="operation-status">
-                ${estadoOperacion}
-            </div>
-        </div>
-
-        <div class="summary-section">
-            <h4>Pendientes</h4>
-            <div class="pending-list">
-                ${pendientesHTML}
-            </div>
-        </div>
-
-        <div class="summary-section">
-            <h4>Variables de operación</h4>
-
-            <div class="summary-grid">
-
-                <div>
-                    <span>Nivel tanque</span>
-                    <strong>${last.Variables?.NivelTanque ?? ""} %</strong>
-                </div>
-
-                <div>
-                    <span>Presión tanque</span>
-                    <strong>${last.Variables?.PresionTanque ?? ""} PSI</strong>
-                </div>
-
-                <div>
-                    <span>Temperatura tanque</span>
-                    <strong>${last.Variables?.TempTanque ?? ""} °C</strong>
-                </div>
-
-                <div>
-                    <span>Presión bomba</span>
-                    <strong>${last.Variables?.PresionBomba ?? ""} PSI</strong>
-                </div>
-
-                <div>
-                    <span>Temperatura vapor</span>
-                    <strong>${last.Variables?.TempVapor ?? ""} °C</strong>
-                </div>
-
-                <div>
-                    <span>Presión vapor</span>
-                    <strong>${last.Variables?.PresionVapor ?? ""} PSI</strong>
-                </div>
-
-                <div>
-                    <span>Presión mezcla</span>
-                    <strong>${last.Variables?.PresionMezcla ?? ""} PSI</strong>
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-`;
-
-} catch (err) {
-
-        console.error("Error cargando último registro:", err);
-
-        document.getElementById('summaryDisplay').innerHTML =
-            '<p>Error cargando el último registro</p>';
-    }
-}
-
-async function updateSummary() {
-
-    try {
-
-        const response = await fetch('/ultimo-registro');
-
-        if (!response.ok) {
-            throw new Error('No se pudo obtener el último registro');
-        }
-
-        const last = await response.json();
+        ultimoRegistro = last;
 
         if (!last) {
             document.getElementById('summaryDisplay').innerHTML =
@@ -526,6 +395,146 @@ async function updateSummary() {
         document.getElementById('summaryDisplay').innerHTML =
             '<p>No se pudo cargar el último registro</p>';
     }
+}
+
+function mostrarComparativo() {
+
+    if (!ultimoRegistro) {
+        return;
+    }
+
+    const variables = [
+        {
+            key: "NivelTanque",
+            label: "Nivel tanque",
+            unit: "%"
+        },
+        {
+            key: "PresionTanque",
+            label: "Presión tanque",
+            unit: "PSI"
+        },
+        {
+            key: "TempTanque",
+            label: "Temperatura tanque",
+            unit: "°C"
+        },
+        {
+            key: "PresionBomba",
+            label: "Presión bomba",
+            unit: "PSI"
+        },
+        {
+            key: "TempVapor",
+            label: "Temperatura vapor",
+            unit: "°C"
+        },
+        {
+            key: "PresionVapor",
+            label: "Presión vapor",
+            unit: "PSI"
+        },
+        {
+            key: "PresionMezcla",
+            label: "Presión mezcla",
+            unit: "PSI"
+        }
+    ];
+
+    const filas = variables.map(variable => {
+
+        const input = document.getElementById(
+            variable.key.charAt(0).toLowerCase() + variable.key.slice(1)
+        );
+
+        const actual = input ? input.value : "";
+        const anterior =
+            ultimoRegistro.Variables?.[variable.key] ?? "";
+
+        const actualNumero = parseFloat(actual);
+        const anteriorNumero = parseFloat(anterior);
+
+        let diferencia = "";
+        let claseCambio = "";
+
+        if (!isNaN(actualNumero) && !isNaN(anteriorNumero)) {
+
+            const cambio = actualNumero - anteriorNumero;
+
+            if (cambio > 0) {
+                diferencia = `+${cambio}`;
+                claseCambio = "change-positive";
+            } else if (cambio < 0) {
+                diferencia = `${cambio}`;
+                claseCambio = "change-negative";
+            } else {
+                diferencia = "0";
+                claseCambio = "change-neutral";
+            }
+        }
+
+        return `
+            <tr>
+                <td>${variable.label}</td>
+
+                <td>
+                    ${actual} ${variable.unit}
+                </td>
+
+                <td>
+                    ${anterior} ${variable.unit}
+                </td>
+
+                <td class="${claseCambio}">
+                    ${diferencia} ${variable.unit}
+                </td>
+            </tr>
+        `;
+
+    }).join("");
+
+    document.getElementById("summaryDisplay").innerHTML = `
+
+        <div class="summary-panel">
+
+            <div class="summary-header">
+
+                <h3>Comparación con último registro</h3>
+
+                <span>
+                    ${ultimoRegistro.Fecha || ""} ·
+                    ${ultimoRegistro.Hora || ""}
+                </span>
+
+            </div>
+
+            <div class="summary-section">
+
+                <div class="table-container">
+
+                    <table class="registro-table comparativo-table">
+
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Actual</th>
+                                <th>Último registro</th>
+                                <th>Cambio</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            ${filas}
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
 }
 
 function resetForm() {
@@ -785,52 +794,11 @@ async function saveData(data) {
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
-function updateSummaryLocal(data){
+function updateSummaryLocal(data) {
 
-    document.getElementById("summaryDisplay").innerHTML = `
-    <table class="registro-table">
-    <thead>
-    <tr>
-        <th>Fecha</th>
-        <th>Hora</th>
-        <th>NivelTanque</th>
-        <th>PresionTanque</th>
-        <th>TempTanque</th>
-        <th>NivelCisterna</th>
-        <th>PresionCisterna</th>
-        <th>TempCisterna</th>
-        <th>CapacidadCisterna</th>
-        <th>PlacaCisterna</th>
-        <th>PresionBomba</th>
-        <th>TempVapor</th>
-        <th>PresionVapor</th>
-        <th>PresionMezcla</th>
-        <th>Observaciones</th>
-        <th>Encargado</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>${data.Fecha}</td>
-        <td>${data.Hora}</td>
-        <td>${data.NivelTanque}</td>
-        <td>${data.PresionTanque}</td>
-        <td>${data.TempTanque}</td>
-        <td>${data.NivelCisterna}</td>
-        <td>${data.PresionCisterna}</td>
-        <td>${data.TempCisterna}</td>
-        <td>${data.CapacidadCisterna}</td>
-        <td>${data.PlacaCisterna}</td>
-        <td>${data.PresionBomba}</td>
-        <td>${data.TempVapor}</td>
-        <td>${data.PresionVapor}</td>
-        <td>${data.PresionMezcla}</td>
-        <td>${data.Observaciones}</td>
-        <td>${data.Encargado}</td>
-    </tr>
-    </tbody>
-    </table>
-    `;
+    // Después de guardar, el registro recién creado
+    // pasa a ser el último registro.
+    updateSummary();
 }
 
 
