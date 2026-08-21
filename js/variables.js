@@ -396,6 +396,30 @@ function readVariables(category = null) {
     return data;
 }
 
+function groupVariablesByCategory(data) {
+
+    const grouped = {};
+
+    for (const [name, value] of Object.entries(data)) {
+
+        const variable = VARIABLES[name];
+
+        if (!variable) {
+            continue;
+        }
+
+        const category = variable.category;
+
+        if (!grouped[category]) {
+            grouped[category] = {};
+        }
+
+        grouped[category][name] = value;
+    }
+
+    return grouped;
+}
+
 function getVariablesByCategory(category) {
     return Object.entries(VARIABLES)
         .filter(([, variable]) => variable.category === category)
@@ -420,6 +444,7 @@ if (typeof module !== "undefined" && module.exports) {
         getVariablesByCategory,
         variableExists,
         readVariable,
-        readVariables
+        readVariables,
+        groupVariablesByCategory
     };
 }
