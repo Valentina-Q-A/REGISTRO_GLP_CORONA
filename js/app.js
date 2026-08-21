@@ -403,54 +403,13 @@ function mostrarComparativo() {
         return;
     }
 
-    const variables = [
-        {
-            key: "NivelTanque",
-            label: "Nivel tanque",
-            unit: "%"
-        },
-        {
-            key: "PresionTanque",
-            label: "Presión tanque",
-            unit: "PSI"
-        },
-        {
-            key: "TempTanque",
-            label: "Temperatura tanque",
-            unit: "°C"
-        },
-        {
-            key: "PresionBomba",
-            label: "Presión bomba",
-            unit: "PSI"
-        },
-        {
-            key: "TempVapor",
-            label: "Temperatura vapor",
-            unit: "°C"
-        },
-        {
-            key: "PresionVapor",
-            label: "Presión vapor",
-            unit: "PSI"
-        },
-        {
-            key: "PresionMezcla",
-            label: "Presión mezcla",
-            unit: "PSI"
-        }
-    ];
+    const variables = getVariablesByCategory("proceso");
 
     const filas = variables.map(variable => {
 
-        const input = document.getElementById(
-            variable.key.charAt(0).toLowerCase() + variable.key.slice(1)
-        );
-
+        const input = document.getElementById(variable.field);
         const actual = input ? input.value : "";
-        const anterior =
-            ultimoRegistro.Variables?.[variable.key] ?? "";
-
+        const anterior = ultimoRegistro.Variables?.[variable.excelField] ?? "";
         const actualNumero = parseFloat(actual);
         const anteriorNumero = parseFloat(anterior);
 
