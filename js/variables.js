@@ -289,6 +289,62 @@ function getVariable(nombre) {
     return VARIABLES[nombre] || null;
 }
 
+function readVariable(variable) {
+
+    if (!variable || !variable.field) {
+        return null;
+    }
+
+    switch (variable.control) {
+
+        case "number":
+        case "text":
+        case "textarea":
+        case "select": {
+            const element = document.getElementById(variable.field);
+
+            return element ? element.value : "";
+        }
+
+        case "toggle": {
+            const element = document.getElementById(variable.field);
+
+            return element ? element.checked : false;
+        }
+
+        case "checkbox": {
+            const elements = document.querySelectorAll(
+                `input[name="${variable.field}"]:checked`
+            );
+
+            return Array.from(elements).map(element => element.value);
+        }
+
+        default:
+            console.warn(
+                `Control no soportado para la variable "${variable.field}":`,
+                variable.control
+            );
+
+            return null;
+    }
+}
+
+function readVariables(category = null) {
+
+    const variables = category
+        ? getVariablesByCategory(category)
+        : Object.values(VARIABLES);
+
+    const data = {};
+
+    for (const variable of variables) {
+        data[variable.name] = readVariable(variable);
+    }
+
+    return data;
+}
+
 function getVariablesByCategory(category) {
     return Object.entries(VARIABLES)
         .filter(([, variable]) => variable.category === category)
@@ -311,6 +367,8 @@ if (typeof module !== "undefined" && module.exports) {
         VARIABLES,
         getVariable,
         getVariablesByCategory,
-        variableExists
+        variableExists,
+        readVariable,
+        readVariables
     };
 }
