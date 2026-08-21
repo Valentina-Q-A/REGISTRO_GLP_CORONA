@@ -84,7 +84,8 @@ const VARIABLES = {
         min: 0,
         max: 100,
         step: 1,
-        defaultValue: 0
+        defaultValue: 0,
+        dependsOn: "cisterna_habilitada"
     },
     presion_cisterna: {
         category: "proceso",
@@ -102,7 +103,8 @@ const VARIABLES = {
         min: 90,
         max: 140,
         step: 1,
-        defaultValue: 110
+        defaultValue: 110,
+        dependsOn: "cisterna_habilitada"
     },
     temp_cisterna: {
         category: "proceso",
@@ -120,7 +122,36 @@ const VARIABLES = {
         min: 16,
         max: 30,
         step: 1,
-        defaultValue: 22
+        defaultValue: 22,
+        dependsOn: "cisterna_habilitada"
+    },
+    capacidad_cisterna: {
+        category: "proceso",
+
+        type: "number",
+        control: "number",
+
+        field: "capacidadCisterna",
+        excelField: "CapacidadCisterna",
+
+        label: "Capacidad Cisterna (Gal)",
+        unit: " Gal",
+        min: 0,
+        step: 1,
+        dependsOn: "cisterna_habilitada"
+    },
+
+    placa_cisterna: {
+        category: "administrativo",
+
+        type: "text",
+        control: "text",
+
+        field: "placaCisterna",
+        excelField: "PlacaCisterna",
+
+        label: "Placa Cisterna",
+        dependsOn: "cisterna_habilitada"
     },
     presion_bomba: {
         category: "proceso",
