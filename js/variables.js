@@ -291,3 +291,16 @@ function getVariablesByCategory(category) {
 function variableExists(nombre) {
     return Object.prototype.hasOwnProperty.call(VARIABLES, nombre);
 }
+
+// ============================================
+// EXPORTACIÓN PARA NODE.JS
+// ============================================
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+        VARIABLES,
+        getVariable,
+        getVariablesByCategory,
+        variableExists
+    };
+}
