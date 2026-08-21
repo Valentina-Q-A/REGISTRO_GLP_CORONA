@@ -164,20 +164,8 @@ async function updateSummary() {
         // TRADUCIR ESTADO DE OPERACIÓN
         // ============================================
 
-        const estadoLabels = {
-            inicia_trasego: "Inicia trasego",
-            finaliza_trasego: "Finaliza trasego",
-            sin_novedad: "Sin novedad"
-        };
-
-        const pendienteLabels = {
-            bomba_1_apagada: "Bomba 1 apagada",
-            bomba_2_apagada: "Bomba 2 apagada",
-            sin_cisterna: "Sin cisterna"
-        };
-
         const estadoOperacion =
-            estadoLabels[last.EstadoOperacion] ||
+            ESTADOS_OPERACION[last.EstadoOperacion] ||
             last.EstadoOperacion ||
             "";
 
@@ -188,9 +176,8 @@ async function updateSummary() {
         const pendientes = Array.isArray(last.Pendientes)
             ? last.Pendientes
                 .filter(p => p !== "otro")
-                .map(p => pendienteLabels[p] || p)
-            : [];
-
+                .map(p => PENDIENTES[p] || p)
+                    : [];
         if (
             Array.isArray(last.Pendientes) &&
             last.Pendientes.includes("otro") &&
