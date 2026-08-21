@@ -363,14 +363,34 @@ function readVariable(variable) {
 
 function readVariables(category = null) {
 
-    const variables = category
-        ? getVariablesByCategory(category)
-        : Object.values(VARIABLES);
+    const entries = Object.entries(VARIABLES)
+        .filter(([, variable]) =>
+            !category || variable.category === category
+        );
 
     const data = {};
 
-    for (const variable of variables) {
-        data[variable.name] = readVariable(variable);
+    for (const [name, variable] of entries) {
+
+        if (variable.dependsOn) {
+
+            const dependency = getVariable(variable.dependsOn);
+
+            if (!dependency) {
+                console.warn(
+                    `Dependencia no encontrada: "${variable.dependsOn}" para "${name}"`
+                );
+                continue;
+            }
+
+            const dependencyValue = readVariable(dependency);
+
+            if (!dependencyValue) {
+                continue;
+            }
+        }
+
+        data[name] = readVariable(variable);
     }
 
     return data;
