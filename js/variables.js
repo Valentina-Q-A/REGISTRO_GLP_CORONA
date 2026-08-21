@@ -270,3 +270,24 @@ const VARIABLES = {
     }
 
 };
+
+// ============================================
+// CONSULTAS DEL CATÁLOGO DE VARIABLES
+// ============================================
+
+function getVariable(nombre) {
+    return VARIABLES[nombre] || null;
+}
+
+function getVariablesByCategory(category) {
+    return Object.entries(VARIABLES)
+        .filter(([nombre, variable]) => variable.category === category)
+        .map(([nombre, variable]) => ({
+            name: nombre,
+            ...variable
+        }));
+}
+
+function variableExists(nombre) {
+    return Object.prototype.hasOwnProperty.call(VARIABLES, nombre);
+}
