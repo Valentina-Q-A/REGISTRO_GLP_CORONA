@@ -281,7 +281,7 @@ function getVariable(nombre) {
 
 function getVariablesByCategory(category) {
     return Object.entries(VARIABLES)
-        .filter(([nombre, variable]) => variable.category === category)
+        .filter(([, variable]) => variable.category === category)
         .map(([nombre, variable]) => ({
             name: nombre,
             ...variable
