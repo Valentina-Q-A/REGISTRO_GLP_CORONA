@@ -11,6 +11,7 @@ const VARIABLES = {
         control: "number",
 
         field: "nivelTanque",
+        excelField: "NivelTanque",
         valueDisplay: "nivelTanqueValue",
 
         label: "Nivel Tanque",
@@ -28,6 +29,7 @@ const VARIABLES = {
         control: "number",
 
         field: "presionTanque",
+        excelField: "PresionTanque",
         valueDisplay: "presionTanqueValue",
 
         label: "Presión Tanque",
@@ -45,6 +47,7 @@ const VARIABLES = {
         control: "number",
 
         field: "tempTanque",
+        excelField: "TempTanque",
         valueDisplay: "tempTanqueValue",
 
         label: "Temperatura Tanque",
@@ -72,6 +75,7 @@ const VARIABLES = {
         control: "number",
 
         field: "nivelCisterna",
+        excelField: "NivelCisterna",
         valueDisplay: "nivelCisternaValue",
 
         label: "Nivel Cisterna",
@@ -89,6 +93,7 @@ const VARIABLES = {
         control: "number",
 
         field: "presionCisterna",
+        excelField: "PresionCisterna",
         valueDisplay: "presionCisternaValue",
 
         label: "Presión Cisterna",
@@ -106,6 +111,7 @@ const VARIABLES = {
         control: "number",
 
         field: "tempCisterna",
+        excelField: "TempCisterna",
         valueDisplay: "tempCisternaValue",
 
         label: "Temperatura Cisterna",
@@ -123,6 +129,7 @@ const VARIABLES = {
         control: "number",
 
         field: "presionBomba",
+        excelField: "PresionBomba",
         valueDisplay: "presionBombaValue",
 
         label: "Presión Bomba",
@@ -140,6 +147,7 @@ const VARIABLES = {
         control: "number",
 
         field: "tempVapor",
+        excelField: "TempVapor",
         valueDisplay: "tempVaporValue",
 
         label: "Temperatura Vapor",
@@ -157,6 +165,7 @@ const VARIABLES = {
         control: "number",
 
         field: "presionVapor",
+        excelField: "PresionVapor",
         valueDisplay: "presionVaporValue",
 
         label: "Presión Vapor",
@@ -174,6 +183,7 @@ const VARIABLES = {
         control: "number",
 
         field: "presionMezcla",
+        excelField: "PresionMezcla",
         valueDisplay: "presionMezclaValue",
 
         label: "Presión Mezcla",
