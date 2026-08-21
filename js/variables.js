@@ -5,6 +5,8 @@
 const VARIABLES = {
 
     nivel_tanque: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -20,6 +22,8 @@ const VARIABLES = {
         defaultValue: 50
     },
     presion_tanque: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -35,6 +39,8 @@ const VARIABLES = {
         defaultValue: 100
     },
     temp_tanque: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -50,6 +56,8 @@ const VARIABLES = {
         defaultValue: 19
     },
     cisterna_habilitada: {
+        category: "estado",
+
         type: "boolean",
         control: "toggle",
 
@@ -58,6 +66,8 @@ const VARIABLES = {
         label: "¿Ingresar datos de cisterna?"
     },
     nivel_cisterna: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -73,6 +83,8 @@ const VARIABLES = {
         defaultValue: 0
     },
     presion_cisterna: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -88,6 +100,8 @@ const VARIABLES = {
         defaultValue: 110
     },
     temp_cisterna: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -103,6 +117,8 @@ const VARIABLES = {
         defaultValue: 22
     },
     presion_bomba: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -118,6 +134,8 @@ const VARIABLES = {
         defaultValue: 110
     },
     temp_vapor: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -133,6 +151,8 @@ const VARIABLES = {
         defaultValue: 56
     },
     presion_vapor: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -148,6 +168,8 @@ const VARIABLES = {
         defaultValue: 105
     },
     presion_mezcla: {
+        category: "proceso",
+
         type: "number",
         control: "number",
 
@@ -163,6 +185,8 @@ const VARIABLES = {
         defaultValue: 10
     },
     estado_operacion: {
+        category: "estado",
+
         type: "select",
         control: "select",
 
@@ -186,6 +210,8 @@ const VARIABLES = {
         ]
     },
     pendientes: {
+        category: "estado",
+
         type: "multiselect",
         control: "checkbox",
 
@@ -213,15 +239,33 @@ const VARIABLES = {
         ]
     },
     observaciones: {
+        category: "administrativo",
+
         type: "text",
         control: "textarea",
+
         field: "observaciones",
+
         label: "Observaciones"
     },
-    valvulas_capuchon: {
+     encargado: {
+        type: "text",
+        control: "text",
+
+        field: "encargado",
+
+        category: "administrativo",
+
+        label: "Encargado"
+    },
+        valvulas_capuchon: {
+        category: "estado",
+
         type: "boolean",
         control: "toggle",
+        
         field: "valvulasCapuchon",
+
         label: "¿Las válvulas tienen capuchón?"
     }
 
