@@ -12,6 +12,8 @@ const VARIABLES = {
 
         field: "nivelTanque",
         excelField: "NivelTanque",
+        recordGroup: "Variables",
+        recordField: "NivelTanque",
         valueDisplay: "nivelTanqueValue",
 
         label: "Nivel Tanque",
@@ -30,6 +32,8 @@ const VARIABLES = {
 
         field: "presionTanque",
         excelField: "PresionTanque",
+        recordGroup: "Variables",
+        recordField: "PresionTanque",
         valueDisplay: "presionTanqueValue",
 
         label: "Presión Tanque",
@@ -48,6 +52,8 @@ const VARIABLES = {
 
         field: "tempTanque",
         excelField: "TempTanque",
+        recordGroup: "Variables",
+        recordField: "TempTanque",
         valueDisplay: "tempTanqueValue",
 
         label: "Temperatura Tanque",
@@ -65,6 +71,8 @@ const VARIABLES = {
         control: "toggle",
 
         field: "cisternaHabilitada",
+        recordGroup: "Estado",
+        recordField: "CisternaHabilitada",
 
         label: "¿Ingresar datos de cisterna?"
     },
@@ -76,6 +84,8 @@ const VARIABLES = {
 
         field: "nivelCisterna",
         excelField: "NivelCisterna",
+        recordGroup: "Cisterna",
+        recordField: "NivelCisterna",
         valueDisplay: "nivelCisternaValue",
 
         label: "Nivel Cisterna",
@@ -95,6 +105,8 @@ const VARIABLES = {
 
         field: "presionCisterna",
         excelField: "PresionCisterna",
+        recordGroup: "Cisterna",
+        recordField: "PresionCisterna",
         valueDisplay: "presionCisternaValue",
 
         label: "Presión Cisterna",
@@ -114,6 +126,8 @@ const VARIABLES = {
 
         field: "tempCisterna",
         excelField: "TempCisterna",
+        recordGroup: "Cisterna",
+        recordField: "TempCisterna",
         valueDisplay: "tempCisternaValue",
 
         label: "Temperatura Cisterna",
@@ -133,6 +147,8 @@ const VARIABLES = {
 
         field: "capacidadCisterna",
         excelField: "CapacidadCisterna",
+        recordField: "CapacidadCisterna",
+        recordGroup: "Cisterna",
 
         label: "Capacidad Cisterna (Gal)",
         unit: " Gal",
@@ -140,7 +156,6 @@ const VARIABLES = {
         step: 1,
         dependsOn: "cisterna_habilitada"
     },
-
     placa_cisterna: {
         category: "administrativo",
 
@@ -149,6 +164,8 @@ const VARIABLES = {
 
         field: "placaCisterna",
         excelField: "PlacaCisterna",
+        recordField: "PlacaCisterna",
+        recordGroup: "Cisterna",
 
         label: "Placa Cisterna",
         dependsOn: "cisterna_habilitada"
@@ -161,6 +178,8 @@ const VARIABLES = {
 
         field: "presionBomba",
         excelField: "PresionBomba",
+        recordGroup: "Variables",
+        recordField: "PresionBomba",
         valueDisplay: "presionBombaValue",
 
         label: "Presión Bomba",
@@ -179,6 +198,8 @@ const VARIABLES = {
 
         field: "tempVapor",
         excelField: "TempVapor",
+        recordGroup: "Variables",
+        recordField: "TempVapor",
         valueDisplay: "tempVaporValue",
 
         label: "Temperatura Vapor",
@@ -197,6 +218,8 @@ const VARIABLES = {
 
         field: "presionVapor",
         excelField: "PresionVapor",
+        recordGroup: "Variables",
+        recordField: "PresionVapor",
         valueDisplay: "presionVaporValue",
 
         label: "Presión Vapor",
@@ -215,6 +238,8 @@ const VARIABLES = {
 
         field: "presionMezcla",
         excelField: "PresionMezcla",
+        recordGroup: "Variables",
+        recordField: "PresionMezcla",
         valueDisplay: "presionMezclaValue",
 
         label: "Presión Mezcla",
@@ -232,6 +257,8 @@ const VARIABLES = {
         control: "select",
 
         field: "estadoOperacion",
+        recordGroup: "Estado",
+        recordField: "EstadoOperacion",
 
         label: "Estado de operación",
 
@@ -257,9 +284,24 @@ const VARIABLES = {
         control: "checkbox",
 
         field: "pendientes",
+        recordGroup: "Estado",
+        recordField: "Pendientes",
 
         label: "Pendientes",
 
+        context: {
+            fields: {
+                fechaRegistro: "fecha",
+                encargadoRegistro: "encargado",
+                fechaSolucion: null,
+                encargadoSolucion: null
+            }
+        },
+        record: {
+            id: "ID",
+            type: "Tipo",
+            description: "Descripcion"
+        },
         options: [
             {
                 value: "bomba_1_apagada",
@@ -275,7 +317,8 @@ const VARIABLES = {
             },
             {
                 value: "otro",
-                label: "Otro"
+                label: "Otro",
+                descriptionField: "otroProblema"
             }
         ]
     },
@@ -286,16 +329,20 @@ const VARIABLES = {
         control: "textarea",
 
         field: "observaciones",
+        recordGroup: "Administrativo",
+        recordField: "Observaciones",
 
         label: "Observaciones"
     },
      encargado: {
+        category: "administrativo",
+
         type: "text",
         control: "text",
 
         field: "encargado",
-
-        category: "administrativo",
+        recordGroup: "Administrativo",
+        recordField: "Encargado",
 
         label: "Encargado"
     },
@@ -306,9 +353,26 @@ const VARIABLES = {
         control: "toggle",
         
         field: "valvulasCapuchon",
+        recordGroup: "Estado",
+        recordField: "ValvulasCapuchon",
 
         label: "¿Las válvulas tienen capuchón?"
-    }
+    },
+    fecha: {
+        category: "administrativo",
+        type: "date",
+        control: "date",
+        field: "fecha",
+        label: "Fecha"
+    },
+
+    hora: {
+        category: "administrativo",
+        type: "time",
+        control: "time",
+        field: "hora",
+        label: "Hora"
+    },
 
 };
 
@@ -331,7 +395,9 @@ function readVariable(variable) {
         case "number":
         case "text":
         case "textarea":
-        case "select": {
+        case "select":
+        case "date":
+        case "time": {
             const element = document.getElementById(variable.field);
 
             return element ? element.value : "";
@@ -433,6 +499,190 @@ function variableExists(nombre) {
     return Object.prototype.hasOwnProperty.call(VARIABLES, nombre);
 }
 
+function createPending(type, description = null) {
+
+    const variable = VARIABLES.pendientes;
+
+    if (!variable || !Array.isArray(variable.options)) {
+        return null;
+    }
+
+    const option = variable.options.find(
+        option => option.value === type
+    );
+
+    if (!option) {
+        return null;
+    }
+
+    const context = {};
+
+    const contextFields =
+        variable.context?.fields || {};
+
+    for (const [contextName, variableName] of Object.entries(contextFields)) {
+
+        if (!variableName) {
+            context[contextName] = null;
+            continue;
+        }
+
+        const contextVariable = VARIABLES[variableName];
+
+        if (!contextVariable) {
+            console.warn(
+                `Variable de contexto no encontrada: "${variableName}"`
+            );
+
+            context[contextName] = null;
+            continue;
+        }
+
+        context[contextName] = readVariable(contextVariable);
+    }
+
+    return {
+        id: `pendiente-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+
+        type,
+
+        description:
+            type === "otro"
+                ? String(description || "").trim()
+                : option.label,
+
+        context
+    };
+}
+
+function normalizePending(pending) {
+
+    if (!pending) {
+        return null;
+    }
+
+    if (typeof pending === "string") {
+        return createPending(pending);
+    }
+
+    if (typeof pending === "object") {
+
+        if (!pending.id || !pending.type) {
+            return null;
+        }
+
+        const context = {};
+
+        const contextFields =
+            VARIABLES.pendientes?.context?.fields || [];
+
+        for (const field of contextFields) {
+            context[field] =
+                pending.context?.[field] ?? null;
+        }
+
+        return {
+            id: pending.id,
+            type: pending.type,
+            description: String(pending.description || "").trim(),
+            context
+        };
+    }
+    return null;
+}
+
+function normalizePendings(pendings) {
+
+    if (!Array.isArray(pendings)) {
+        return [];
+    }
+
+    return pendings
+        .map(normalizePending)
+        .filter(Boolean);
+}
+
+function mergePendings(previousPendings, selectedPendings) {
+
+    const previous = normalizePendings(previousPendings);
+    const selected = normalizePendings(selectedPendings);
+
+    const result = [...previous];
+
+    for (const pending of selected) {
+
+        const existing = result.find(previousPending => {
+
+            if (pending.type === "otro") {
+                return (
+                    previousPending.type === "otro" &&
+                    previousPending.description === pending.description
+                );
+            }
+
+            return previousPending.type === pending.type;
+        });
+
+        if (!existing) {
+            result.push(pending);
+        }
+    }
+
+    return result;
+}
+
+function buildRecordVariables(data) {
+
+    const result = {};
+
+    for (const [name, value] of Object.entries(data)) {
+
+        const variable = VARIABLES[name];
+
+        if (!variable || !variable.excelField) {
+            continue;
+        }
+
+        result[variable.excelField] = value;
+    }
+
+    return result;
+}
+
+function buildRecordGroups(data) {
+
+    const record = {};
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+
+        if (!variable.recordGroup || !variable.recordField) {
+            continue;
+        }
+
+        if (variable.dependsOn) {
+
+            const dependencyValue = data[variable.dependsOn];
+
+            if (!dependencyValue) {
+
+                if (!(variable.recordGroup in record)) {
+                    record[variable.recordGroup] = null;
+                }
+
+                continue;
+            }
+        }
+
+        if (!(variable.recordGroup in record)) {
+            record[variable.recordGroup] = {};
+        }
+
+        record[variable.recordGroup][variable.recordField] = data[name];
+    }
+
+    return record;
+}
+
 // ============================================
 // EXPORTACIÓN PARA NODE.JS
 // ============================================
@@ -445,6 +695,12 @@ if (typeof module !== "undefined" && module.exports) {
         variableExists,
         readVariable,
         readVariables,
-        groupVariablesByCategory
+        groupVariablesByCategory,
+        buildRecordVariables,
+        buildRecordGroups,
+        createPending,
+        normalizePending,
+        normalizePendings,
+        mergePendings
     };
 }

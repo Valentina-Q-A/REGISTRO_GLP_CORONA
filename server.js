@@ -8,6 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 
+const { VARIABLES } = require('./js/variables.js');
+
 const app = express();
 const PORT = 3000;
 
@@ -105,6 +107,220 @@ function saveRecord(record) {
     }
 
     XLSX.writeFile(workbook, excelFilePath);
+}
+
+// ============================================
+// HOJA DE PENDIENTES
+// ============================================
+
+const PENDIENTES_SHEET = "Pendientes";
+
+const PENDIENTES_COLUMNS = [
+    "ID",
+    "Tipo",
+    "Descripcion",
+    "FechaRegistro",
+    "EncargadoRegistro",
+    "FechaSolucion",
+    "EncargadoSolucion"
+];
+
+function getPendientesData(workbook) {
+
+    if (!workbook.SheetNames.includes(PENDIENTES_SHEET)) {
+        return [];
+    }
+
+    const worksheet = workbook.Sheets[PENDIENTES_SHEET];
+
+    return XLSX.utils.sheet_to_json(worksheet);
+}
+
+function savePendientesData(pendientes) {
+
+    let workbook;
+
+    if (fs.existsSync(excelFilePath)) {
+        workbook = XLSX.readFile(excelFilePath);
+    } else {
+        workbook = XLSX.utils.book_new();
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(
+        pendientes,
+        {
+            header: PENDIENTES_COLUMNS
+        }
+    );
+
+    if (workbook.SheetNames.includes(PENDIENTES_SHEET)) {
+
+        workbook.Sheets[PENDIENTES_SHEET] = worksheet;
+
+    } else {
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            PENDIENTES_SHEET
+        );
+    }
+
+    XLSX.writeFile(workbook, excelFilePath);
+}
+
+function testPendientesSheet() {
+
+    let workbook;
+
+    if (fs.existsSync(excelFilePath)) {
+        workbook = XLSX.readFile(excelFilePath);
+    } else {
+        workbook = XLSX.utils.book_new();
+    }
+
+    const pendientes = getPendientesData(workbook);
+
+    console.log("Pendientes actuales:", pendientes);
+}
+
+function addPending(pending) {
+
+    if (!pending) {
+        throw new Error(
+            "No se recibió el pendiente"
+        );
+    }
+
+    const config = VARIABLES.pendientes;
+
+    if (!config) {
+        throw new Error(
+            "No existe la configuración de pendientes"
+        );
+    }
+
+    let workbook;
+
+    if (fs.existsSync(excelFilePath)) {
+        workbook = XLSX.readFile(excelFilePath);
+    } else {
+        workbook = XLSX.utils.book_new();
+    }
+
+    const pendientes = getPendientesData(workbook);
+
+    const record = {};
+
+    // ============================================
+    // DATOS PRINCIPALES DEL PENDIENTE
+    // ============================================
+
+    const recordFields = config.record || {};
+
+    for (const [pendingField, columnName] of Object.entries(recordFields)) {
+
+        record[columnName] =
+            pending[pendingField] ?? "";
+    }
+
+    // ============================================
+    // CONTEXTO DEL PENDIENTE
+    // ============================================
+
+    const contextFields =
+        config.context?.fields || {};
+
+    for (const contextName of Object.keys(contextFields)) {
+
+        const columnName =
+            contextName.charAt(0).toUpperCase() +
+            contextName.slice(1);
+
+        record[columnName] =
+            pending.context?.[contextName] ?? "";
+    }
+
+    pendientes.push(record);
+
+    savePendientesData(pendientes);
+
+    return record;
+}
+
+// ============================================
+// CREAR PENDIENTE
+// ============================================
+
+app.post('/pendientes', (req, res) => {
+
+    try {
+
+        const pending = req.body;
+
+        const nuevoPendiente = addPending(pending);
+
+        res.status(201).json({
+            success: true,
+            pendiente: nuevoPendiente
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Error creando pendiente:",
+            err
+        );
+
+        res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
+function testCrearHojaPendientes() {
+
+    let workbook;
+
+    if (fs.existsSync(excelFilePath)) {
+        workbook = XLSX.readFile(excelFilePath);
+    } else {
+        workbook = XLSX.utils.book_new();
+    }
+
+    const pendientes = getPendientesData(workbook);
+
+    console.log("Hojas actuales:", workbook.SheetNames);
+    console.log("Pendientes antes de la prueba:", pendientes);
+
+    if (!workbook.SheetNames.includes(PENDIENTES_SHEET)) {
+
+        const worksheet = XLSX.utils.json_to_sheet(
+            [],
+            {
+                header: PENDIENTES_COLUMNS
+            }
+        );
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            PENDIENTES_SHEET
+        );
+
+        XLSX.writeFile(workbook, excelFilePath);
+
+        console.log(
+            `Hoja "${PENDIENTES_SHEET}" creada correctamente`
+        );
+
+    } else {
+
+        console.log(
+            `La hoja "${PENDIENTES_SHEET}" ya existe`
+        );
+    }
 }
 
 // ============================================
@@ -249,6 +465,76 @@ app.get('/historial', (req, res) => {
     const filtrados = data.filter(r => r.Fecha === fecha);
 
     res.json(filtrados);
+});
+
+// ============================================
+// HISTÓRICO DE PENDIENTES
+// ============================================
+
+app.get('/pendientes/historial', (req, res) => {
+
+    try {
+
+        if (!fs.existsSync(excelFilePath)) {
+            return res.json([]);
+        }
+
+        const workbook = XLSX.readFile(excelFilePath);
+
+        const pendientes = getPendientesData(workbook);
+
+        res.json(pendientes);
+
+    } catch (err) {
+
+        console.error(
+            "Error cargando histórico de pendientes:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Error cargando histórico de pendientes",
+            error: err.message
+        });
+    }
+});
+
+// ============================================
+// PENDIENTES ACTIVOS
+// ============================================
+
+app.get('/pendientes', (req, res) => {
+
+    try {
+
+        if (!fs.existsSync(excelFilePath)) {
+            return res.json([]);
+        }
+
+        const workbook = XLSX.readFile(excelFilePath);
+
+        const pendientes = getPendientesData(workbook);
+
+        const pendientesActivos = pendientes.filter(
+            pendiente => !pendiente.FechaSolucion
+        );
+
+        res.json(pendientesActivos);
+
+    } catch (err) {
+
+        console.error(
+            "Error cargando pendientes activos:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Error cargando pendientes activos",
+            error: err.message
+        });
+    }
 });
 
 // ============================================

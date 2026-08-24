@@ -25,7 +25,9 @@ const controls = getVariablesByCategory("proceso");
 document.addEventListener('DOMContentLoaded', function() {
     initializeControls();
     initializeCisterna();
-    initializeOtroPendiente();
+    initializeProblemas();
+    initializeOtroProblema();
+    initializeResolucionPendientes();
     setCurrentDateTime();
     updateSummary();
     initializeForm();
@@ -547,6 +549,88 @@ function initializeForm() {
     });
 }
 
+function initializeProblemas() {
+
+    const select = document.getElementById('problemaReportado');
+    const container = document.getElementById('problemasContainer');
+
+    if (!select || !container) {
+        return;
+    }
+
+    function updateState() {
+
+        const enabled = select.value === "true";
+
+        container.style.display = enabled ? '' : 'none';
+
+        if (!enabled) {
+
+            const checkboxes = container.querySelectorAll(
+                'input[name="problemas"]'
+            );
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            const otroInput =
+                document.getElementById('otroProblema');
+
+            if (otroInput) {
+                otroInput.value = '';
+                otroInput.disabled = true;
+            }
+
+            const otroContainer =
+                document.getElementById('otroProblemaContainer');
+
+            if (otroContainer) {
+                otroContainer.style.display = 'none';
+            }
+        }
+    }
+
+    select.addEventListener('change', updateState);
+
+    updateState();
+}
+
+function initializeOtroProblema() {
+
+    const checkbox =
+        document.getElementById('problemaOtro');
+
+    const container =
+        document.getElementById('otroProblemaContainer');
+
+    const input =
+        document.getElementById('otroProblema');
+
+    if (!checkbox || !container || !input) {
+        return;
+    }
+
+    function updateState() {
+
+        const enabled = checkbox.checked;
+
+        container.style.display =
+            enabled ? '' : 'none';
+
+        input.disabled = !enabled;
+        input.required = enabled;
+
+        if (!enabled) {
+            input.value = '';
+        }
+    }
+
+    checkbox.addEventListener('change', updateState);
+
+    updateState();
+}
+
 function initializeOtroPendiente() {
 
     const checkbox = document.getElementById('pendienteOtro');
@@ -576,73 +660,191 @@ function initializeOtroPendiente() {
     updateState();
 }
 
+function initializeResolucionPendientes() {
+
+    const select = document.getElementById('pendienteResuelto');
+    const container = document.getElementById('pendientesResolverContainer');
+    const list = document.getElementById('pendientesResolverList');
+
+    if (!select || !container || !list) {
+        return;
+    }
+
+    function updateState() {
+
+        const enabled = select.value === "true";
+
+        container.style.display = enabled ? '' : 'none';
+
+        if (!enabled) {
+            list.innerHTML = '';
+            return;
+        }
+
+        cargarPendientesParaResolver();
+    }
+
+    select.addEventListener('change', updateState);
+
+    updateState();
+}
+
+async function cargarPendientesParaResolver() {
+
+    const list = document.getElementById('pendientesResolverList');
+
+    if (!list) {
+        return;
+    }
+
+    list.innerHTML = '<p>Cargando pendientes...</p>';
+
+    try {
+
+        const response = await fetch('/pendientes');
+
+        if (!response.ok) {
+            throw new Error('No se pudieron obtener los pendientes');
+        }
+
+        const pendientes = await response.json();
+
+        if (!Array.isArray(pendientes) || pendientes.length === 0) {
+
+            list.innerHTML =
+                '<p>No hay pendientes activos para resolver.</p>';
+
+            return;
+        }
+
+        list.innerHTML = pendientes.map(pending => `
+
+            <label>
+                <input
+                    type="checkbox"
+                    name="pendientesResolver"
+                    value="${pending.id}"
+                >
+                ${pending.description}
+            </label>
+
+        `).join('');
+
+    } catch (err) {
+
+        console.error(
+            'Error cargando pendientes para resolver:',
+            err
+        );
+
+        list.innerHTML =
+            '<p>No se pudieron cargar los pendientes.</p>';
+    }
+}
+
+async function savePendings(pendings) {
+
+    if (!Array.isArray(pendings) || pendings.length === 0) {
+        return [];
+    }
+
+    const saved = [];
+
+    for (const pending of pendings) {
+
+        const response = await fetch("/pendientes", {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(pending)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.message || "Error guardando pendiente"
+            );
+        }
+
+        saved.push(result.pendiente);
+    }
+
+    return saved;
+}
+
 function collectFormData() {
-    const pendientes = Array.from(
-        document.querySelectorAll('input[name="pendientes"]:checked')
-        ).map(input => input.value);
-    const otroPendiente = document.getElementById('otroPendiente').value.trim();
+
+    const variables = readVariables();
+
+    const pendientes = variables.pendientes || [];
+
+    delete variables.pendientes;
 
     return {
         Fecha: document.getElementById('fecha').value,
         Hora: document.getElementById('hora').value,
-        CisternaHabilitada: document.getElementById('cisternaHabilitada').checked,
-        EstadoOperacion: document.getElementById('estadoOperacion').value,
-        Pendientes: pendientes,
-        OtroPendiente: otroPendiente,
-        NivelTanque: document.getElementById('nivelTanque').value,
-        PresionTanque: document.getElementById('presionTanque').value,
-        TempTanque: document.getElementById('tempTanque').value,
-        NivelCisterna: document.getElementById('nivelCisterna').value,
-        PresionCisterna: document.getElementById('presionCisterna').value,
-        TempCisterna: document.getElementById('tempCisterna').value,
-        CapacidadCisterna: document.getElementById('capacidadCisterna').value,
-        PlacaCisterna: document.getElementById('placaCisterna').value,
-        PresionBomba: document.getElementById('presionBomba').value,
-        TempVapor: document.getElementById('tempVapor').value,
-        PresionVapor: document.getElementById('presionVapor').value,
-        PresionMezcla: document.getElementById('presionMezcla').value,
-        Observaciones: document.getElementById('observaciones').value,
-        Encargado: document.getElementById('encargado').value.trim()
+
+        ...variables,
+
+        pendientes
     };
 }
 
+function buildPendingRecords(data) {
+
+    const config = VARIABLES.pendientes;
+
+    if (!config) {
+        return [];
+    }
+
+    const selectedTypes = data.pendientes || [];
+
+    return selectedTypes
+        .map(type => {
+
+            const option = config.options?.find(
+                option => option.value === type
+            );
+
+            if (!option) {
+                return null;
+            }
+
+            let description = null;
+
+            if (option.descriptionField) {
+
+                const input =
+                    document.getElementById(
+                        option.descriptionField
+                    );
+
+                description =
+                    input?.value.trim() || "";
+            }
+
+            return createPending(
+                type,
+                description
+            );
+        })
+        .filter(Boolean);
+}
+
 function buildRecord(data) {
+
+    const recordGroups = buildRecordGroups(data);
+
     return {
         Fecha: data.Fecha,
         Hora: data.Hora,
 
-        EstadoOperacion: data.EstadoOperacion,
-
-        Pendientes: data.Pendientes,
-        OtroPendiente: data.OtroPendiente,
-
-        CisternaHabilitada: data.CisternaHabilitada,
-
-        Variables: {
-            NivelTanque: Number(data.NivelTanque),
-            PresionTanque: Number(data.PresionTanque),
-            TempTanque: Number(data.TempTanque),
-
-            PresionBomba: Number(data.PresionBomba),
-
-            TempVapor: Number(data.TempVapor),
-            PresionVapor: Number(data.PresionVapor),
-
-            PresionMezcla: Number(data.PresionMezcla)
-        },
-
-        Cisterna: data.CisternaHabilitada
-            ? {
-                Nivel: Number(data.NivelCisterna),
-                Presion: Number(data.PresionCisterna),
-                Temperatura: Number(data.TempCisterna),
-                Capacidad: Number(data.CapacidadCisterna),
-                Placa: data.PlacaCisterna
-            }
-            : null,
-
-        Encargado: data.Encargado,
-        Observaciones: data.Observaciones
+        ...recordGroups
     };
 }
 
@@ -703,8 +905,10 @@ function buildPayload(data) {
 async function saveData(data) {
 
     const record = buildRecord(data);
+    const pendings = buildPendingRecords(data);
 
     console.log("Registro preparado:", record);
+    console.log("Pendientes preparados:", pendings);
 
     try {
         const response = await fetch("/save", {
@@ -722,6 +926,12 @@ async function saveData(data) {
         }
 
         console.log("Registro guardado:", result);
+        const savedPendings = await savePendings(pendings);
+
+        console.log(
+            "Pendientes guardados:",
+            savedPendings
+        );
 
         showAlert("Registro guardado correctamente", "success");
 

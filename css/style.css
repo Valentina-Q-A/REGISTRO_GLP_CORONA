@@ -181,6 +181,49 @@ body {
     text-align: center;
 }
 
+/* ============================================
+   TABLA COMPARATIVA
+   ============================================ */
+
+.comparativo-table {
+    table-layout: fixed;
+    min-width: 0;
+}
+
+.comparativo-table th,
+.comparativo-table td {
+    padding: 10px 8px;
+}
+
+/* Columna de variable */
+.comparativo-table th:first-child,
+.comparativo-table td:first-child {
+    width: 34%;
+    text-align: left;
+}
+
+/* Actual, último registro y cambio */
+.comparativo-table th:nth-child(2),
+.comparativo-table td:nth-child(2),
+.comparativo-table th:nth-child(3),
+.comparativo-table td:nth-child(3),
+.comparativo-table th:nth-child(4),
+.comparativo-table td:nth-child(4) {
+    width: 22%;
+    text-align: center;
+}
+
+.comparativo-table .change-positive {
+    font-weight: bold;
+}
+
+.comparativo-table .change-negative {
+    font-weight: bold;
+}
+
+.comparativo-table .change-neutral {
+    font-weight: bold;
+}
 
 .table-container {
     width: 100%;

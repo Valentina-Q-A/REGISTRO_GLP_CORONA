@@ -133,42 +133,106 @@
                     </select>
                 </div>
 
-                <!-- Pendientes -->
+                <!-- Problemas nuevos -->
                 <div class="form-group">
-                    <label>PENDIENTES</label>
+                    <label>¿Ocurrió algún problema?</label>
+
+                    <select id="problemaReportado">
+                        <option value="false">No</option>
+                        <option value="true">Sí</option>
+                    </select>
+                </div>
+
+                <div
+                    id="problemasContainer"
+                    class="form-group"
+                    style="display: none;"
+                >
+                    <label>Seleccione los problemas</label>
 
                     <div class="checkbox-group">
+
                         <label>
-                            <input type="checkbox" name="pendientes" value="bomba_1_apagada">
+                            <input
+                                type="checkbox"
+                                name="problemas"
+                                value="bomba_1_apagada"
+                            >
                             Bomba 1 apagada
                         </label>
 
                         <label>
-                            <input type="checkbox" name="pendientes" value="bomba_2_apagada">
+                            <input
+                                type="checkbox"
+                                name="problemas"
+                                value="bomba_2_apagada"
+                            >
                             Bomba 2 apagada
                         </label>
 
                         <label>
-                            <input type="checkbox" name="pendientes" value="sin_cisterna">
+                            <input
+                                type="checkbox"
+                                name="problemas"
+                                value="sin_cisterna"
+                            >
                             Sin cisterna
                         </label>
 
-                       <label>
-                            <input type="checkbox" id="pendienteOtro" name="pendientes" value="otro">
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="problemaOtro"
+                                name="problemas"
+                                value="otro"
+                            >
                             Otro
                         </label>
 
-                        <div id="otroPendienteContainer" class="otro-pendiente-container" style="display: none;">
-                            <label for="otroPendiente">Descripción del pendiente</label>
+                        <div
+                            id="otroProblemaContainer"
+                            class="otro-pendiente-container"
+                            style="display: none;"
+                        >
+                            <label for="otroProblema">
+                                Descripción del problema
+                            </label>
+
                             <input
                                 type="text"
-                                id="otroPendiente"
+                                id="otroProblema"
                                 placeholder="Describa la novedad"
                                 disabled
                             >
                         </div>
+
                     </div>
                 </div>
+
+            <!-- Resolución de pendientes -->
+            <div class="form-group">
+                <label>¿Se resolvió algún pendiente?</label>
+
+                <select id="pendienteResuelto">
+                    <option value="false">No</option>
+                    <option value="true">Sí</option>
+                </select>
+            </div>
+
+            <div
+                id="pendientesResolverContainer"
+                class="form-group"
+                style="display: none;"
+            >
+                <label>Seleccione los pendientes resueltos</label>
+
+                <div
+                    id="pendientesResolverList"
+                    class="checkbox-group"
+                >
+                    <!-- Se llenará dinámicamente con JavaScript -->
+                </div>
+            </div>
 
             </div>
             <div class="form-row">
