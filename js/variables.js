@@ -22,7 +22,11 @@ const VARIABLES = {
         min: 35,
         max: 85,
         step: 1,
-        defaultValue: 50
+        defaultValue: 50,
+
+        ubidots: {
+            variableId: "69c2b0e098c4170371875955"
+        }
     },
     presion_tanque: {
         category: "proceso",
@@ -42,7 +46,11 @@ const VARIABLES = {
         min: 90,
         max: 145,
         step: 1,
-        defaultValue: 100
+        defaultValue: 100,
+
+        ubidots: {
+            variableId: "69c2b0e000a7ca2c376872f1"
+        }
     },
     temp_tanque: {
         category: "proceso",
@@ -62,7 +70,10 @@ const VARIABLES = {
         min: 0,
         max: 30,
         step: 1,
-        defaultValue: 19
+        defaultValue: 19,
+        ubidots: {
+            variableId: "69c2a6179c18013ea16383e5"
+        }
     },
     cisterna_habilitada: {
         category: "estado",
@@ -95,6 +106,10 @@ const VARIABLES = {
         max: 100,
         step: 1,
         defaultValue: 0,
+        ubidots: {
+            variableId: "69c2a62f45c5fcfe4bad3384"
+        },
+
         dependsOn: "cisterna_habilitada"
     },
     presion_cisterna: {
@@ -116,6 +131,10 @@ const VARIABLES = {
         max: 140,
         step: 1,
         defaultValue: 110,
+        ubidots: {
+            variableId: "6a4e5fdc63db9441a85dcbb0"
+        },
+
         dependsOn: "cisterna_habilitada"
     },
     temp_cisterna: {
@@ -137,6 +156,11 @@ const VARIABLES = {
         max: 30,
         step: 1,
         defaultValue: 22,
+
+        ubidots: {
+            variableId: "6a4e5fd11b4b877cc189e6a6"
+        },
+
         dependsOn: "cisterna_habilitada"
     },
     capacidad_cisterna: {
@@ -154,6 +178,10 @@ const VARIABLES = {
         unit: " Gal",
         min: 0,
         step: 1,
+        ubidots: {
+            variableId: "69c2a647bd8a77f94450feb1"
+        },
+
         dependsOn: "cisterna_habilitada"
     },
     placa_cisterna: {
@@ -188,7 +216,11 @@ const VARIABLES = {
         min: 100,
         max: 115,
         step: 1,
-        defaultValue: 110
+        defaultValue: 110,
+
+        ubidots: {
+            variableId: "69c2a66053a41a747f3a2129"
+        }
     },
     temp_vapor: {
         category: "proceso",
@@ -208,7 +240,11 @@ const VARIABLES = {
         min: 45,
         max: 75,
         step: 1,
-        defaultValue: 56
+        defaultValue: 56,
+
+        ubidots: {
+            variableId: "69c2a6779933011f71ff918d"
+        }
     },
     presion_vapor: {
         category: "proceso",
@@ -228,7 +264,11 @@ const VARIABLES = {
         min: 90,
         max: 115,
         step: 1,
-        defaultValue: 105
+        defaultValue: 105,
+
+        ubidots: {
+            variableId: "69c2a68c9933011f71ff918e"
+        }
     },
     presion_mezcla: {
         category: "proceso",
@@ -248,7 +288,11 @@ const VARIABLES = {
         min: 9,
         max: 11,
         step: 1,
-        defaultValue: 10
+        defaultValue: 10,
+
+        ubidots: {
+            variableId: "69c2a6a3cfe705dda9e03c76"
+        }
     },
     estado_operacion: {
         category: "estado",

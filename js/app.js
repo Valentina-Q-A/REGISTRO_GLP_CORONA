@@ -862,41 +862,42 @@ function createVariablePayload(value, data) {
 }
 
 function buildPayload(data) {
-    const payload = {
-        nivel_tanque:
-            createVariablePayload(data.NivelTanque, data),
 
-        presion_tanque:
-            createVariablePayload(data.PresionTanque, data),
+    const payload = {};
 
-        temp_tanque:
-            createVariablePayload(data.TempTanque, data),
+    for (const [name, variable] of Object.entries(VARIABLES)) {
 
-        presion_bomba:
-            createVariablePayload(data.PresionBomba, data),
+        if (!variable.ubidots?.variableId) {
+            continue;
+        }
 
-        temp_vapor:
-            createVariablePayload(data.TempVapor, data),
+        if (!(name in data)) {
+            continue;
+        }
 
-        presion_vapor:
-            createVariablePayload(data.PresionVapor, data),
+        const value = data[name];
 
-        presion_mezcla:
-            createVariablePayload(data.PresionMezcla, data)
-    };
+        if (value === "" || value === null || value === undefined) {
+            continue;
+        }
 
-    if (data.CisternaHabilitada) {
-        payload.nivel_cisterna =
-            createVariablePayload(data.NivelCisterna, data);
+        let ubidotsValue = value;
 
-        payload.presion_cisterna =
-            createVariablePayload(data.PresionCisterna, data);
+        if (variable.type === "number") {
+            ubidotsValue = Number(value);
 
-        payload.temp_cisterna =
-            createVariablePayload(data.TempCisterna, data);
+            if (!Number.isFinite(ubidotsValue)) {
+                console.warn(
+                    `Valor no numérico para "${name}":`,
+                    value
+                );
+                continue;
+            }
+        }
 
-        payload.capacidad_cisterna =
-            createVariablePayload(data.CapacidadCisterna, data);
+        payload[name] = {
+            value: ubidotsValue
+        };
     }
 
     return payload;
