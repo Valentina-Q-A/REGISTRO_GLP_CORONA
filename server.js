@@ -8,6 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 
+require('dotenv').config();
+
 const { VARIABLES } = require('./js/variables.js');
 
 const app = express();
@@ -408,64 +410,243 @@ function testCrearHojaPendientes() {
 }
 
 // ============================================
+// CONSTRUIR PAYLOAD PARA UBIDOTS
+// ============================================
+
+function buildUbidotsPayload(data) {
+
+    const payload = {};
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+
+        // Solo variables configuradas para Ubidots
+        if (!variable.ubidots?.variableId) {
+            continue;
+        }
+
+        let value = null;
+
+
+        // ========================================
+        // 1. Variables pertenecientes a un grupo
+        // ========================================
+
+        if (
+            variable.recordGroup &&
+            variable.recordField
+        ) {
+
+            const group =
+                data[variable.recordGroup];
+
+            if (
+                group &&
+                typeof group === "object"
+            ) {
+
+                value =
+                    group[variable.recordField] ?? null;
+            }
+        }
+
+
+        // ========================================
+        // 2. Variables almacenadas directamente
+        // ========================================
+
+        if (value === null) {
+
+            if (
+                variable.recordField &&
+                data[variable.recordField] !== undefined
+            ) {
+
+                value =
+                    data[variable.recordField];
+            }
+        }
+
+
+        // ========================================
+        // 3. Variables mediante field
+        // ========================================
+
+        if (value === null) {
+
+            if (
+                variable.field &&
+                data[variable.field] !== undefined
+            ) {
+
+                value =
+                    data[variable.field];
+            }
+        }
+
+
+        // ========================================
+        // 4. Variables mediante excelField
+        // ========================================
+
+        if (value === null) {
+
+            if (
+                variable.excelField &&
+                data[variable.excelField] !== undefined
+            ) {
+
+                value =
+                    data[variable.excelField];
+            }
+        }
+
+
+        // ========================================
+        // SIN VALOR
+        // ========================================
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
+            continue;
+        }
+
+
+        // ========================================
+        // VARIABLES NUMÉRICAS
+        // ========================================
+
+        if (
+            variable.type === "number" ||
+            variable.type === "range"
+        ) {
+
+            const numericValue =
+                Number(value);
+
+            if (!Number.isNaN(numericValue)) {
+
+                payload[name] =
+                    numericValue;
+            }
+
+            continue;
+        }
+
+
+        // ========================================
+        // VARIABLES DE TEXTO
+        // ========================================
+
+        if (typeof value === "string") {
+
+            payload[name] =
+                value.length;
+
+            continue;
+        }
+
+
+        // ========================================
+        // OTROS TIPOS
+        // ========================================
+
+        payload[name] =
+            value;
+    }
+
+
+    // ============================================
+    // METADATOS
+    // ============================================
+
+    if (data.Fecha) {
+
+        payload.fecha =
+            Date.parse(data.Fecha);
+    }
+
+    if (data.Fecha && data.Hora) {
+
+        payload.hora =
+            Date.parse(
+                `${data.Fecha} ${data.Hora}`
+            );
+    }
+
+    payload.fecha_servidor =
+        Date.now();
+
+
+    return payload;
+}
+
+// ============================================
 // ENVIAR DATOS A UBIDOTS
 // ============================================
 
-async function sendToUbidots(data){
+async function sendToUbidots(data) {
 
-const TOKEN="BBUS-9TxsD2zFJdsZHGHnhVbtafa8LU37rA";
+    const TOKEN =
+        process.env.UBIDOTS_TOKEN;
 
-try{
+    if (!TOKEN) {
 
-await fetch("https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",{
+        console.error(
+            "ERROR: UBIDOTS_TOKEN no está configurado."
+        );
 
-method:"POST",
+        return;
+    }
 
-headers:{
-"Content-Type":"application/json",
-"X-Auth-Token":TOKEN
-},
+    try {
 
-body:JSON.stringify({
+        const payload =
+            buildUbidotsPayload(data);
 
-fecha: Date.parse(data.Fecha),
+        console.log(
+            "PAYLOAD DINÁMICO PARA UBIDOTS:"
+        );
 
-hora: Date.parse(`${data.Fecha} ${data.Hora}`),
+        console.log(
+            JSON.stringify(
+                payload,
+                null,
+                2
+            )
+        );
 
-nivel_tanque: Number(data.NivelTanque),
-presion_tanque: Number(data.PresionTanque),
-temp_tanque: Number(data.TempTanque),
+        await fetch(
+            "https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",
+            {
+                method: "POST",
 
-nivel_cisterna: Number(data.NivelCisterna),
-capacidad_cisterna: Number(data.CapacidadCisterna),
+                headers: {
+                    "Content-Type":
+                        "application/json",
 
-placa_cisterna: data.PlacaCisterna ? data.PlacaCisterna.length : 0,
+                    "X-Auth-Token":
+                        TOKEN
+                },
 
-presion_bomba: Number(data.PresionBomba),
+                body:
+                    JSON.stringify(payload)
+            }
+        );
 
-temp_vapor: Number(data.TempVapor),
-presion_vapor: Number(data.PresionVapor),
+        console.log(
+            "Variables enviadas a Ubidots"
+        );
 
-presion_mezcla: Number(data.PresionMezcla),
+    } catch (err) {
 
-observaciones: data.Observaciones ? data.Observaciones.length : 0,
-
-encargado: data.Encargado ? data.Encargado.length : 0,
-
-fecha_servidor: Date.now()
-
-})
-
-});
-
-console.log("Todas las variables enviadas a Ubidots");
-
-}catch(err){
-
-console.error("Error enviando a Ubidots:",err);
-
-}
-
+        console.error(
+            "Error enviando a Ubidots:",
+            err
+        );
+    }
 }
 
 // ============================================
