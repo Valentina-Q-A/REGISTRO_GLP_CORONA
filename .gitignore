@@ -3,3 +3,5 @@ node_modules/
 
 # Respaldos locales de trabajo
 backups/
+
+ubidots-pending.json

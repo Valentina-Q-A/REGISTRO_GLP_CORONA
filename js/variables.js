@@ -35,7 +35,7 @@ const VARIABLES = {
         defaultValue: 50,
 
         ubidots: {
-            variableId: "69c2b0e098c4170371875955"
+            variableId: "69b9845f00fab5d8ef22b54d"
         }
     },
     presion_tanque: {
@@ -59,7 +59,7 @@ const VARIABLES = {
         defaultValue: 100,
 
         ubidots: {
-            variableId: "69c2b0e000a7ca2c376872f1"
+            variableId: "69b9846000fab5d8ef22b54e"
         }
     },
     temp_tanque: {
@@ -82,7 +82,7 @@ const VARIABLES = {
         step: 1,
         defaultValue: 19,
         ubidots: {
-            variableId: "69c2a6179c18013ea16383e5"
+            variableId: "69b984613609a6ccc5146aa2"
         }
     },
     cisterna_habilitada: {
@@ -117,7 +117,7 @@ const VARIABLES = {
         step: 1,
         defaultValue: 0,
         ubidots: {
-            variableId: "69c2a62f45c5fcfe4bad3384"
+            variableId: "69b9845f00fab5d8ef22b54c"
         },
 
         dependsOn: "cisterna_habilitada"
@@ -142,7 +142,7 @@ const VARIABLES = {
         step: 1,
         defaultValue: 110,
         ubidots: {
-            variableId: "6a4e5fdc63db9441a85dcbb0"
+            variableId: "6a8dbf62d9a262f5af22bdab"
         },
 
         dependsOn: "cisterna_habilitada"
@@ -168,7 +168,7 @@ const VARIABLES = {
         defaultValue: 22,
 
         ubidots: {
-            variableId: "6a4e5fd11b4b877cc189e6a6"
+            variableId: "6a8dbf6455e95e1d147d97dc"
         },
 
         dependsOn: "cisterna_habilitada"
@@ -189,7 +189,7 @@ const VARIABLES = {
         min: 0,
         step: 1,
         ubidots: {
-            variableId: "69c2a647bd8a77f94450feb1"
+            variableId: "69b9845f3609a6ccc5146aa1"
         },
 
         dependsOn: "cisterna_habilitada"
@@ -229,7 +229,7 @@ const VARIABLES = {
         defaultValue: 110,
 
         ubidots: {
-            variableId: "69c2a66053a41a747f3a2129"
+            variableId: "69b984609ae1225920346415"
         }
     },
     temp_vapor: {
@@ -253,7 +253,7 @@ const VARIABLES = {
         defaultValue: 56,
 
         ubidots: {
-            variableId: "69c2a6779933011f71ff918d"
+            variableId: "69b9846100fab5d8ef22b54f"
         }
     },
     presion_vapor: {
@@ -277,7 +277,7 @@ const VARIABLES = {
         defaultValue: 105,
 
         ubidots: {
-            variableId: "69c2a68c9933011f71ff918e"
+            variableId: "69b984603384289118c238ca"
         }
     },
     presion_mezcla: {
@@ -301,7 +301,7 @@ const VARIABLES = {
         defaultValue: 10,
 
         ubidots: {
-            variableId: "69c2a6a3cfe705dda9e03c76"
+            variableId: "69b98460f0f71673e8da7976"
         }
     },
     estado_operacion: {

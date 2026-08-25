@@ -41,6 +41,12 @@ app.get('/js/variables.js', (req, res) => {
 
 const excelFilePath = path.join(__dirname, 'registros.xlsx');
 
+const ubidotsQueueFilePath =
+    path.join(__dirname, 'ubidots-pending.json');
+
+const UBIDOTS_RETRY_INTERVAL =
+    5* 60 * 1000;                               // 5 minutes
+
 // ============================================
 // FUNCION GUARDAR EXCEL
 // ============================================
@@ -507,9 +513,130 @@ function buildRecordRow(record) {
     return flatRecord;
 }
 
+// ============================================
+// COLA DE SINCRONIZACIÓN UBIDOTS
+// ============================================
+
+function loadUbidotsQueue() {
+
+    if (!fs.existsSync(ubidotsQueueFilePath)) {
+        return [];
+    }
+
+    try {
+
+        const content =
+            fs.readFileSync(
+                ubidotsQueueFilePath,
+                'utf8'
+            );
+
+        if (!content.trim()) {
+            return [];
+        }
+
+        const queue =
+            JSON.parse(content);
+
+        return Array.isArray(queue)
+            ? queue
+            : [];
+
+    } catch (err) {
+
+        console.error(
+            "Error leyendo cola de Ubidots:",
+            err
+        );
+
+        return [];
+    }
+}
+
+
+function saveUbidotsQueue(queue) {
+
+    fs.writeFileSync(
+        ubidotsQueueFilePath,
+        JSON.stringify(
+            queue,
+            null,
+            2
+        )
+    );
+}
+
+
+function addToUbidotsQueue(data) {
+
+    const queue =
+        loadUbidotsQueue();
+
+    const id =
+        `${data.Fecha}_${data.Hora}`;
+
+    const alreadyExists =
+        queue.some(
+            item => item.id === id
+        );
+
+    if (alreadyExists) {
+
+        console.log(
+            `Registro ${id} ya existe en la cola de Ubidots.`
+        );
+
+        return false;
+    }
+
+    const payload =
+        buildUbidotsPayload(data);
+
+    queue.push({
+        id,
+        createdAt: Date.now(),
+        attempts: 0,
+        payload
+    });
+
+    saveUbidotsQueue(queue);
+
+    console.log(
+        `Registro ${id} agregado a la cola de Ubidots.`
+    );
+
+    return true;
+}
+
+function getRecordTimestamp(data) {
+
+    if (!data.Fecha || !data.Hora) {
+        return Date.now();
+    }
+
+    const timestamp =
+        Date.parse(
+            `${data.Fecha}T${data.Hora}:00-05:00`
+        );
+
+    if (Number.isNaN(timestamp)) {
+
+        console.warn(
+            "No se pudo convertir Fecha/Hora. Se utilizará la hora actual."
+        );
+
+        return Date.now();
+    }
+
+    return timestamp;
+}
+
 function buildUbidotsPayload(data) {
 
     const payload = {};
+
+    const timestamp =
+    getRecordTimestamp(data);
 
     for (const [name, variable] of Object.entries(VARIABLES)) {
 
@@ -591,8 +718,10 @@ function buildUbidotsPayload(data) {
 
             if (!Number.isNaN(numericValue)) {
 
-                payload[name] =
-                    numericValue;
+                payload[name] = {
+                    value: numericValue,
+                    timestamp
+                };
             }
 
             continue;
@@ -605,8 +734,10 @@ function buildUbidotsPayload(data) {
 
         if (typeof value === "string") {
 
-            payload[name] =
-                value.length;
+            payload[name] = {
+                value: value.length,
+                timestamp
+            };
 
             continue;
         }
@@ -616,8 +747,10 @@ function buildUbidotsPayload(data) {
         // OTROS TIPOS
         // ========================================
 
-        payload[name] =
-            value;
+        payload[name] = {
+            value,
+            timestamp
+        };
     }
 
 
@@ -625,23 +758,20 @@ function buildUbidotsPayload(data) {
     // METADATOS
     // ============================================
 
-    if (data.Fecha) {
+    payload.fecha = {
+        value: timestamp,
+        timestamp
+    };
 
-        payload.fecha =
-            Date.parse(data.Fecha);
-    }
+    payload.hora = {
+        value: timestamp,
+        timestamp
+    };
 
-    if (data.Fecha && data.Hora) {
-
-        payload.hora =
-            Date.parse(
-                `${data.Fecha} ${data.Hora}`
-            );
-    }
-
-    payload.fecha_servidor =
-        Date.now();
-
+    payload.fecha_servidor = {
+        value: Date.now(),
+        timestamp
+    };
 
     return payload;
 }
@@ -650,7 +780,7 @@ function buildUbidotsPayload(data) {
 // ENVIAR DATOS A UBIDOTS
 // ============================================
 
-async function sendToUbidots(data) {
+async function sendToUbidots(payload) {
 
     const TOKEN =
         process.env.UBIDOTS_TOKEN;
@@ -662,11 +792,8 @@ async function sendToUbidots(data) {
         );
     }
 
-    const payload =
-        buildUbidotsPayload(data);
-
     console.log(
-        "PAYLOAD DINÁMICO PARA UBIDOTS:"
+        "PAYLOAD ENVIADO A UBIDOTS:"
     );
 
     console.log(
@@ -712,10 +839,69 @@ async function sendToUbidots(data) {
 
     return {
         success: true,
-        status: response.status,
-        payload
+        status: response.status
     };
 }
+
+// ============================================
+// PROCESAR COLA UBIDOTS
+// ============================================
+
+async function processUbidotsQueue() {
+
+    const queue =
+        loadUbidotsQueue();
+
+    if (queue.length === 0) {
+        return;
+    }
+
+    console.log(
+        `Cola de Ubidots: ${queue.length} registro(s) pendiente(s).`
+    );
+
+    const remaining = [];
+
+    for (const item of queue) {
+
+        try {
+
+            item.attempts++;
+
+            console.log(
+                `Reintentando registro ${item.id}. Intento ${item.attempts}.`
+            );
+
+            await sendToUbidots(
+                item.payload
+            );
+
+            console.log(
+                `Registro ${item.id} sincronizado correctamente.`
+            );
+
+        } catch (err) {
+
+            console.error(
+                `No se pudo sincronizar ${item.id}:`,
+                err.message
+            );
+
+            remaining.push(item);
+        }
+    }
+
+    saveUbidotsQueue(remaining);
+}
+
+// ============================================
+// REINTENTO AUTOMÁTICO UBIDOTS
+// ============================================
+
+setInterval(
+    processUbidotsQueue,
+    UBIDOTS_RETRY_INTERVAL
+);
 
 // ============================================
 // ENDPOINT GUARDAR
@@ -741,18 +927,24 @@ app.post('/save', async (req, res) => {
 
         saveRecord(data);
 
+        const payload =
+            buildUbidotsPayload(data);
+
         try {
 
-            await sendToUbidots(data);
+            await sendToUbidots(
+                payload
+            );
 
         } catch (err) {
 
             console.error(
                 "Advertencia: registro guardado en Excel, pero no se pudo enviar a Ubidots:",
-                err
+                err.message
             );
-        }
 
+            addToUbidotsQueue(data);
+        }
         res.status(200).json({
             success: true,
             message: "Registro guardado correctamente"
@@ -858,6 +1050,20 @@ app.get('/historial', (req, res) => {
         Hora: excelTimeToString(record.Hora)
     }));
 
+    // ============================================
+    // ORDENAR DEL MÁS RECIENTE AL MÁS ANTIGUO
+    // ============================================
+
+    normalizados.sort((a, b) => {
+
+        const fechaHoraA =
+            new Date(`${a.Fecha}T${a.Hora}:00`);
+
+        const fechaHoraB =
+            new Date(`${b.Fecha}T${b.Hora}:00`);
+
+        return fechaHoraB - fechaHoraA;
+    });
     // ============================================
     // FILTRAR POR FECHA
     // ============================================
