@@ -26,10 +26,22 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('dist'));
 
+app.get('/historial.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'historial.html'));
+});
+
+app.get('/js/variables.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'js', 'variables.js'));
+});
+
 const excelFilePath = path.join(__dirname, 'registros.xlsx');
 
 // ============================================
 // FUNCION GUARDAR EXCEL
+// ============================================
+
+// ============================================
+// FUNCION GUARDAR EXCEL - DINÁMICA
 // ============================================
 
 function saveRecord(record) {
@@ -39,42 +51,101 @@ function saveRecord(record) {
     let data = [];
 
     // ============================================
-    // CONVERTIR REGISTRO ESTRUCTURADO A FILA PLANA
+    // CONSTRUIR FILA A PARTIR DE VARIABLES
     // ============================================
 
-    const flatRecord = {
-        Fecha: record.Fecha,
-        Hora: record.Hora,
+    const flatRecord = {};
 
-        EstadoOperacion: record.EstadoOperacion,
+    for (const [name, variable] of Object.entries(VARIABLES)) {
 
-        Pendientes: Array.isArray(record.Pendientes)
-            ? record.Pendientes.join(", ")
-            : "",
+        // ========================================
+        // Solo las variables con excelField
+        // forman parte del histórico
+        // ========================================
 
-        OtroPendiente: record.OtroPendiente || "",
+        if (!variable.excelField) {
+            continue;
+        }
 
-        CisternaHabilitada: record.CisternaHabilitada,
+        let value = null;
 
-        NivelTanque: record.Variables?.NivelTanque ?? "",
-        PresionTanque: record.Variables?.PresionTanque ?? "",
-        TempTanque: record.Variables?.TempTanque ?? "",
+        // ========================================
+        // 1. Variables pertenecientes a un grupo
+        // ========================================
 
-        PresionBomba: record.Variables?.PresionBomba ?? "",
-        TempVapor: record.Variables?.TempVapor ?? "",
-        PresionVapor: record.Variables?.PresionVapor ?? "",
-        PresionMezcla: record.Variables?.PresionMezcla ?? "",
+        if (variable.recordGroup && variable.recordField) {
 
-        NivelCisterna: record.Cisterna?.Nivel ?? "",
-        PresionCisterna: record.Cisterna?.Presion ?? "",
-        TempCisterna: record.Cisterna?.Temperatura ?? "",
-        CapacidadCisterna: record.Cisterna?.Capacidad ?? "",
-        PlacaCisterna: record.Cisterna?.Placa ?? "",
+            const group =
+                record[variable.recordGroup];
 
-        Observaciones: record.Observaciones || "",
-        Encargado: record.Encargado || "",
-        FechaServidor: record.FechaServidor || ""
-    };
+            if (
+                group &&
+                typeof group === "object"
+            ) {
+                value =
+                    group[variable.recordField] ?? null;
+            }
+        }
+
+        // ========================================
+        // 2. Variables almacenadas directamente
+        // ========================================
+
+        if (value === null) {
+
+            if (
+                variable.recordField &&
+                record[variable.recordField] !== undefined
+            ) {
+                value =
+                    record[variable.recordField];
+            }
+        }
+
+        // ========================================
+        // 3. Variables cuyo field corresponde
+        // directamente al registro
+        // ========================================
+
+        if (value === null) {
+
+            if (
+                variable.field &&
+                record[variable.field] !== undefined
+            ) {
+                value =
+                    record[variable.field];
+            }
+        }
+        // ========================================
+        // 4. Intentar directamente con excelField
+        // ========================================
+
+        if (value === null) {
+
+            if (
+                variable.excelField &&
+                record[variable.excelField] !== undefined
+            ) {
+                value =
+                    record[variable.excelField];
+            }
+        }
+        // ========================================
+        // 5. Guardar usando excelField como
+        // nombre definitivo de la columna
+        // ========================================
+
+        flatRecord[variable.excelField] =
+            value ?? "";
+    }
+
+    // ============================================
+    // METADATO DEL SISTEMA
+    // ============================================
+
+    flatRecord.FechaServidor =
+        record.FechaServidor ?? "";
 
     // ============================================
     // CARGAR HISTÓRICO EXISTENTE
@@ -83,30 +154,43 @@ function saveRecord(record) {
     if (fs.existsSync(excelFilePath)) {
 
         workbook = XLSX.readFile(excelFilePath);
-        worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-        data = XLSX.utils.sheet_to_json(worksheet);
+        worksheet =
+            workbook.Sheets[workbook.SheetNames[0]];
+
+        data =
+            XLSX.utils.sheet_to_json(worksheet);
 
         data.push(flatRecord);
 
-        worksheet = XLSX.utils.json_to_sheet(data);
+        worksheet =
+            XLSX.utils.json_to_sheet(data);
 
-        workbook.Sheets[workbook.SheetNames[0]] = worksheet;
+        workbook.Sheets[
+            workbook.SheetNames[0]
+        ] = worksheet;
 
     } else {
 
-        workbook = XLSX.utils.book_new();
+        workbook =
+            XLSX.utils.book_new();
 
-        worksheet = XLSX.utils.json_to_sheet([flatRecord]);
+        worksheet =
+            XLSX.utils.json_to_sheet(
+                [flatRecord]
+            );
 
         XLSX.utils.book_append_sheet(
             workbook,
             worksheet,
-            'Registros'
+            "Registros"
         );
     }
 
-    XLSX.writeFile(workbook, excelFilePath);
+    XLSX.writeFile(
+        workbook,
+        excelFilePath
+    );
 }
 
 // ============================================
@@ -456,15 +540,81 @@ app.get('/historial', (req, res) => {
 
     const workbook = XLSX.readFile(excelFilePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
     const data = XLSX.utils.sheet_to_json(worksheet);
 
-    if (!fecha) {
-        return res.json(data);
+    // ============================================
+    // CONVERTIR FECHA EXCEL → YYYY-MM-DD
+    // ============================================
+
+    function excelDateToISO(value) {
+
+        if (typeof value === "number") {
+
+            const date = XLSX.SSF.parse_date_code(value);
+
+            if (!date) {
+                return "";
+            }
+
+            return [
+                date.y,
+                String(date.m).padStart(2, "0"),
+                String(date.d).padStart(2, "0")
+            ].join("-");
+        }
+
+        return value || "";
     }
 
-    const filtrados = data.filter(r => r.Fecha === fecha);
+    // ============================================
+    // CONVERTIR HORA EXCEL → HH:MM
+    // ============================================
 
-    res.json(filtrados);
+    function excelTimeToString(value) {
+
+        if (typeof value === "number") {
+
+            const totalMinutes = Math.round(value * 24 * 60);
+
+            const hours = Math.floor(totalMinutes / 60) % 24;
+            const minutes = totalMinutes % 60;
+
+            return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+        }
+
+        return value || "";
+    }
+
+    // ============================================
+    // NORMALIZAR DATOS
+    // ============================================
+
+    const normalizados = data.map(record => ({
+        ...record,
+
+        Fecha: excelDateToISO(record.Fecha),
+        Hora: excelTimeToString(record.Hora)
+    }));
+
+    // ============================================
+    // FILTRAR POR FECHA
+    // ============================================
+
+    if (fecha) {
+
+        const filtrados = normalizados.filter(
+            record => record.Fecha === fecha
+        );
+
+        return res.json(filtrados);
+    }
+
+    // ============================================
+    // SIN FILTRO
+    // ============================================
+
+    res.json(normalizados);
 });
 
 // ============================================

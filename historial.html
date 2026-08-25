@@ -42,272 +42,389 @@ cursor:pointer;
 <h1>Histórico Planta GLP</h1>
 
 <input type="date" id="fecha">
+
 <button onclick="buscar()">Buscar</button>
 <button onclick="cargarHistorico()">Reset</button>
 <button onclick="exportar()">Exportar Excel</button>
 
-
 <table>
-<thead>
-<tr>
-<th>Fecha</th>
-<th>Hora</th>
-<th>NivelTanque</th>
-<th>PresionTanque</th>
-<th>TempTanque</th>
-<th>NivelCisterna</th>
-<th>PresionCisterna</th>
-<th>TempCisterna</th>
-<th>CapacidadCisterna</th>
-<th>PlacaCisterna</th>
-<th>PresionBomba</th>
-<th>TempVapor</th>
-<th>PresionVapor</th>
-<th>PresionMezcla</th>
-<th>Observaciones</th>
-<th>Encargado</th>
-<th>FechaServidor</th>
-</tr>
+
+<thead id="encabezados">
 </thead>
 
-<tbody id="tabla"></tbody>
+<tbody id="tabla">
+</tbody>
 
 </table>
+
+
+<!-- ============================================
+     CONFIGURACIÓN CENTRAL DE VARIABLES
+     ============================================ -->
+
+<script src="js/variables.js"></script>
+
 
 <script>
 
 // ============================================
-// CONFIG
+// DATOS GLOBALES
 // ============================================
 
-const TOKEN = "BBUS-etSh1XzuTj9VZAJIuZLswp9CPxFBTM"
+let DATA_GLOBAL = [];
 
-const VARIABLES = {
-    nivel_tanque: "69c2b0e098c4170371875955",
-    presion_tanque: "69c2b0e000a7ca2c376872f1",
-    temp_tanque: "69c2a6179c18013ea16383e5",
-    nivel_cisterna: "69c2a62f45c5fcfe4bad3384",
-    presion_cisterna: "6a4e5fdc63db9441a85dcbb0",
-    temp_cisterna: "6a4e5fd11b4b877cc189e6a6",
-    capacidad_cisterna: "69c2a647bd8a77f94450feb1",
-    presion_bomba: "69c2a66053a41a747f3a2129",
-    temp_vapor: "69c2a6779933011f71ff918d",
-    presion_vapor: "69c2a68c9933011f71ff918e",
-    presion_mezcla: "69c2a6a3cfe705dda9e03c76"
-}
-
-// 👉 almacenamiento global
-let DATA_GLOBAL = []
 
 // ============================================
-// TRAER DATOS
+// VARIABLES DEL HISTÓRICO
+// ============================================
+//
+// Una variable aparecerá en el histórico si
+// tiene definido "excelField" en variables.js.
+//
+// Esto significa que agregar una nueva variable
+// al catálogo puede hacer que aparezca
+// automáticamente en esta tabla.
+//
+
+function getHistoricalVariables() {
+
+    return Object.entries(VARIABLES)
+        .filter(([, variable]) => variable.excelField);
+
+}
+
+
+// ============================================
+// GENERAR ENCABEZADOS
 // ============================================
 
-async function getData(variableId){
+function generarEncabezados() {
 
-let url = `https://industrial.api.ubidots.com/api/v1.6/variables/${variableId}/values?page_size=100`
-let all = []
+    const encabezados =
+        document.getElementById("encabezados");
 
-while(url){
+    if (!encabezados) {
+        return;
+    }
 
-const res = await fetch(url,{
-headers:{ "X-Auth-Token":TOKEN }
-})
+    const variables =
+        getHistoricalVariables();
 
-const data = await res.json()
+    encabezados.innerHTML = `
 
-if(data.results){
-all = all.concat(data.results)
+        <tr>
+
+            <th>Fecha</th>
+
+            <th>Hora</th>
+
+            ${variables.map(([, variable]) => `
+                <th>
+                    ${variable.excelField}
+                </th>
+            `).join("")}
+
+            <th>FechaServidor</th>
+
+        </tr>
+    `;
 }
 
-url = data.next
-
-}
-
-return all
-
-}
 
 // ============================================
 // CARGAR HISTÓRICO
 // ============================================
 
-async function cargarHistorico(){
+async function cargarHistorico() {
 
-const keys = Object.keys(VARIABLES)
-const dataset = {}
+    try {
 
-for(let key of keys){
-dataset[key] = await getData(VARIABLES[key])
+        const response =
+            await fetch("/historial");
+
+        if (!response.ok) {
+            throw new Error(
+                "No se pudo cargar el histórico"
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error(
+                "El servidor no devolvió un arreglo"
+            );
+        }
+
+        DATA_GLOBAL = data;
+
+        renderTabla(DATA_GLOBAL);
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando histórico:",
+            error
+        );
+
+        DATA_GLOBAL = [];
+
+        renderTabla([]);
+
+    }
+
 }
+
 
 // ============================================
-// MERGE POR TIMESTAMP (MEJORADO)
+// RENDER TABLA
 // ============================================
 
-let registros = {}
+function renderTabla(data) {
 
-keys.forEach(key=>{
-dataset[key].forEach(r=>{
+    const tabla =
+        document.getElementById("tabla");
 
-const t = r.timestamp
+    if (!tabla) {
+        return;
+    }
 
-if(!registros[t]){
-registros[t] = {
-timestamp: t,
-context: {}
+    const variables =
+        getHistoricalVariables();
+
+    tabla.innerHTML = "";
+
+    data.forEach(record => {
+
+        const fila = document.createElement("tr");
+
+
+        // ========================================
+        // FECHA
+        // ========================================
+
+        const fecha =
+            document.createElement("td");
+
+        fecha.textContent =
+            record.Fecha ?? "";
+
+        fila.appendChild(fecha);
+
+
+        // ========================================
+        // HORA
+        // ========================================
+
+        const hora =
+            document.createElement("td");
+
+        hora.textContent =
+            record.Hora ?? "";
+
+        fila.appendChild(hora);
+
+
+        // ========================================
+        // VARIABLES
+        // ========================================
+
+        variables.forEach(([, variable]) => {
+
+            const celda =
+                document.createElement("td");
+
+            const field =
+                variable.excelField;
+
+            celda.textContent =
+                record[field] ?? "";
+
+            fila.appendChild(celda);
+
+        });
+
+
+        // ========================================
+        // FECHA SERVIDOR
+        // ========================================
+
+        const fechaServidor =
+            document.createElement("td");
+
+        fechaServidor.textContent =
+            record.FechaServidor ?? "";
+
+        fila.appendChild(fechaServidor);
+
+
+        tabla.appendChild(fila);
+
+    });
+
 }
-}
 
-// 🔥 fusionar contextos correctamente
-registros[t].context = {
-...registros[t].context,
-...(r.context || {})
-}
-
-registros[t][key] = r.value
-
-})
-})
-
-// convertir a array
-let final = Object.values(registros)
-
-// ordenar correctamente
-final.sort((a,b)=> b.timestamp - a.timestamp)
-
-// guardar global
-DATA_GLOBAL = final
-
-renderTabla(final)
-
-}
 
 // ============================================
-// RENDER
+// BUSCAR
 // ============================================
 
-function renderTabla(data){
+async function buscar() {
 
-const tabla = document.getElementById("tabla")
-tabla.innerHTML = ""
+    const fecha =
+        document.getElementById("fecha").value;
 
-data.forEach(r=>{
+    if (!fecha) {
 
-const ctx = r.context || {}
+        await cargarHistorico();
 
-tabla.innerHTML += `
-<tr>
-<td>${ctx.Fecha || ""}</td>
-<td>${ctx.Hora || ""}</td>
-<td>${r.nivel_tanque || ""}</td>
-<td>${r.presion_tanque || ""}</td>
-<td>${r.temp_tanque || ""}</td>
-<td>${r.nivel_cisterna || ""}</td>
-<td>${r.presion_cisterna || ""}</td>
-<td>${r.temp_cisterna || ""}</td>
-<td>${r.capacidad_cisterna}</td>
-<td>${ctx.PlacaCisterna || ""}</td>
-<td>${r.presion_bomba || ""}</td>
-<td>${r.temp_vapor || ""}</td>
-<td>${r.presion_vapor || ""}</td>
-<td>${r.presion_mezcla || ""}</td>
-<td>${ctx.Observaciones || ""}</td>
-<td>${ctx.Encargado || ""}</td>
-<td>${new Date(r.timestamp).toLocaleString()}</td>
-</tr>
-`
-})
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                `/historial?fecha=${encodeURIComponent(fecha)}`
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "No se pudo realizar la búsqueda"
+            );
+        }
+
+        const data =
+            await response.json();
+
+        DATA_GLOBAL = Array.isArray(data)
+            ? data
+            : [];
+
+        renderTabla(DATA_GLOBAL);
+
+    } catch (error) {
+
+        console.error(
+            "Error buscando histórico:",
+            error
+        );
+
+        DATA_GLOBAL = [];
+
+        renderTabla([]);
+
+    }
 
 }
 
-// ============================================
-// BUSCAR (CORREGIDO)
-// ============================================
-
-function buscar(){
-
-const fecha = document.getElementById("fecha").value
-
-if(!fecha){
-renderTabla(DATA_GLOBAL)
-return
-}
-
-// 🔥 filtrar sobre datos ya cargados
-const filtrados = DATA_GLOBAL.filter(r=>{
-const ctx = r.context || {}
-return ctx.Fecha === fecha
-})
-
-// ordenar
-filtrados.sort((a,b)=> b.timestamp - a.timestamp)
-
-renderTabla(filtrados)
-
-}
 
 // ============================================
 // EXPORTAR
 // ============================================
 
-function exportar(){
+function exportar() {
 
-let filas = []
+    const variables =
+        getHistoricalVariables();
 
-// encabezados
-filas.push([
-"Fecha","Hora","NivelTanque","PresionTanque","TempTanque",
-"NivelCisterna","PresionCisterna", "TempCisterna","CapacidadCisterna","PlacaCisterna",
-"PresionBomba","TempVapor","PresionVapor","PresionMezcla",
-"Observaciones","Encargado","FechaServidor"
-])
+    const filas = [];
 
-// recorrer datos
-DATA_GLOBAL.forEach(r=>{
 
-const ctx = r.context || {}
+    // ========================================
+    // ENCABEZADOS
+    // ========================================
 
-filas.push([
-ctx.Fecha || "",
-ctx.Hora || "",
-r.nivel_tanque ?? "",
-r.presion_tanque ?? "",
-r.temp_tanque ?? "",
-r.nivel_cisterna ?? "",
-r.presion_cisterna ?? "",
-r.temp_cisterna ?? "",
-r.capacidad_cisterna,
-ctx.PlacaCisterna || "",
-r.presion_bomba ?? "",
-r.temp_vapor ?? "",
-r.presion_vapor ?? "",
-r.presion_mezcla ?? "",
-ctx.Observaciones || "",
-ctx.Encargado || "",
-new Date(r.timestamp).toLocaleString()
-])
+    filas.push([
 
-})
+        "Fecha",
+        "Hora",
 
-// convertir a texto tipo Excel (CSV con tabulación)
-let contenido = filas.map(f => f.join("\t")).join("\n")
+        ...variables.map(
+            ([, variable]) =>
+                variable.excelField
+        ),
 
-// crear archivo
-let blob = new Blob([contenido], { type: "application/vnd.ms-excel" })
+        "FechaServidor"
 
-let link = document.createElement("a")
-link.href = URL.createObjectURL(blob)
-link.download = "historico_glp.xls"
-link.click()
+    ]);
+
+
+    // ========================================
+    // DATOS
+    // ========================================
+
+    DATA_GLOBAL.forEach(record => {
+
+        filas.push([
+
+            record.Fecha ?? "",
+            record.Hora ?? "",
+
+            ...variables.map(
+                ([, variable]) =>
+                    record[variable.excelField] ?? ""
+            ),
+
+            record.FechaServidor ?? ""
+
+        ]);
+
+    });
+
+
+    // ========================================
+    // CREAR ARCHIVO
+    // ========================================
+
+    const contenido =
+        filas
+            .map(fila =>
+                fila.join("\t")
+            )
+            .join("\n");
+
+
+    const blob = new Blob(
+        [contenido],
+        {
+            type:
+                "application/vnd.ms-excel"
+        }
+    );
+
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        URL.createObjectURL(blob);
+
+    link.download =
+        "historico_glp.xls";
+
+    link.click();
+
+    URL.revokeObjectURL(link.href);
 
 }
 
+
 // ============================================
-// INIT
+// INICIALIZACIÓN
 // ============================================
 
-window.onload = cargarHistorico
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        generarEncabezados();
+
+        cargarHistorico();
+
+    }
+);
 
 </script>
 

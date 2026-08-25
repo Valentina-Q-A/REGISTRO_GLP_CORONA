@@ -407,6 +407,7 @@ const VARIABLES = {
         type: "date",
         control: "date",
         field: "fecha",
+        excelField: "Fecha",
         label: "Fecha"
     },
 
@@ -415,6 +416,7 @@ const VARIABLES = {
         type: "time",
         control: "time",
         field: "hora",
+        excelField: "Hora",
         label: "Hora"
     },
 
