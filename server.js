@@ -10,7 +10,10 @@ const XLSX = require('xlsx');
 
 require('dotenv').config();
 
-const { VARIABLES } = require('./js/variables.js');
+const {
+    VARIABLES,
+    UBIDOTS_CONFIG
+} = require('./js/variables.js');
 
 const app = express();
 const PORT = 3000;
@@ -56,91 +59,7 @@ function saveRecord(record) {
     // CONSTRUIR FILA A PARTIR DE VARIABLES
     // ============================================
 
-    const flatRecord = {};
-
-    for (const [name, variable] of Object.entries(VARIABLES)) {
-
-        // ========================================
-        // Solo las variables con excelField
-        // forman parte del histórico
-        // ========================================
-
-        if (!variable.excelField) {
-            continue;
-        }
-
-        let value = null;
-
-        // ========================================
-        // 1. Variables pertenecientes a un grupo
-        // ========================================
-
-        if (variable.recordGroup && variable.recordField) {
-
-            const group =
-                record[variable.recordGroup];
-
-            if (
-                group &&
-                typeof group === "object"
-            ) {
-                value =
-                    group[variable.recordField] ?? null;
-            }
-        }
-
-        // ========================================
-        // 2. Variables almacenadas directamente
-        // ========================================
-
-        if (value === null) {
-
-            if (
-                variable.recordField &&
-                record[variable.recordField] !== undefined
-            ) {
-                value =
-                    record[variable.recordField];
-            }
-        }
-
-        // ========================================
-        // 3. Variables cuyo field corresponde
-        // directamente al registro
-        // ========================================
-
-        if (value === null) {
-
-            if (
-                variable.field &&
-                record[variable.field] !== undefined
-            ) {
-                value =
-                    record[variable.field];
-            }
-        }
-        // ========================================
-        // 4. Intentar directamente con excelField
-        // ========================================
-
-        if (value === null) {
-
-            if (
-                variable.excelField &&
-                record[variable.excelField] !== undefined
-            ) {
-                value =
-                    record[variable.excelField];
-            }
-        }
-        // ========================================
-        // 5. Guardar usando excelField como
-        // nombre definitivo de la columna
-        // ========================================
-
-        flatRecord[variable.excelField] =
-            value ?? "";
-    }
+    const flatRecord = buildRecordRow(record);
 
     // ============================================
     // METADATO DEL SISTEMA
@@ -410,8 +329,183 @@ function testCrearHojaPendientes() {
 }
 
 // ============================================
+// OBTENER VALOR DE UNA VARIABLE
+// ============================================
+
+function getVariableValue(data, variable) {
+
+    let value = null;
+
+
+    // ========================================
+    // 1. Variables pertenecientes a un grupo
+    // ========================================
+
+    if (
+        variable.recordGroup &&
+        variable.recordField
+    ) {
+
+        const group =
+            data[variable.recordGroup];
+
+        if (
+            group &&
+            typeof group === "object"
+        ) {
+
+            value =
+                group[variable.recordField] ?? null;
+        }
+    }
+
+
+    // ========================================
+    // 2. Variables almacenadas directamente
+    // ========================================
+
+    if (value === null) {
+
+        if (
+            variable.recordField &&
+            data[variable.recordField] !== undefined
+        ) {
+
+            value =
+                data[variable.recordField];
+        }
+    }
+
+
+    // ========================================
+    // 3. Variables mediante field
+    // ========================================
+
+    if (value === null) {
+
+        if (
+            variable.field &&
+            data[variable.field] !== undefined
+        ) {
+
+            value =
+                data[variable.field];
+        }
+    }
+
+
+    // ========================================
+    // 4. Variables mediante excelField
+    // ========================================
+
+    if (value === null) {
+
+        if (
+            variable.excelField &&
+            data[variable.excelField] !== undefined
+        ) {
+
+            value =
+                data[variable.excelField];
+        }
+    }
+
+
+    return value;
+}
+
+
+// ============================================
 // CONSTRUIR PAYLOAD PARA UBIDOTS
 // ============================================
+// ============================================
+// CONSTRUIR FILA DEL REGISTRO
+// ============================================
+
+function buildRecordRow(record) {
+
+    const flatRecord = {};
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+
+        // ========================================
+        // SOLO VARIABLES CON EXCEL
+        // ========================================
+
+        if (!variable.excelField) {
+            continue;
+        }
+
+        // ========================================
+        // DEPENDENCIA / ENABLE
+        // ========================================
+
+        let enabled = true;
+
+        if (variable.dependsOn) {
+
+            const dependency =
+                VARIABLES[variable.dependsOn];
+
+            if (!dependency) {
+
+                console.warn(
+                    `La variable "${name}" depende de "${variable.dependsOn}", pero la dependencia no existe.`
+                );
+
+                enabled = false;
+
+            } else {
+
+                const dependencyValue =
+                    getVariableValue(
+                        record,
+                        dependency
+                    );
+
+                enabled =
+                    dependencyValue === true;
+            }
+        }
+
+        // ========================================
+        // VARIABLE DESHABILITADA
+        // ========================================
+
+        if (!enabled) {
+
+            flatRecord[variable.excelField] = null;
+
+            continue;
+        }
+
+        // ========================================
+        // OBTENER VALOR
+        // ========================================
+
+        const value =
+            getVariableValue(
+                record,
+                variable
+            );
+
+        // ========================================
+        // GUARDAR VALOR
+        // ========================================
+
+        flatRecord[variable.excelField] =
+            value;
+    }
+
+    // ============================================
+    // METADATO DEL SISTEMA
+    // ============================================
+
+    flatRecord.FechaServidor =
+        record.FechaServidor ?? "";
+
+    return flatRecord;
+}
 
 function buildUbidotsPayload(data) {
 
@@ -419,86 +513,55 @@ function buildUbidotsPayload(data) {
 
     for (const [name, variable] of Object.entries(VARIABLES)) {
 
-        // Solo variables configuradas para Ubidots
+        // ========================================
+        // SOLO VARIABLES CONFIGURADAS PARA UBIDOTS
+        // ========================================
+
         if (!variable.ubidots?.variableId) {
             continue;
         }
 
-        let value = null;
-
 
         // ========================================
-        // 1. Variables pertenecientes a un grupo
+        // DEPENDENCIA / ENABLE
         // ========================================
 
-        if (
-            variable.recordGroup &&
-            variable.recordField
-        ) {
+        if (variable.dependsOn) {
 
-            const group =
-                data[variable.recordGroup];
+            const dependency =
+                VARIABLES[variable.dependsOn];
 
-            if (
-                group &&
-                typeof group === "object"
-            ) {
+            if (!dependency) {
 
-                value =
-                    group[variable.recordField] ?? null;
+                console.warn(
+                    `La variable "${name}" depende de "${variable.dependsOn}", pero la dependencia no existe.`
+                );
+
+                continue;
+            }
+
+            const dependencyValue =
+                getVariableValue(
+                    data,
+                    dependency
+                );
+
+            if (dependencyValue !== true) {
+
+                continue;
             }
         }
 
 
         // ========================================
-        // 2. Variables almacenadas directamente
+        // OBTENER VALOR
         // ========================================
 
-        if (value === null) {
-
-            if (
-                variable.recordField &&
-                data[variable.recordField] !== undefined
-            ) {
-
-                value =
-                    data[variable.recordField];
-            }
-        }
-
-
-        // ========================================
-        // 3. Variables mediante field
-        // ========================================
-
-        if (value === null) {
-
-            if (
-                variable.field &&
-                data[variable.field] !== undefined
-            ) {
-
-                value =
-                    data[variable.field];
-            }
-        }
-
-
-        // ========================================
-        // 4. Variables mediante excelField
-        // ========================================
-
-        if (value === null) {
-
-            if (
-                variable.excelField &&
-                data[variable.excelField] !== undefined
-            ) {
-
-                value =
-                    data[variable.excelField];
-            }
-        }
+        const value =
+            getVariableValue(
+                data,
+                variable
+            );
 
 
         // ========================================
@@ -594,32 +657,29 @@ async function sendToUbidots(data) {
 
     if (!TOKEN) {
 
-        console.error(
-            "ERROR: UBIDOTS_TOKEN no está configurado."
+        throw new Error(
+            "UBIDOTS_TOKEN no está configurado."
         );
-
-        return;
     }
 
-    try {
+    const payload =
+        buildUbidotsPayload(data);
 
-        const payload =
-            buildUbidotsPayload(data);
+    console.log(
+        "PAYLOAD DINÁMICO PARA UBIDOTS:"
+    );
 
-        console.log(
-            "PAYLOAD DINÁMICO PARA UBIDOTS:"
-        );
+    console.log(
+        JSON.stringify(
+            payload,
+            null,
+            2
+        )
+    );
 
-        console.log(
-            JSON.stringify(
-                payload,
-                null,
-                2
-            )
-        );
-
+    const response =
         await fetch(
-            "https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp",
+            UBIDOTS_CONFIG.deviceUrl,
             {
                 method: "POST",
 
@@ -636,24 +696,32 @@ async function sendToUbidots(data) {
             }
         );
 
-        console.log(
-            "Variables enviadas a Ubidots"
-        );
+    if (!response.ok) {
 
-    } catch (err) {
+        const errorBody =
+            await response.text();
 
-        console.error(
-            "Error enviando a Ubidots:",
-            err
+        throw new Error(
+            `Ubidots respondió HTTP ${response.status}: ${errorBody}`
         );
     }
+
+    console.log(
+        `Datos enviados correctamente a Ubidots. HTTP ${response.status}`
+    );
+
+    return {
+        success: true,
+        status: response.status,
+        payload
+    };
 }
 
 // ============================================
 // ENDPOINT GUARDAR
 // ============================================
 
-app.post('/save', (req, res) => {
+app.post('/save', async (req, res) => {
 
     const data = req.body;
 
@@ -672,7 +740,19 @@ app.post('/save', (req, res) => {
         data.FechaServidor = new Date().toLocaleString('es-CO');
 
         saveRecord(data);
-        /*sendToUbidots(data);*/
+
+        try {
+
+            await sendToUbidots(data);
+
+        } catch (err) {
+
+            console.error(
+                "Advertencia: registro guardado en Excel, pero no se pudo enviar a Ubidots:",
+                err
+            );
+        }
+
         res.status(200).json({
             success: true,
             message: "Registro guardado correctamente"
