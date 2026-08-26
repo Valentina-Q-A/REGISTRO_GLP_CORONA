@@ -556,7 +556,7 @@ function buildRecordRow(record) {
         // ========================================
 
         flatRecord[variable.excelField] =
-            value;
+            value ?? null;
     }
 
     // ============================================
