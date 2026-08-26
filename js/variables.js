@@ -311,6 +311,9 @@ const VARIABLES = {
         control: "select",
 
         field: "estadoOperacion",
+
+        excelField: "EstadoOperacion",
+
         recordGroup: "Estado",
         recordField: "EstadoOperacion",
 
@@ -338,6 +341,8 @@ const VARIABLES = {
         control: "checkbox",
 
         field: "pendientes",
+        excelField: "Pendientes",
+
         recordGroup: "Estado",
         recordField: "Pendientes",
 
@@ -383,6 +388,9 @@ const VARIABLES = {
         control: "textarea",
 
         field: "observaciones",
+
+        excelField: "Observaciones",
+
         recordGroup: "Administrativo",
         recordField: "Observaciones",
 
@@ -395,6 +403,9 @@ const VARIABLES = {
         control: "text",
 
         field: "encargado",
+
+        excelField: "Encargado",
+
         recordGroup: "Administrativo",
         recordField: "Encargado",
 

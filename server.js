@@ -495,11 +495,61 @@ function buildRecordRow(record) {
         // OBTENER VALOR
         // ========================================
 
-        const value =
+        let value =
             getVariableValue(
                 record,
                 variable
             );
+
+        // ========================================
+        // PENDIENTES → TEXTO PARA HISTÓRICO
+        // ========================================
+
+        if (name === "pendientes") {
+
+            if (!Array.isArray(value) || value.length === 0) {
+
+                value = "Sin pendientes";
+
+            } else {
+
+                const options =
+                    variable.options || [];
+
+                value = value
+                    .map(pendingValue => {
+
+                        const option =
+                            options.find(
+                                option =>
+                                    option.value === pendingValue
+                            );
+
+                        if (!option) {
+                            return pendingValue;
+                        }
+
+                        if (
+                            option.value === "otro" &&
+                            option.descriptionField
+                        ) {
+
+                            const description =
+                                record[
+                                    option.descriptionField
+                                ];
+
+                            if (description) {
+
+                                return `${option.label}: ${String(description).trim()}`;
+                            }
+                        }
+
+                        return option.label;
+                    })
+                    .join("; ");
+            }
+        }
 
         // ========================================
         // GUARDAR VALOR
