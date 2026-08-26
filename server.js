@@ -44,6 +44,9 @@ app.get('/js/variables.js', (req, res) => {
 
 const excelFilePath = path.join(__dirname, 'registros.xlsx');
 
+const testExcelFilePath =
+    path.join(__dirname, 'registros-test.xlsx');
+
 const ubidotsQueueFilePath =
     path.join(__dirname, 'ubidots-pending.json');
 
@@ -58,7 +61,7 @@ const UBIDOTS_RETRY_INTERVAL =
 // FUNCION GUARDAR EXCEL - DINÁMICA
 // ============================================
 
-function saveRecord(record) {
+function saveRecord(record, filePath = excelFilePath) {
 
     let workbook;
     let worksheet;
@@ -81,9 +84,9 @@ function saveRecord(record) {
     // CARGAR HISTÓRICO EXISTENTE
     // ============================================
 
-    if (fs.existsSync(excelFilePath)) {
+    if (fs.existsSync(filePath)) {
 
-        workbook = XLSX.readFile(excelFilePath);
+        workbook = XLSX.readFile(filePath);
 
         worksheet =
             workbook.Sheets[workbook.SheetNames[0]];
@@ -119,7 +122,7 @@ function saveRecord(record) {
 
     XLSX.writeFile(
         workbook,
-        excelFilePath
+        filePath
     );
 }
 
@@ -905,6 +908,49 @@ setInterval(
     processUbidotsQueue,
     UBIDOTS_RETRY_INTERVAL
 );
+
+// ============================================
+// ENDPOINT DE PRUEBA DE GUARDADO
+// ============================================
+
+
+app.post('/test-save', (req, res) => {
+
+    const data = req.body;
+
+    if (!data) {
+        return res.status(400).json({
+            success: false,
+            message: "No se recibieron datos"
+        });
+    }
+
+    try {
+
+        data.FechaServidor =
+            new Date().toLocaleString('es-CO');
+
+        saveRecord(data, testExcelFilePath);
+
+        res.status(200).json({
+            success: true,
+            message: "Registro de prueba guardado correctamente"
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Error guardando registro de prueba:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Error guardando registro de prueba",
+            error: err.message
+        });
+    }
+});
 
 // ============================================
 // ENDPOINT GUARDAR
