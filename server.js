@@ -912,7 +912,45 @@ setInterval(
 // ============================================
 // ENDPOINT DE PRUEBA DE GUARDADO
 // ============================================
+app.get('/test-save', (req, res) => {
 
+    if (!fs.existsSync(testExcelFilePath)) {
+        return res.status(404).json({
+            success: false,
+            message: "No existe el archivo de prueba"
+        });
+    }
+
+    try {
+
+        const workbook =
+            XLSX.readFile(testExcelFilePath);
+
+        const worksheet =
+            workbook.Sheets[workbook.SheetNames[0]];
+
+        const data =
+            XLSX.utils.sheet_to_json(worksheet);
+
+        res.status(200).json({
+            success: true,
+            registros: data
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Error leyendo archivo de prueba:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Error leyendo archivo de prueba",
+            error: err.message
+        });
+    }
+});
 
 app.post('/test-save', (req, res) => {
 
