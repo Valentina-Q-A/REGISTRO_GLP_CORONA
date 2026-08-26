@@ -441,6 +441,17 @@ const VARIABLES = {
         label: "Hora"
     },
 
+        prueba_nueva: {
+        category: "prueba",
+
+        type: "number",
+
+        field: "pruebaNueva",
+        excelField: "PruebaNueva",
+
+        label: "Prueba nueva"
+    },
+
 };
 
 // ============================================

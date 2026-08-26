@@ -92,12 +92,49 @@ function saveRecord(record, filePath = excelFilePath) {
             workbook.Sheets[workbook.SheetNames[0]];
 
         data =
-            XLSX.utils.sheet_to_json(worksheet);
+            XLSX.utils.sheet_to_json(
+                worksheet,
+                {
+                    defval: null
+                }
+            );
 
         data.push(flatRecord);
 
+        // ============================================
+        // NORMALIZAR COLUMNAS HISTÓRICAS
+        // ============================================
+
+        const excelColumns =
+            Object.values(VARIABLES)
+                .filter(variable => variable.excelField)
+                .map(variable => variable.excelField);
+
+        excelColumns.push(
+            "FechaServidor"
+        );
+
+        data =
+            data.map(row => {
+
+                const normalizedRow = {};
+
+                for (const column of excelColumns) {
+
+                    normalizedRow[column] =
+                        row[column] ?? null;
+                }
+
+                return normalizedRow;
+            });
+
         worksheet =
-            XLSX.utils.json_to_sheet(data);
+            XLSX.utils.json_to_sheet(
+                data,
+                {
+                    header: excelColumns
+                }
+            );
 
         workbook.Sheets[
             workbook.SheetNames[0]
