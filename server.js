@@ -968,6 +968,15 @@ app.post('/test-save', (req, res) => {
         data.FechaServidor =
             new Date().toLocaleString('es-CO');
 
+        console.log(
+            "TEST buildRecordRow:",
+            JSON.stringify(
+                buildRecordRow(data),
+                null,
+                2
+            )
+        );
+
         saveRecord(data, testExcelFilePath);
 
         const testFileExists =
