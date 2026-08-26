@@ -970,9 +970,30 @@ app.post('/test-save', (req, res) => {
 
         saveRecord(data, testExcelFilePath);
 
+        const testFileExists =
+            fs.existsSync(testExcelFilePath);
+
+        let testRecords = [];
+
+        if (testFileExists) {
+
+            const workbook =
+                XLSX.readFile(testExcelFilePath);
+
+            const worksheet =
+                workbook.Sheets[workbook.SheetNames[0]];
+
+            testRecords =
+                XLSX.utils.sheet_to_json(worksheet);
+        }
+
         res.status(200).json({
             success: true,
-            message: "Registro de prueba guardado correctamente"
+            message: "Registro de prueba guardado correctamente",
+            archivoExiste: testFileExists,
+            cantidadRegistros: testRecords.length,
+            ultimoRegistro:
+                testRecords[testRecords.length - 1] || null
         });
 
     } catch (err) {
