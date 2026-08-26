@@ -29,7 +29,7 @@ app.use(cors()); //  IMPORTANTE para React
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static('dist'));
+app.use(express.static(__dirname));
 
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/css', express.static(path.join(__dirname, 'css')));
