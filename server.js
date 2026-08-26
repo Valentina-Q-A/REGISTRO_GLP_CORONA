@@ -1017,7 +1017,12 @@ app.get('/test-save', (req, res) => {
             workbook.Sheets[workbook.SheetNames[0]];
 
         const data =
-            XLSX.utils.sheet_to_json(worksheet);
+            XLSX.utils.sheet_to_json(
+            worksheet,
+            {
+                defval: null
+            }
+        );
 
         res.status(200).json({
             success: true,
