@@ -71,6 +71,23 @@
                 <div class="control-group">
                     <label for="cisternaHabilitada">¿Desea Ingresar datos de cisterna?</label>
                     <input type="checkbox" id="cisternaHabilitada">
+                    <div
+                        id="mismaCisternaContainer"
+                        style="display: none;"
+                    >
+
+                        <label for="mismaCisterna">
+                            ¿Es la misma cisterna?
+                        </label>
+
+                        <input
+                            type="checkbox"
+                            id="mismaCisterna"
+                        >
+
+                        <div id="ultimaCisternaInfo"></div>
+
+                    </div>
                 </div>
 
                 <div id="cisternaFields">
@@ -209,31 +226,46 @@
                     </div>
                 </div>
 
-            <!-- Resolución de pendientes -->
-            <div class="form-group">
-                <label>¿Se resolvió algún pendiente?</label>
+            <!-- Pendientes activos -->
+                <div class="form-group">
 
-                <select id="pendienteResuelto">
-                    <option value="false">No</option>
-                    <option value="true">Sí</option>
-                </select>
-            </div>
+                    <label>Pendientes activos</label>
 
-            <div
-                id="pendientesResolverContainer"
-                class="form-group"
-                style="display: none;"
-            >
-                <label>Seleccione los pendientes resueltos</label>
+                    <div
+                        id="pendientesActivosList"
+                        class="checkbox-group"
+                    >
+                        <p>Cargando pendientes...</p>
+                    </div>
+
+                </div>
+
+                <!-- Resolución de pendientes -->
+                <div class="form-group">
+
+                    <label>¿Se resolvió algún pendiente?</label>
+
+                    <select id="pendienteResuelto">
+                        <option value="false">No</option>
+                        <option value="true">Sí</option>
+                    </select>
+
+                </div>
 
                 <div
-                    id="pendientesResolverList"
-                    class="checkbox-group"
+                    id="pendientesResolverContainer"
+                    class="form-group"
+                    style="display: none;"
                 >
-                    <!-- Se llenará dinámicamente con JavaScript -->
-                </div>
-            </div>
+                    <label>Seleccione los pendientes resueltos</label>
 
+                    <div
+                        id="pendientesResolverList"
+                        class="checkbox-group"
+                    >
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
             </div>
             <div class="form-row">
                 <div class="form-group">

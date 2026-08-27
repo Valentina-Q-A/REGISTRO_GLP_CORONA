@@ -440,18 +440,6 @@ const VARIABLES = {
         excelField: "Hora",
         label: "Hora"
     },
-
-        prueba_nueva: {
-        category: "prueba",
-
-        type: "number",
-
-        field: "pruebaNueva",
-        excelField: "PruebaNueva",
-
-        label: "Prueba nueva"
-    },
-
 };
 
 // ============================================
@@ -538,6 +526,110 @@ function readVariables(category = null) {
     }
 
     return data;
+}
+
+
+function resetVariable(variable) {
+
+    if (!variable || !variable.field) {
+        return;
+    }
+
+    switch (variable.control) {
+
+        case "number":
+        case "text":
+        case "textarea":
+        case "date":
+        case "time": {
+
+            const element =
+                document.getElementById(variable.field);
+
+            if (!element) {
+                return;
+            }
+
+            element.value =
+                variable.defaultValue ?? "";
+
+            break;
+        }
+
+        case "select": {
+
+            const element =
+                document.getElementById(variable.field);
+
+            if (!element) {
+                return;
+            }
+
+            if (variable.defaultValue !== undefined) {
+
+                element.value =
+                    variable.defaultValue;
+
+            } else if (element.options.length > 0) {
+
+                element.selectedIndex = 0;
+            }
+
+            break;
+        }
+
+        case "toggle": {
+
+            const element =
+                document.getElementById(variable.field);
+
+            if (!element) {
+                return;
+            }
+
+            element.checked =
+                variable.defaultValue ?? false;
+
+            break;
+        }
+
+        case "checkbox": {
+
+            const elements =
+                document.querySelectorAll(
+                    `input[name="${variable.field}"]`
+                );
+
+            elements.forEach(element => {
+                element.checked = false;
+            });
+
+            break;
+        }
+
+        default:
+
+            console.warn(
+                `Control no soportado para resetear la variable "${variable.field}":`,
+                variable.control
+            );
+
+            break;
+    }
+}
+
+function resetVariables(category = null) {
+
+    const entries =
+        Object.entries(VARIABLES)
+            .filter(([, variable]) =>
+                !category ||
+                variable.category === category
+            );
+
+    for (const [, variable] of entries) {
+        resetVariable(variable);
+    }
 }
 
 function groupVariablesByCategory(data) {
@@ -652,9 +744,10 @@ function normalizePending(pending) {
         const context = {};
 
         const contextFields =
-            VARIABLES.pendientes?.context?.fields || [];
+            VARIABLES.pendientes?.context?.fields || {};
 
-        for (const field of contextFields) {
+        for (const field of Object.keys(contextFields)) {
+
             context[field] =
                 pending.context?.[field] ?? null;
         }
@@ -662,10 +755,14 @@ function normalizePending(pending) {
         return {
             id: pending.id,
             type: pending.type,
-            description: String(pending.description || "").trim(),
+            description:
+                String(
+                    pending.description || ""
+                ).trim(),
             context
         };
     }
+
     return null;
 }
 
@@ -775,6 +872,8 @@ if (typeof module !== "undefined" && module.exports) {
         variableExists,
         readVariable,
         readVariables,
+        resetVariable,
+        resetVariables,
         groupVariablesByCategory,
         buildRecordVariables,
         buildRecordGroups,

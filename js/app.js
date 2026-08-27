@@ -14,6 +14,13 @@ const DEVICE = "planta-glp";
 
 let ultimoRegistro = null;
 
+let ultimaCisterna = {
+    placa: null,
+    capacidad: null
+};
+
+let pendientesActivos = [];
+
 // Configuración de controles y sus valores
 const controls = getVariablesByCategory("proceso");
 
@@ -93,33 +100,154 @@ function validarRango(input) {
 
 function initializeCisterna() {
 
-    const toggle = document.getElementById('cisternaHabilitada');
-    const fields = document.getElementById('cisternaFields');
+    const toggle =
+        document.getElementById('cisternaHabilitada');
+
+    const fields =
+        document.getElementById('cisternaFields');
+
+    const sameToggle =
+        document.getElementById('mismaCisterna');
+
+    const sameContainer =
+        document.getElementById('mismaCisternaContainer');
+
+    const info =
+        document.getElementById('ultimaCisternaInfo');
 
     if (!toggle || !fields) {
         return;
     }
 
-    const inputs = fields.querySelectorAll('input');
+    const inputs =
+        fields.querySelectorAll('input');
+
+    const placaInput =
+        document.getElementById('placaCisterna');
+
+    const capacidadInput =
+        document.getElementById('capacidadCisterna');
+
 
     function updateState() {
 
-        const enabled = toggle.checked;
+        const enabled =
+            toggle.checked;
 
-        fields.style.display = enabled ? '' : 'none';
+        fields.style.display =
+            enabled ? '' : 'none';
+
         inputs.forEach(input => {
             input.disabled = !enabled;
         });
 
-        document.getElementById('capacidadCisterna').required = enabled;
-        document.getElementById('placaCisterna').required = enabled;
+        document.getElementById(
+            'capacidadCisterna'
+        ).required = enabled;
+
+        document.getElementById(
+            'placaCisterna'
+        ).required = enabled;
+
+
+        if (sameContainer) {
+
+            sameContainer.style.display =
+                enabled &&
+                esValorCisternaValido(ultimaCisterna.placa) &&
+                esValorCisternaValido(ultimaCisterna.capacidad)
+                    ? ''
+                    : 'none';
+        }
+
+        updateSameCisternaState();
     }
 
-    toggle.addEventListener('change', updateState);
 
-    // Estado inicial
+    function updateSameCisternaState() {
+
+        if (!sameToggle) {
+            return;
+        }
+
+        const same =
+            sameToggle.checked &&
+            toggle.checked;
+
+
+        if (
+            same &&
+            esValorCisternaValido(ultimaCisterna.placa) &&
+            esValorCisternaValido(ultimaCisterna.capacidad)
+        ) {
+
+            placaInput.value =
+                ultimaCisterna.placa;
+
+            capacidadInput.value =
+                ultimaCisterna.capacidad;
+
+            placaInput.disabled = true;
+            capacidadInput.disabled = true;
+
+            placaInput.required = false;
+            capacidadInput.required = false;
+
+            if (info) {
+
+                info.innerHTML = `
+                    <small>
+                        Última cisterna:
+                        <strong>
+                            ${ultimaCisterna.placa}
+                        </strong>
+                        ·
+                        <strong>
+                            ${ultimaCisterna.capacidad} Gal
+                        </strong>
+                    </small>
+                `;
+            }
+
+        } else {
+
+            placaInput.disabled =
+                !toggle.checked;
+
+            capacidadInput.disabled =
+                !toggle.checked;
+
+            placaInput.required =
+                toggle.checked;
+
+            capacidadInput.required =
+                toggle.checked;
+
+            if (info) {
+                info.innerHTML = "";
+            }
+        }
+    }
+
+
+    toggle.addEventListener(
+        'change',
+        updateState
+    );
+
+
+    if (sameToggle) {
+
+        sameToggle.addEventListener(
+            'change',
+            updateSameCisternaState
+        );
+    }
+
+
     updateState();
 }
+
 // ============================================
 // FUNCIONES DE FECHA Y HORA
 // ============================================
@@ -142,6 +270,93 @@ function setCurrentDateTime() {
 // ============================================
 // RESUMEN DE DATOS
 // ============================================
+
+function esValorCisternaValido(valor) {
+
+    if (valor === null || valor === undefined) {
+        return false;
+    }
+
+    if (typeof valor === "string") {
+
+        const texto = valor.trim();
+
+        if (!texto || texto === "0") {
+            return false;
+        }
+
+        return true;
+    }
+
+    return valor !== 0;
+}
+
+function refrescarEstadoCisterna() {
+
+    const toggle =
+        document.getElementById('cisternaHabilitada');
+
+    const sameToggle =
+        document.getElementById('mismaCisterna');
+
+    const sameContainer =
+        document.getElementById('mismaCisternaContainer');
+
+    if (
+        !toggle ||
+        !sameToggle ||
+        !sameContainer
+    ) {
+        return;
+    }
+
+    const cisternaDisponible =
+        esValorCisternaValido(ultimaCisterna.placa) &&
+        esValorCisternaValido(ultimaCisterna.capacidad);
+
+    sameContainer.style.display =
+        toggle.checked && cisternaDisponible
+            ? ''
+            : 'none';
+
+    if (!cisternaDisponible) {
+        sameToggle.checked = false;
+    }
+
+    toggle.dispatchEvent(new Event('change'));
+}
+
+function actualizarUltimaCisterna(registros) {
+
+    ultimaCisterna = {
+        placa: null,
+        capacidad: null
+    };
+
+    if (!Array.isArray(registros)) {
+        return;
+    }
+
+    for (const registro of registros) {
+
+        const placa = registro.PlacaCisterna;
+        const capacidad = registro.CapacidadCisterna;
+
+        if (
+            esValorCisternaValido(placa) &&
+            esValorCisternaValido(capacidad)
+        ) {
+
+            ultimaCisterna = {
+                placa,
+                capacidad
+            };
+
+            return;
+        }
+    }
+}
+
 async function updateSummary() {
 
     try {
@@ -160,6 +375,15 @@ async function updateSummary() {
             document.getElementById('summaryDisplay').innerHTML =
                 '<p>No hay registros anteriores</p>';
             return;
+        }
+        const historialResponse = await fetch('/historial');
+
+        if (historialResponse.ok) {
+
+            const historial = await historialResponse.json();
+
+            actualizarUltimaCisterna(historial);
+            refrescarEstadoCisterna();
         }
 
         // ============================================
@@ -485,40 +709,82 @@ function mostrarComparativo() {
     `;
 }
 
+
+function refreshControlsDisplay() {
+
+    controls.forEach(variable => {
+
+        const input =
+            document.getElementById(variable.field);
+
+        const span =
+            document.getElementById(variable.valueDisplay);
+
+        if (!input || !span) {
+            return;
+        }
+
+        const unit =
+            variable.unit || "";
+
+        span.textContent =
+            input.value + unit;
+
+        validarRango(input);
+    });
+}
+
+
 function resetForm() {
-    const form = document.getElementById('glpForm');
 
-    // Resetear campos de texto
-    document.getElementById('capacidadCisterna').value = '';
-    document.getElementById('placaCisterna').value = '';
-    document.getElementById('observaciones').value = '';
-    document.getElementById('encargado').value = '';
+    // Restablecer todas las variables según su configuración
+    resetVariables();
 
-    // Restablecer fecha y hora actuales
+    // Fecha y hora actuales
     setCurrentDateTime();
 
-    // Restablecer controles numéricos
-    controls.forEach(s => {
+    // Actualizar valores mostrados de los controles numéricos
+    refreshControlsDisplay();
 
-        const isCentralized = Boolean(s.field);
+    // Restablecer comportamiento de cisterna
+    const cisternaToggle =
+        document.getElementById('cisternaHabilitada');
 
-        const field = isCentralized ? s.field : s.id;
-        const valueDisplay = isCentralized ? s.valueDisplay : s.span;
-        const unit = s.unit || "";
+    if (cisternaToggle) {
+        cisternaToggle.dispatchEvent(
+            new Event('change')
+        );
+    }
 
-        const input = document.getElementById(field);
-        const span = document.getElementById(valueDisplay);
+    // Restablecer comportamiento de problemas
+    const problemaSelect =
+        document.getElementById('problemaReportado');
 
-        if (input && span) {
+    if (problemaSelect) {
+        problemaSelect.dispatchEvent(
+            new Event('change')
+        );
+    }
 
-            if (isCentralized) {
-                input.value = s.defaultValue;
-            }
+    // Restablecer comportamiento de "Otro problema"
+    const problemaOtro =
+        document.getElementById('problemaOtro');
 
-            span.textContent = input.value + unit;
-            validarRango(input);
-        }
-    });
+    if (problemaOtro) {
+        problemaOtro.dispatchEvent(
+            new Event('change')
+        );
+    }
+
+    // Restablecer resolución de pendientes
+    const pendienteResuelto =
+        document.getElementById('pendienteResuelto');
+
+    if (pendienteResuelto) {
+        pendienteResuelto.dispatchEvent(
+            new Event('change')
+        );
+    }
 
     // Actualizar resumen
     updateSummary();
@@ -681,7 +947,7 @@ function initializeResolucionPendientes() {
             return;
         }
 
-        cargarPendientesParaResolver();
+        cargarPendientesActivos();
     }
 
     select.addEventListener('change', updateState);
@@ -689,27 +955,38 @@ function initializeResolucionPendientes() {
     updateState();
 }
 
-async function cargarPendientesParaResolver() {
+async function cargarPendientesActivos() {
 
-    const list = document.getElementById('pendientesResolverList');
+    const list =
+        document.getElementById('pendientesResolverList');
 
     if (!list) {
         return;
     }
 
-    list.innerHTML = '<p>Cargando pendientes...</p>';
+    list.innerHTML =
+        '<p>Cargando pendientes...</p>';
 
     try {
 
-        const response = await fetch('/pendientes');
+        const response =
+            await fetch('/pendientes');
 
         if (!response.ok) {
-            throw new Error('No se pudieron obtener los pendientes');
+            throw new Error(
+                'No se pudieron obtener los pendientes'
+            );
         }
 
-        const pendientes = await response.json();
+        const pendientes =
+            await response.json();
 
-        if (!Array.isArray(pendientes) || pendientes.length === 0) {
+        pendientesActivos =
+            Array.isArray(pendientes)
+                ? pendientes
+                : [];
+
+        if (pendientesActivos.length === 0) {
 
             list.innerHTML =
                 '<p>No hay pendientes activos para resolver.</p>';
@@ -717,25 +994,28 @@ async function cargarPendientesParaResolver() {
             return;
         }
 
-        list.innerHTML = pendientes.map(pending => `
+        list.innerHTML =
+            pendientesActivos
+                .map(pendiente => `
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="pendientesResolver"
+                            value="${pendiente.ID}"
+                        >
+                        ${pendiente.Descripcion}
+                    </label>
+                `)
+                .join('');
 
-            <label>
-                <input
-                    type="checkbox"
-                    name="pendientesResolver"
-                    value="${pending.id}"
-                >
-                ${pending.description}
-            </label>
-
-        `).join('');
-
-    } catch (err) {
+    } catch (error) {
 
         console.error(
-            'Error cargando pendientes para resolver:',
-            err
+            'Error cargando pendientes activos:',
+            error
         );
+
+        pendientesActivos = [];
 
         list.innerHTML =
             '<p>No se pudieron cargar los pendientes.</p>';
@@ -774,6 +1054,39 @@ async function savePendings(pendings) {
     }
 
     return saved;
+}
+
+async function resolverPendientes(ids, fecha, encargado) {
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return null;
+    }
+
+    const response = await fetch(
+        "/pendientes/resolver",
+        {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                ids,
+                fecha,
+                encargado
+            })
+        }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.message ||
+            "Error resolviendo pendientes"
+        );
+    }
+
+    return result;
 }
 
 function collectFormData() {
@@ -908,6 +1221,18 @@ async function saveData(data) {
     const record = buildRecord(data);
     const pendings = buildPendingRecords(data);
 
+    const pendientesResueltos =
+        Array.from(
+            document.querySelectorAll(
+                'input[name="pendientesResolver"]:checked'
+            )
+        ).map(input => input.value);
+
+    console.log(
+        "Pendientes seleccionados para resolver:",
+        pendientesResueltos
+    );
+
     console.log("Registro preparado:", record);
     console.log("Pendientes preparados:", pendings);
 
@@ -932,6 +1257,18 @@ async function saveData(data) {
         console.log(
             "Pendientes guardados:",
             savedPendings
+        );
+
+        const resolvedPendings =
+            await resolverPendientes(
+                pendientesResueltos,
+                data.Fecha,
+                data.Encargado
+            );
+
+        console.log(
+            "Pendientes resueltos:",
+            resolvedPendings
         );
 
         showAlert("Registro guardado correctamente", "success");

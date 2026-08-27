@@ -169,25 +169,61 @@ function saveRecord(record, filePath = excelFilePath) {
 
 const PENDIENTES_SHEET = "Pendientes";
 
-const PENDIENTES_COLUMNS = [
-    "ID",
-    "Tipo",
-    "Descripcion",
-    "FechaRegistro",
-    "EncargadoRegistro",
-    "FechaSolucion",
-    "EncargadoSolucion"
-];
-
 function getPendientesData(workbook) {
 
     if (!workbook.SheetNames.includes(PENDIENTES_SHEET)) {
         return [];
     }
 
-    const worksheet = workbook.Sheets[PENDIENTES_SHEET];
+    const worksheet =
+        workbook.Sheets[PENDIENTES_SHEET];
 
-    return XLSX.utils.sheet_to_json(worksheet);
+    const pendientes =
+        XLSX.utils.sheet_to_json(worksheet);
+
+    const config =
+        VARIABLES.pendientes;
+
+    if (!config) {
+        return [];
+    }
+
+    const recordFields =
+        config.record || {};
+
+    const contextFields =
+        config.context?.fields || {};
+
+    return pendientes.map(pendiente => {
+
+        const normalizado = {};
+
+        // ============================================
+        // CAMPOS PRINCIPALES
+        // ============================================
+
+        for (const [field, columnName] of Object.entries(recordFields)) {
+
+            normalizado[columnName] =
+                pendiente[columnName] ?? null;
+        }
+
+        // ============================================
+        // CAMPOS DE CONTEXTO
+        // ============================================
+
+        for (const [field, sourceField] of Object.entries(contextFields)) {
+
+            const columnName =
+                field.charAt(0).toUpperCase() +
+                field.slice(1);
+
+            normalizado[columnName] =
+                pendiente[columnName] ?? null;
+        }
+
+        return normalizado;
+    });
 }
 
 function savePendientesData(pendientes) {
@@ -200,16 +236,30 @@ function savePendientesData(pendientes) {
         workbook = XLSX.utils.book_new();
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(
-        pendientes,
-        {
-            header: PENDIENTES_COLUMNS
-        }
-    );
+    // ============================================
+    // COLUMNAS DINÁMICAS
+    // ============================================
+
+    const columns = [
+        ...new Set(
+            pendientes.flatMap(
+                pendiente => Object.keys(pendiente)
+            )
+        )
+    ];
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            pendientes,
+            {
+                header: columns
+            }
+        );
 
     if (workbook.SheetNames.includes(PENDIENTES_SHEET)) {
 
-        workbook.Sheets[PENDIENTES_SHEET] = worksheet;
+        workbook.Sheets[PENDIENTES_SHEET] =
+            worksheet;
 
     } else {
 
@@ -220,7 +270,10 @@ function savePendientesData(pendientes) {
         );
     }
 
-    XLSX.writeFile(workbook, excelFilePath);
+    XLSX.writeFile(
+        workbook,
+        excelFilePath
+    );
 }
 
 function testPendientesSheet() {
@@ -292,7 +345,7 @@ function addPending(pending) {
             contextName.slice(1);
 
         record[columnName] =
-            pending.context?.[contextName] ?? "";
+            pending.context?.[contextName] ?? null;
     }
 
     pendientes.push(record);
@@ -350,12 +403,7 @@ function testCrearHojaPendientes() {
 
     if (!workbook.SheetNames.includes(PENDIENTES_SHEET)) {
 
-        const worksheet = XLSX.utils.json_to_sheet(
-            [],
-            {
-                header: PENDIENTES_COLUMNS
-            }
-        );
+        const worksheet = XLSX.utils.json_to_sheet([]);
 
         XLSX.utils.book_append_sheet(
             workbook,
@@ -1322,6 +1370,88 @@ app.get('/pendientes/historial', (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error cargando histórico de pendientes",
+            error: err.message
+        });
+    }
+});
+
+// ============================================
+// RESOLVER PENDIENTES
+// ============================================
+
+app.patch('/pendientes/resolver', (req, res) => {
+
+    try {
+
+        const {
+            ids,
+            fecha,
+            encargado
+        } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+
+            return res.status(400).json({
+                success: false,
+                message: "No se recibieron pendientes para resolver"
+            });
+        }
+
+        if (!fecha || !encargado) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Fecha y encargado son obligatorios"
+            });
+        }
+
+        if (!fs.existsSync(excelFilePath)) {
+
+            return res.status(404).json({
+                success: false,
+                message: "No existe el archivo de registros"
+            });
+        }
+
+        const workbook =
+            XLSX.readFile(excelFilePath);
+
+        const pendientes =
+            getPendientesData(workbook);
+
+        let solucionados = 0;
+
+        for (const pendiente of pendientes) {
+
+            if (
+                ids.includes(String(pendiente.ID)) &&
+                !pendiente.FechaSolucion
+            ) {
+
+                pendiente.FechaSolucion = fecha;
+                pendiente.EncargadoSolucion = encargado;
+
+                solucionados++;
+            }
+        }
+
+        savePendientesData(pendientes);
+
+        res.json({
+            success: true,
+            solucionados
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Error resolviendo pendientes:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Error resolviendo pendientes",
             error: err.message
         });
     }
