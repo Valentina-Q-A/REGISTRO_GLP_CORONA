@@ -337,7 +337,11 @@ function actualizarUltimaCisterna(registros) {
         return;
     }
 
-    for (const registro of registros) {
+    // Recorrer desde el registro más reciente
+    // hacia los anteriores, según el orden recibido.
+    for (let i = 0; i < registros.length; i++) {
+
+        const registro = registros[i];
 
         const placa = registro.PlacaCisterna;
         const capacidad = registro.CapacidadCisterna;
@@ -1097,7 +1101,7 @@ function collectFormData() {
 
     delete variables.pendientes;
 
-    return {
+    const data = {
         Fecha: document.getElementById('fecha').value,
         Hora: document.getElementById('hora').value,
 
@@ -1105,6 +1109,69 @@ function collectFormData() {
 
         pendientes
     };
+
+    return normalizarDatosCisterna(data);
+}
+
+function normalizarDatosCisterna(data) {
+
+    const habilitada =
+        data.cisterna_habilitada === true;
+
+    // ============================================
+    // CISTERNA DESHABILITADA
+    // ============================================
+
+    if (!habilitada) {
+
+        for (const [name, variable] of Object.entries(VARIABLES)) {
+
+            if (
+                variable.dependsOn === "cisterna_habilitada"
+            ) {
+                data[name] = null;
+            }
+        }
+
+        return data;
+    }
+
+    // ============================================
+    // MISMA CISTERNA
+    // ============================================
+
+    const mismaToggle =
+        document.getElementById("mismaCisterna");
+
+    const misma =
+        mismaToggle?.checked === true;
+
+    if (!misma) {
+        return data;
+    }
+
+    // ============================================
+    // REUTILIZAR VARIABLES CONFIGURADAS
+    // ============================================
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+
+        if (!variable.reuseFromLast) {
+            continue;
+        }
+
+        const source =
+            name.replace("_cisterna", "");
+
+        const valorAnterior =
+            ultimaCisterna[source];
+
+        if (esValorCisternaValido(valorAnterior)) {
+            data[name] = valorAnterior;
+        }
+    }
+
+    return data;
 }
 
 function buildPendingRecords(data) {

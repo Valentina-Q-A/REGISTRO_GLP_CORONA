@@ -192,7 +192,8 @@ const VARIABLES = {
             variableId: "69b9845f3609a6ccc5146aa1"
         },
 
-        dependsOn: "cisterna_habilitada"
+        dependsOn: "cisterna_habilitada",
+        reuseFromLast: true
     },
     placa_cisterna: {
         category: "administrativo",
@@ -206,7 +207,8 @@ const VARIABLES = {
         recordGroup: "Cisterna",
 
         label: "Placa Cisterna",
-        dependsOn: "cisterna_habilitada"
+        dependsOn: "cisterna_habilitada",
+        reuseFromLast: true
     },
     presion_bomba: {
         category: "proceso",
@@ -518,6 +520,7 @@ function readVariables(category = null) {
             const dependencyValue = readVariable(dependency);
 
             if (!dependencyValue) {
+                data[name] = null;
                 continue;
             }
         }
@@ -834,19 +837,10 @@ function buildRecordGroups(data) {
             continue;
         }
 
-        if (variable.dependsOn) {
-
-            const dependencyValue = data[variable.dependsOn];
-
-            if (!dependencyValue) {
-
-                if (!(variable.recordGroup in record)) {
-                    record[variable.recordGroup] = null;
-                }
-
-                continue;
-            }
-        }
+        // ============================================
+        // El registro ya viene normalizado.
+        // Solo agrupamos variables.
+        // ============================================
 
         if (!(variable.recordGroup in record)) {
             record[variable.recordGroup] = {};

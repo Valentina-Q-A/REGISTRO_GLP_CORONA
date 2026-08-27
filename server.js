@@ -534,49 +534,6 @@ function buildRecordRow(record) {
         }
 
         // ========================================
-        // DEPENDENCIA / ENABLE
-        // ========================================
-
-        let enabled = true;
-
-        if (variable.dependsOn) {
-
-            const dependency =
-                VARIABLES[variable.dependsOn];
-
-            if (!dependency) {
-
-                console.warn(
-                    `La variable "${name}" depende de "${variable.dependsOn}", pero la dependencia no existe.`
-                );
-
-                enabled = false;
-
-            } else {
-
-                const dependencyValue =
-                    getVariableValue(
-                        record,
-                        dependency
-                    );
-
-                enabled =
-                    dependencyValue === true;
-            }
-        }
-
-        // ========================================
-        // VARIABLE DESHABILITADA
-        // ========================================
-
-        if (!enabled) {
-
-            flatRecord[variable.excelField] = null;
-
-            continue;
-        }
-
-        // ========================================
         // OBTENER VALOR
         // ========================================
 
@@ -789,38 +746,6 @@ function buildUbidotsPayload(data) {
             continue;
         }
 
-
-        // ========================================
-        // DEPENDENCIA / ENABLE
-        // ========================================
-
-        if (variable.dependsOn) {
-
-            const dependency =
-                VARIABLES[variable.dependsOn];
-
-            if (!dependency) {
-
-                console.warn(
-                    `La variable "${name}" depende de "${variable.dependsOn}", pero la dependencia no existe.`
-                );
-
-                continue;
-            }
-
-            const dependencyValue =
-                getVariableValue(
-                    data,
-                    dependency
-                );
-
-            if (dependencyValue !== true) {
-
-                continue;
-            }
-        }
-
-
         // ========================================
         // OBTENER VALOR
         // ========================================
@@ -830,7 +755,6 @@ function buildUbidotsPayload(data) {
                 data,
                 variable
             );
-
 
         // ========================================
         // SIN VALOR
@@ -843,7 +767,6 @@ function buildUbidotsPayload(data) {
 
             continue;
         }
-
 
         // ========================================
         // VARIABLES NUMÉRICAS
@@ -868,7 +791,6 @@ function buildUbidotsPayload(data) {
             continue;
         }
 
-
         // ========================================
         // VARIABLES DE TEXTO
         // ========================================
@@ -883,7 +805,6 @@ function buildUbidotsPayload(data) {
             continue;
         }
 
-
         // ========================================
         // OTROS TIPOS
         // ========================================
@@ -893,7 +814,6 @@ function buildUbidotsPayload(data) {
             timestamp
         };
     }
-
 
     // ============================================
     // METADATOS
@@ -1043,122 +963,6 @@ setInterval(
     processUbidotsQueue,
     UBIDOTS_RETRY_INTERVAL
 );
-
-// ============================================
-// ENDPOINT DE PRUEBA DE GUARDADO
-// ============================================
-app.get('/test-save', (req, res) => {
-
-    if (!fs.existsSync(testExcelFilePath)) {
-        return res.status(404).json({
-            success: false,
-            message: "No existe el archivo de prueba"
-        });
-    }
-
-    try {
-
-        const workbook =
-            XLSX.readFile(testExcelFilePath);
-
-        const worksheet =
-            workbook.Sheets[workbook.SheetNames[0]];
-
-        const data =
-            XLSX.utils.sheet_to_json(
-            worksheet,
-            {
-                defval: null
-            }
-        );
-
-        res.status(200).json({
-            success: true,
-            registros: data
-        });
-
-    } catch (err) {
-
-        console.error(
-            "Error leyendo archivo de prueba:",
-            err
-        );
-
-        res.status(500).json({
-            success: false,
-            message: "Error leyendo archivo de prueba",
-            error: err.message
-        });
-    }
-});
-
-app.post('/test-save', (req, res) => {
-
-    const data = req.body;
-
-    if (!data) {
-        return res.status(400).json({
-            success: false,
-            message: "No se recibieron datos"
-        });
-    }
-
-    try {
-
-        data.FechaServidor =
-            new Date().toLocaleString('es-CO');
-
-        console.log(
-            "TEST buildRecordRow:",
-            JSON.stringify(
-                buildRecordRow(data),
-                null,
-                2
-            )
-        );
-
-        saveRecord(data, testExcelFilePath);
-
-        const testFileExists =
-            fs.existsSync(testExcelFilePath);
-
-        let testRecords = [];
-
-        if (testFileExists) {
-
-            const workbook =
-                XLSX.readFile(testExcelFilePath);
-
-            const worksheet =
-                workbook.Sheets[workbook.SheetNames[0]];
-
-            testRecords =
-                XLSX.utils.sheet_to_json(worksheet);
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Registro de prueba guardado correctamente",
-            archivoExiste: testFileExists,
-            cantidadRegistros: testRecords.length,
-            ultimoRegistro:
-                testRecords[testRecords.length - 1] || null
-        });
-
-    } catch (err) {
-
-        console.error(
-            "Error guardando registro de prueba:",
-            err
-        );
-
-        res.status(500).json({
-            success: false,
-            message: "Error guardando registro de prueba",
-            error: err.message
-        });
-    }
-});
 
 // ============================================
 // ENDPOINT GUARDAR
