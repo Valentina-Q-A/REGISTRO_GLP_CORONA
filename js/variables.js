@@ -755,7 +755,8 @@ function buildRecordGroups(data) {
             record[variable.recordGroup] = {};
         }
 
-        record[variable.recordGroup][variable.recordField] = data[name];
+        record[variable.recordGroup][variable.recordField] =
+            data[name] ?? null;
     }
 
     return record;
