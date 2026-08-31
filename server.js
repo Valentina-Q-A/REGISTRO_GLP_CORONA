@@ -166,6 +166,13 @@ function saveRecord(record, filePath = excelFilePath) {
 // ============================================
 // HOJA DE PENDIENTES
 // ============================================
+function toExcelFieldName(field) {
+    if (!field) {
+        return field;
+    }
+
+    return field.charAt(0).toUpperCase() + field.slice(1);
+}
 
 const PENDIENTES_SHEET = "Pendientes";
 
@@ -179,7 +186,9 @@ function getPendientesData(workbook) {
         workbook.Sheets[PENDIENTES_SHEET];
 
     const pendientes =
-        XLSX.utils.sheet_to_json(worksheet);
+        XLSX.utils.sheet_to_json(worksheet, {
+            defval: null
+        });
 
     const config =
         VARIABLES.pendientes;
@@ -194,6 +203,9 @@ function getPendientesData(workbook) {
     const contextFields =
         config.context?.fields || {};
 
+    const resolutionFields =
+        config.context?.resolution?.fields || {};
+
     return pendientes.map(pendiente => {
 
         const normalizado = {};
@@ -202,7 +214,10 @@ function getPendientesData(workbook) {
         // CAMPOS PRINCIPALES
         // ============================================
 
-        for (const [field, columnName] of Object.entries(recordFields)) {
+        for (
+            const [field, columnName]
+            of Object.entries(recordFields)
+        ) {
 
             normalizado[columnName] =
                 pendiente[columnName] ?? null;
@@ -212,14 +227,36 @@ function getPendientesData(workbook) {
         // CAMPOS DE CONTEXTO
         // ============================================
 
-        for (const [field, sourceField] of Object.entries(contextFields)) {
+        for (
+            const field
+            of Object.keys(contextFields)
+        ) {
 
             const columnName =
-                field.charAt(0).toUpperCase() +
-                field.slice(1);
+                toExcelFieldName(field);
 
             normalizado[columnName] =
-                pendiente[columnName] ?? null;
+                pendiente[columnName] ??
+                pendiente[field] ??
+                null;
+        }
+
+        // ============================================
+        // CAMPOS DE RESOLUCIÓN
+        // ============================================
+
+        for (
+            const field
+            of Object.keys(resolutionFields)
+        ) {
+
+            const columnName =
+                toExcelFieldName(field);
+
+            normalizado[columnName] =
+                pendiente[columnName] ??
+                pendiente[field] ??
+                null;
         }
 
         return normalizado;
@@ -276,21 +313,6 @@ function savePendientesData(pendientes) {
     );
 }
 
-function testPendientesSheet() {
-
-    let workbook;
-
-    if (fs.existsSync(excelFilePath)) {
-        workbook = XLSX.readFile(excelFilePath);
-    } else {
-        workbook = XLSX.utils.book_new();
-    }
-
-    const pendientes = getPendientesData(workbook);
-
-    console.log("Pendientes actuales:", pendientes);
-}
-
 function addPending(pending) {
 
     if (!pending) {
@@ -338,14 +360,16 @@ function addPending(pending) {
     const contextFields =
         config.context?.fields || {};
 
-    for (const contextName of Object.keys(contextFields)) {
+    for (
+        const [targetField, sourceField]
+        of Object.entries(contextFields)
+    ) {
 
         const columnName =
-            contextName.charAt(0).toUpperCase() +
-            contextName.slice(1);
+            toExcelFieldName(targetField);
 
         record[columnName] =
-            pending.context?.[contextName] ?? null;
+            pending.context?.[sourceField] ?? null;
     }
 
     pendientes.push(record);
@@ -385,45 +409,6 @@ app.post('/pendientes', (req, res) => {
         });
     }
 });
-
-function testCrearHojaPendientes() {
-
-    let workbook;
-
-    if (fs.existsSync(excelFilePath)) {
-        workbook = XLSX.readFile(excelFilePath);
-    } else {
-        workbook = XLSX.utils.book_new();
-    }
-
-    const pendientes = getPendientesData(workbook);
-
-    console.log("Hojas actuales:", workbook.SheetNames);
-    console.log("Pendientes antes de la prueba:", pendientes);
-
-    if (!workbook.SheetNames.includes(PENDIENTES_SHEET)) {
-
-        const worksheet = XLSX.utils.json_to_sheet([]);
-
-        XLSX.utils.book_append_sheet(
-            workbook,
-            worksheet,
-            PENDIENTES_SHEET
-        );
-
-        XLSX.writeFile(workbook, excelFilePath);
-
-        console.log(
-            `Hoja "${PENDIENTES_SHEET}" creada correctamente`
-        );
-
-    } else {
-
-        console.log(
-            `La hoja "${PENDIENTES_SHEET}" ya existe`
-        );
-    }
-}
 
 // ============================================
 // OBTENER VALOR DE UNA VARIABLE
@@ -680,10 +665,6 @@ function addToUbidotsQueue(data) {
 
     if (alreadyExists) {
 
-        console.log(
-            `Registro ${id} ya existe en la cola de Ubidots.`
-        );
-
         return false;
     }
 
@@ -698,10 +679,6 @@ function addToUbidotsQueue(data) {
     });
 
     saveUbidotsQueue(queue);
-
-    console.log(
-        `Registro ${id} agregado a la cola de Ubidots.`
-    );
 
     return true;
 }
@@ -853,18 +830,6 @@ async function sendToUbidots(payload) {
         );
     }
 
-    console.log(
-        "PAYLOAD ENVIADO A UBIDOTS:"
-    );
-
-    console.log(
-        JSON.stringify(
-            payload,
-            null,
-            2
-        )
-    );
-
     const response =
         await fetch(
             UBIDOTS_CONFIG.deviceUrl,
@@ -893,10 +858,6 @@ async function sendToUbidots(payload) {
             `Ubidots respondió HTTP ${response.status}: ${errorBody}`
         );
     }
-
-    console.log(
-        `Datos enviados correctamente a Ubidots. HTTP ${response.status}`
-    );
 
     return {
         success: true,
@@ -929,16 +890,8 @@ async function processUbidotsQueue() {
 
             item.attempts++;
 
-            console.log(
-                `Reintentando registro ${item.id}. Intento ${item.attempts}.`
-            );
-
             await sendToUbidots(
                 item.payload
-            );
-
-            console.log(
-                `Registro ${item.id} sincronizado correctamente.`
             );
 
         } catch (err) {
@@ -971,9 +924,6 @@ setInterval(
 app.post('/save', async (req, res) => {
 
     const data = req.body;
-
-    console.log("DATOS RECIBIDOS EN /save:");
-    console.log(JSON.stringify(data, null, 2));
 
     if (!data) {
         return res.status(400).json({
@@ -1225,18 +1175,56 @@ app.patch('/pendientes/resolver', (req, res) => {
 
         let solucionados = 0;
 
+        const resolutionFields =
+            VARIABLES.pendientes?.context?.resolution?.fields || {};
+
+        const resolutionContext = {
+            fecha,
+            encargado
+        };
+
         for (const pendiente of pendientes) {
 
-            if (
-                ids.includes(String(pendiente.ID)) &&
-                !pendiente.FechaSolucion
+            if (!ids.includes(String(pendiente.ID))) {
+                continue;
+            }
+
+            // Buscar si el pendiente ya tiene algún campo
+            // de resolución informado.
+            const yaResuelto =
+                Object.keys(resolutionFields).some(
+                    targetField => {
+
+                        const columnName =
+                            toExcelFieldName(targetField);
+
+                        return (
+                            pendiente[columnName] !== null &&
+                            pendiente[columnName] !== undefined &&
+                            pendiente[columnName] !== ""
+                        );
+                    }
+                );
+
+            if (yaResuelto) {
+                continue;
+            }
+
+            // Aplicar dinámicamente todos los campos
+            // definidos en la configuración.
+            for (
+                const [targetField, sourceField]
+                of Object.entries(resolutionFields)
             ) {
 
-                pendiente.FechaSolucion = fecha;
-                pendiente.EncargadoSolucion = encargado;
+                const columnName =
+                    toExcelFieldName(targetField);
 
-                solucionados++;
+                pendiente[columnName] =
+                    resolutionContext[sourceField] ?? null;
             }
+
+            solucionados++;
         }
 
         savePendientesData(pendientes);
@@ -1277,9 +1265,36 @@ app.get('/pendientes', (req, res) => {
 
         const pendientes = getPendientesData(workbook);
 
-        const pendientesActivos = pendientes.filter(
-            pendiente => !pendiente.FechaSolucion
-        );
+        const resolutionFields =
+            VARIABLES.pendientes?.context?.resolution?.fields || {};
+
+        const pendientesActivos =
+            pendientes.filter(pendiente => {
+
+                // Si no hay campos de resolución configurados,
+                // todos los pendientes se consideran activos.
+                if (Object.keys(resolutionFields).length === 0) {
+                    return true;
+                }
+
+                // Un pendiente está resuelto cuando alguno
+                // de los campos de resolución tiene valor.
+                const yaResuelto =
+                    Object.keys(resolutionFields).some(
+                        targetField => {
+
+                            const columnName =
+                                toExcelFieldName(targetField);
+
+                            return (
+                                pendiente[columnName] !== null &&
+                                pendiente[columnName] !== undefined &&
+                                pendiente[columnName] !== ""
+                            );
+                        }
+                    );
+                return !yaResuelto;
+            });
 
         res.json(pendientesActivos);
 
@@ -1377,32 +1392,6 @@ app.get('/ultimo-registro', (req, res) => {
 
     res.json(registro);
 });
-
-async function loadLastRecord() {
-    try {
-        const response = await fetch('http://LJDCOLORADO:3000/registros');
-        const data = await response.json();
-
-        if (data.length === 0) {
-            document.getElementById('summaryDisplay').innerHTML = 
-                "<p>No hay registros anteriores</p>";
-            return;
-        }
-
-        const last = data[data.length - 1];
-
-        document.getElementById('summaryDisplay').innerHTML = `
-            <div class="summary-item"><label>Fecha</label><div>${last.Fecha} ${last.Hora}</div></div>
-            <div class="summary-item"><label>Nivel Tanque</label><div>${last.NivelTanque}%</div></div>
-            <div class="summary-item"><label>Presión Tanque</label><div>${last.PresionTanque} PSI</div></div>
-            <div class="summary-item"><label>Temp Tanque</label><div>${last.TempTanque} °C</div></div>
-            <div class="summary-item"><label>Encargado</label><div>${last.Encargado}</div></div>
-        `;
-
-    } catch (err) {
-        console.error("Error cargando registros:", err);
-    }
-}
 
 // ============================================
 // HEALTH CHECK

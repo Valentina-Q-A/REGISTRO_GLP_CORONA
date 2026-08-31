@@ -932,63 +932,33 @@ function initializeOtroPendiente() {
 
 function initializeResolucionPendientes() {
 
-    const select = document.getElementById('pendienteResuelto');
-    const container = document.getElementById('pendientesResolverContainer');
-    const list = document.getElementById('pendientesResolverList');
+    const select =
+        document.getElementById('pendienteResuelto');
+
+    const container =
+        document.getElementById('pendientesResolverContainer');
+
+    const list =
+        document.getElementById('pendientesResolverList');
 
     if (!select || !container || !list) {
         return;
     }
 
-    function updateState() {
+    async function updateState() {
 
-        const enabled = select.value === "true";
+        const enabled =
+            select.value === "true";
 
-        container.style.display = enabled ? '' : 'none';
+        container.style.display =
+            enabled ? '' : 'none';
 
         if (!enabled) {
             list.innerHTML = '';
             return;
         }
 
-        cargarPendientesActivos();
-    }
-
-    select.addEventListener('change', updateState);
-
-    updateState();
-}
-
-async function cargarPendientesActivos() {
-
-    const list =
-        document.getElementById('pendientesResolverList');
-
-    if (!list) {
-        return;
-    }
-
-    list.innerHTML =
-        '<p>Cargando pendientes...</p>';
-
-    try {
-
-        const response =
-            await fetch('/pendientes');
-
-        if (!response.ok) {
-            throw new Error(
-                'No se pudieron obtener los pendientes'
-            );
-        }
-
-        const pendientes =
-            await response.json();
-
-        pendientesActivos =
-            Array.isArray(pendientes)
-                ? pendientes
-                : [];
+        await cargarPendientesActivos();
 
         if (pendientesActivos.length === 0) {
 
@@ -1011,6 +981,51 @@ async function cargarPendientesActivos() {
                     </label>
                 `)
                 .join('');
+    }
+
+    select.addEventListener(
+        'change',
+        updateState
+    );
+
+    updateState();
+}
+
+async function cargarPendientesActivos() {
+
+    try {
+
+        const response =
+            await fetch('/pendientes');
+
+        if (!response.ok) {
+            throw new Error(
+                'No se pudieron obtener los pendientes'
+            );
+        }
+
+        const pendientes =
+            await response.json();
+
+        console.log(
+            "RESPUESTA /pendientes:",
+            pendientes
+        );
+
+        pendientesActivos =
+            Array.isArray(pendientes)
+                ? pendientes
+                : [];
+
+        console.log(
+            "PENDIENTES ACTIVOS:",
+            pendientesActivos
+        );
+
+        console.log(
+            "CANTIDAD:",
+            pendientesActivos.length
+        );
 
     } catch (error) {
 
@@ -1020,9 +1035,6 @@ async function cargarPendientesActivos() {
         );
 
         pendientesActivos = [];
-
-        list.innerHTML =
-            '<p>No se pudieron cargar los pendientes.</p>';
     }
 }
 
@@ -1036,6 +1048,11 @@ async function savePendings(pendings) {
 
     for (const pending of pendings) {
 
+        console.log(
+            "PENDIENTE QUE SE ENVÍA AL SERVIDOR:",
+            JSON.stringify(pending, null, 2)
+        );
+
         const response = await fetch("/pendientes", {
             method: "POST",
 
@@ -1047,6 +1064,11 @@ async function savePendings(pendings) {
         });
 
         const result = await response.json();
+
+        console.log(
+            "RESPUESTA DEL SERVIDOR AL GUARDAR PENDIENTE:",
+            result
+        );
 
         if (!response.ok) {
             throw new Error(
@@ -1204,9 +1226,32 @@ function buildPendingRecords(data) {
                         option.descriptionField
                     );
 
+                console.log(
+                    "OTRO - descriptionField:",
+                    option.descriptionField
+                );
+
+                console.log(
+                    "OTRO - input encontrado:",
+                    input
+                );
+
+                console.log(
+                    "OTRO - valor:",
+                    input?.value
+                );
+
                 description =
                     input?.value.trim() || "";
             }
+
+            console.log(
+                "PENDIENTE ANTES DE createPending:",
+                {
+                    type,
+                    description
+                }
+            );
 
             return createPending(
                 type,
@@ -1326,11 +1371,16 @@ async function saveData(data) {
             savedPendings
         );
 
+        console.log("DATA COMPLETA ANTES DE RESOLVER:", data);
+        console.log("FECHA PARA RESOLUCIÓN:", data.Fecha);
+        console.log("ENCARGADO PARA RESOLUCIÓN:", data.encargado);
+        console.log("PENDIENTES A RESOLVER:", pendientesResueltos);
+
         const resolvedPendings =
             await resolverPendientes(
                 pendientesResueltos,
                 data.Fecha,
-                data.Encargado
+                data.encargado
             );
 
         console.log(

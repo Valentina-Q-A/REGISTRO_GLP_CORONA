@@ -342,7 +342,7 @@ const VARIABLES = {
         type: "multiselect",
         control: "checkbox",
 
-        field: "pendientes",
+        field: "problemas",
         excelField: "Pendientes",
 
         recordGroup: "Estado",
@@ -353,9 +353,14 @@ const VARIABLES = {
         context: {
             fields: {
                 fechaRegistro: "fecha",
-                encargadoRegistro: "encargado",
-                fechaSolucion: null,
-                encargadoSolucion: null
+                encargadoRegistro: "encargado"
+            },
+
+            resolution: {
+                fields: {
+                    fechaSolucion: "fecha",
+                    encargadoSolucion: "encargado"
+                }
             }
         },
         record: {
