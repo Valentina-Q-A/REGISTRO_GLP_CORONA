@@ -44,9 +44,6 @@ app.get('/js/variables.js', (req, res) => {
 
 const excelFilePath = path.join(__dirname, 'registros.xlsx');
 
-const testExcelFilePath =
-    path.join(__dirname, 'registros-test.xlsx');
-
 const ubidotsQueueFilePath =
     path.join(__dirname, 'ubidots-pending.json');
 
@@ -369,7 +366,7 @@ function addPending(pending) {
             toExcelFieldName(targetField);
 
         record[columnName] =
-            pending.context?.[sourceField] ?? null;
+            pending.context?.[targetField] ?? null;
     }
 
     pendientes.push(record);
@@ -414,20 +411,20 @@ app.post('/pendientes', (req, res) => {
 // OBTENER VALOR DE UNA VARIABLE
 // ============================================
 
-function getVariableValue(data, variable) {
+function getVariableValue(data, variable, name) {
+    if (name && data[name] !== undefined) {
+        return data[name];
+    }
 
     let value = null;
-
-
     // ========================================
-    // 1. Variables pertenecientes a un grupo
+    // 2. Variables pertenecientes a un grupo
     // ========================================
 
     if (
         variable.recordGroup &&
         variable.recordField
     ) {
-
         const group =
             data[variable.recordGroup];
 
@@ -441,9 +438,8 @@ function getVariableValue(data, variable) {
         }
     }
 
-
     // ========================================
-    // 2. Variables almacenadas directamente
+    // 3. Variables almacenadas directamente
     // ========================================
 
     if (value === null) {
@@ -458,9 +454,8 @@ function getVariableValue(data, variable) {
         }
     }
 
-
     // ========================================
-    // 3. Variables mediante field
+    // 4. Variables mediante field
     // ========================================
 
     if (value === null) {
@@ -477,7 +472,7 @@ function getVariableValue(data, variable) {
 
 
     // ========================================
-    // 4. Variables mediante excelField
+    // 5. Variables mediante excelField
     // ========================================
 
     if (value === null) {
@@ -491,7 +486,6 @@ function getVariableValue(data, variable) {
                 data[variable.excelField];
         }
     }
-
 
     return value;
 }
@@ -649,8 +643,7 @@ function saveUbidotsQueue(queue) {
     );
 }
 
-
-function addToUbidotsQueue(data) {
+function addToUbidotsQueue(data, payload) {
 
     const queue =
         loadUbidotsQueue();
@@ -667,9 +660,6 @@ function addToUbidotsQueue(data) {
 
         return false;
     }
-
-    const payload =
-        buildUbidotsPayload(data);
 
     queue.push({
         id,
@@ -706,6 +696,163 @@ function getRecordTimestamp(data) {
     return timestamp;
 }
 
+function buildUbidotsContext(data, pendientesActivos = []) {
+
+    const context = {};
+
+    const pendientesConfig =
+        VARIABLES.pendientes;
+
+    // ========================================
+    // ESTADO DE OPERACIÓN
+    // ========================================
+
+    const estadoOperacion =
+        getVariableValue(
+            data,
+            VARIABLES.estado_operacion
+        );
+
+    if (
+        estadoOperacion !== null &&
+        estadoOperacion !== undefined &&
+        estadoOperacion !== ""
+    ) {
+
+        context.estado_operacion =
+            estadoOperacion;
+    }
+
+
+    // ========================================
+    // ENCARGADO
+    // ========================================
+
+    const encargado =
+        getVariableValue(
+            data,
+            VARIABLES.encargado
+        );
+
+    if (
+        encargado !== null &&
+        encargado !== undefined &&
+        encargado !== ""
+    ) {
+
+        context.encargado =
+            encargado;
+    }
+
+
+    // ========================================
+    // CONFIGURACIÓN DE PENDIENTES
+    // ========================================
+
+    const recordFields =
+        pendientesConfig?.record || {};
+
+    const contextFields =
+        pendientesConfig?.context?.fields || {};
+
+
+    // ========================================
+    // PENDIENTES ACTIVOS
+    // ========================================
+
+    const pendientesUbidots =
+        pendientesActivos.map(pendiente => {
+
+            const resultado = {};
+
+
+            // ------------------------------------
+            // CAMPOS DEL REGISTRO
+            // ------------------------------------
+
+            if (recordFields.id) {
+
+                resultado.id =
+                    pendiente[
+                        recordFields.id
+                    ] ?? null;
+            }
+
+            if (recordFields.type) {
+
+                resultado.tipo =
+                    pendiente[
+                        recordFields.type
+                    ] ?? null;
+            }
+
+            if (recordFields.description) {
+
+                resultado.descripcion =
+                    pendiente[
+                        recordFields.description
+                    ] ?? null;
+            }
+
+
+            // ------------------------------------
+            // CAMPOS DE CONTEXTO
+            // ------------------------------------
+
+            for (
+                const [nombreCampo, nombreFuente]
+                of Object.entries(contextFields)
+            ) {
+
+                const columna =
+                    toExcelFieldName(
+                        nombreCampo
+                    );
+
+                const valor =
+                    pendiente[columna] ??
+                    pendiente[nombreFuente] ??
+                    null;
+
+                if (
+                    valor !== null &&
+                    valor !== undefined &&
+                    valor !== ""
+                ) {
+
+                    if (
+                        nombreCampo ===
+                        "encargadoRegistro"
+                    ) {
+
+                        resultado.encargado =
+                            valor;
+
+                    } else if (
+                        nombreCampo ===
+                        "fechaRegistro"
+                    ) {
+
+                        resultado.fecha =
+                            valor;
+                    }
+                }
+            }
+
+
+            return resultado;
+        });
+
+
+    context.pendientes_json =
+        JSON.stringify(
+            pendientesUbidots
+        );
+
+
+    return context;
+}
+
 function buildUbidotsPayload(data) {
 
     const payload = {};
@@ -730,7 +877,8 @@ function buildUbidotsPayload(data) {
         const value =
             getVariableValue(
                 data,
-                variable
+                variable,
+                name
             );
 
         // ========================================
@@ -796,20 +944,41 @@ function buildUbidotsPayload(data) {
     // METADATOS
     // ============================================
 
-    payload.fecha = {
-        value: timestamp,
-        timestamp
-    };
+    return payload;
+}
 
-    payload.hora = {
-        value: timestamp,
-        timestamp
-    };
+// ============================================
+// CONSTRUIR PAYLOAD UBIDOTS + CONTEXTO
+// ============================================
 
-    payload.fecha_servidor = {
-        value: Date.now(),
-        timestamp
-    };
+function buildUbidotsPayloadWithContext(data) {
+
+    const payload =
+        buildUbidotsPayload(data);
+
+    let pendientesActivos = [];
+
+    if (fs.existsSync(excelFilePath)) {
+
+        const workbook =
+            XLSX.readFile(excelFilePath);
+
+        pendientesActivos =
+            getPendientesActivos(workbook);
+    }
+
+    const context =
+        buildUbidotsContext(
+            data,
+            pendientesActivos
+        );
+
+    for (const variable of Object.values(payload)) {
+
+        variable.context = {
+            ...context
+        };
+    }
 
     return payload;
 }
@@ -877,7 +1046,6 @@ async function processUbidotsQueue() {
     if (queue.length === 0) {
         return;
     }
-
     console.log(
         `Cola de Ubidots: ${queue.length} registro(s) pendiente(s).`
     );
@@ -938,24 +1106,6 @@ app.post('/save', async (req, res) => {
 
         saveRecord(data);
 
-        const payload =
-            buildUbidotsPayload(data);
-
-        try {
-
-            await sendToUbidots(
-                payload
-            );
-
-        } catch (err) {
-
-            console.error(
-                "Advertencia: registro guardado en Excel, pero no se pudo enviar a Ubidots:",
-                err.message
-            );
-
-            addToUbidotsQueue(data);
-        }
         res.status(200).json({
             success: true,
             message: "Registro guardado correctamente"
@@ -968,6 +1118,86 @@ app.post('/save', async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error guardando registro",
+            error: err.message
+        });
+    }
+});
+
+// ============================================
+// SINCRONIZAR UBIDOTS
+// Se ejecuta después de actualizar pendientes
+// ============================================
+
+app.post('/sync-ubidots', async (req, res) => {
+
+    const data = req.body;
+
+    if (!data) {
+
+        return res.status(400).json({
+            success: false,
+            message: "No se recibieron datos"
+        });
+    }
+
+    try {
+        console.log("");
+        console.log("==============================================");
+        console.log("       DATA RECIBIDA EN /sync-ubidots");
+        console.log("==============================================");
+        console.log(
+            JSON.stringify(data, null, 2)
+        );
+
+        const payload =
+            buildUbidotsPayloadWithContext(data);
+
+        console.log("");
+        console.log("==============================================");
+        console.log("       SYNC UBIDOTS - PAYLOAD");
+        console.log("==============================================");
+        console.log(
+            JSON.stringify(payload, null, 2)
+        );
+
+        try {
+
+            await sendToUbidots(
+                payload
+            );
+
+        console.log(
+            "Ubidots sincronizado correctamente."
+        );
+
+        } catch (err) {
+
+            console.error(
+                "Advertencia: no se pudo sincronizar con Ubidots. Se agregará a la cola:",
+                err.message
+            );
+
+            addToUbidotsQueue(
+                data,
+                payload
+            );
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Sincronización con Ubidots procesada"
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Error sincronizando Ubidots:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Error sincronizando Ubidots",
             error: err.message
         });
     }
@@ -994,6 +1224,54 @@ app.get('/registros', (req, res) => {
 // FILTRAR REGISTROS POR FECHA
 // ============================================
 
+// ============================================
+// CONVERTIR FECHA EXCEL → YYYY-MM-DD
+// ============================================
+
+function excelDateToISO(value) {
+
+    if (typeof value === "number") {
+
+        const date = XLSX.SSF.parse_date_code(value);
+
+        if (!date) {
+            return "";
+        }
+
+        return [
+            date.y,
+            String(date.m).padStart(2, "0"),
+            String(date.d).padStart(2, "0")
+        ].join("-");
+    }
+
+    return value || "";
+}
+
+
+// ============================================
+// CONVERTIR HORA EXCEL → HH:MM
+// ============================================
+
+function excelTimeToString(value) {
+
+    if (typeof value === "number") {
+
+        const totalMinutes =
+            Math.round(value * 24 * 60);
+
+        const hours =
+            Math.floor(totalMinutes / 60) % 24;
+
+        const minutes =
+            totalMinutes % 60;
+
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    }
+
+    return value || "";
+}
+
 app.get('/historial', (req, res) => {
 
     const { fecha } = req.query;
@@ -1008,48 +1286,6 @@ app.get('/historial', (req, res) => {
     const data = XLSX.utils.sheet_to_json(worksheet, {
         defval: null
     });
-    // ============================================
-    // CONVERTIR FECHA EXCEL → YYYY-MM-DD
-    // ============================================
-
-    function excelDateToISO(value) {
-
-        if (typeof value === "number") {
-
-            const date = XLSX.SSF.parse_date_code(value);
-
-            if (!date) {
-                return "";
-            }
-
-            return [
-                date.y,
-                String(date.m).padStart(2, "0"),
-                String(date.d).padStart(2, "0")
-            ].join("-");
-        }
-
-        return value || "";
-    }
-
-    // ============================================
-    // CONVERTIR HORA EXCEL → HH:MM
-    // ============================================
-
-    function excelTimeToString(value) {
-
-        if (typeof value === "number") {
-
-            const totalMinutes = Math.round(value * 24 * 60);
-
-            const hours = Math.floor(totalMinutes / 60) % 24;
-            const minutes = totalMinutes % 60;
-
-            return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-        }
-
-        return value || "";
-    }
 
     // ============================================
     // NORMALIZAR DATOS
@@ -1250,6 +1486,49 @@ app.patch('/pendientes/resolver', (req, res) => {
 });
 
 // ============================================
+// OBTENER PENDIENTES ACTIVOS
+// ============================================
+
+function getPendientesActivos(workbook) {
+
+    const pendientes =
+        getPendientesData(workbook);
+
+    const resolutionFields =
+        VARIABLES.pendientes?.context?.resolution?.fields || {};
+
+    return pendientes.filter(pendiente => {
+
+        // Si no hay campos de resolución configurados,
+        // todos los pendientes se consideran activos.
+        if (
+            Object.keys(resolutionFields).length === 0
+        ) {
+            return true;
+        }
+
+        // Un pendiente está resuelto cuando alguno
+        // de los campos de resolución tiene valor.
+        const yaResuelto =
+            Object.keys(resolutionFields).some(
+                targetField => {
+
+                    const columnName =
+                        toExcelFieldName(targetField);
+
+                    return (
+                        pendiente[columnName] !== null &&
+                        pendiente[columnName] !== undefined &&
+                        pendiente[columnName] !== ""
+                    );
+                }
+            );
+
+        return !yaResuelto;
+    });
+}
+
+// ============================================
 // PENDIENTES ACTIVOS
 // ============================================
 
@@ -1261,40 +1540,11 @@ app.get('/pendientes', (req, res) => {
             return res.json([]);
         }
 
-        const workbook = XLSX.readFile(excelFilePath);
-
-        const pendientes = getPendientesData(workbook);
-
-        const resolutionFields =
-            VARIABLES.pendientes?.context?.resolution?.fields || {};
+        const workbook =
+            XLSX.readFile(excelFilePath);
 
         const pendientesActivos =
-            pendientes.filter(pendiente => {
-
-                // Si no hay campos de resolución configurados,
-                // todos los pendientes se consideran activos.
-                if (Object.keys(resolutionFields).length === 0) {
-                    return true;
-                }
-
-                // Un pendiente está resuelto cuando alguno
-                // de los campos de resolución tiene valor.
-                const yaResuelto =
-                    Object.keys(resolutionFields).some(
-                        targetField => {
-
-                            const columnName =
-                                toExcelFieldName(targetField);
-
-                            return (
-                                pendiente[columnName] !== null &&
-                                pendiente[columnName] !== undefined &&
-                                pendiente[columnName] !== ""
-                            );
-                        }
-                    );
-                return !yaResuelto;
-            });
+            getPendientesActivos(workbook);
 
         res.json(pendientesActivos);
 
@@ -1314,7 +1564,7 @@ app.get('/pendientes', (req, res) => {
 });
 
 // ============================================
-// ENDPOINT ÚLTIMO REGISTRO
+// ÚLTIMO REGISTRO
 // ============================================
 
 app.get('/ultimo-registro', (req, res) => {
@@ -1324,8 +1574,17 @@ app.get('/ultimo-registro', (req, res) => {
     }
 
     const workbook = XLSX.readFile(excelFilePath);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(worksheet);
+
+    const worksheet =
+        workbook.Sheets[workbook.SheetNames[0]];
+
+    const data =
+        XLSX.utils.sheet_to_json(
+            worksheet,
+            {
+                defval: null
+            }
+        );
 
     if (data.length === 0) {
         return res.json(null);
@@ -1333,62 +1592,125 @@ app.get('/ultimo-registro', (req, res) => {
 
     const ultimo = data[data.length - 1];
 
-    // ============================================
-    // RECONSTRUIR REGISTRO ESTRUCTURADO
-    // ============================================
+    // ========================================
+    // 1. Obtener variables desde VARIABLES
+    // ========================================
 
-    const pendientes = ultimo.Pendientes
-        ? String(ultimo.Pendientes)
-            .split(",")
-            .map(p => p.trim())
-            .filter(Boolean)
-        : [];
+    const valores = {};
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+
+        valores[name] =
+            getVariableValue(
+                ultimo,
+                variable
+            );
+    }
+
+
+    // ========================================
+    // 2. Construir grupos dinámicamente
+    // ========================================
+
+    const grupos = {};
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+
+        if (
+            !variable.recordGroup ||
+            !variable.recordField
+        ) {
+            continue;
+        }
+
+        if (!grupos[variable.recordGroup]) {
+            grupos[variable.recordGroup] = {};
+        }
+
+        grupos[variable.recordGroup][variable.recordField] =
+            valores[name];
+    }
+
+
+    // ========================================
+    // 3. Estado
+    // ========================================
+
+    const estado =
+        grupos.Estado || {};
+
 
     const cisternaHabilitada =
-        ultimo.CisternaHabilitada === true ||
-        ultimo.CisternaHabilitada === "true";
+        estado.CisternaHabilitada === true ||
+        estado.CisternaHabilitada === "true";
+
+
+    // ========================================
+    // 4. Pendientes
+    // ========================================
+
+    const pendientesValor =
+        valores.pendientes;
+
+    const pendientes =
+        pendientesValor === null ||
+        pendientesValor === undefined ||
+        pendientesValor === ""
+            ? []
+            : String(pendientesValor)
+                .split(",")
+                .map(p => p.trim())
+                .filter(Boolean);
+
+
+    // ========================================
+    // 5. Registro estructurado
+    // ========================================
 
     const registro = {
 
-        Fecha: ultimo.Fecha ?? "",
-        Hora: ultimo.Hora ?? "",
+        Fecha:
+            excelDateToISO(
+                valores.fecha
+            ),
 
-        EstadoOperacion: ultimo.EstadoOperacion ?? "",
+        Hora:
+            excelTimeToString(
+                valores.hora
+            ),
 
-        Pendientes: pendientes,
+        EstadoOperacion:
+            valores.estado_operacion ?? null,
 
-        OtroPendiente: ultimo.OtroPendiente ?? "",
+        Pendientes:
+            pendientes,
 
-        CisternaHabilitada: cisternaHabilitada,
+        // Compatibilidad con registros históricos
+        // donde este campo todavía existe.
+        OtroPendiente:
+            ultimo.OtroPendiente ?? null,
 
-        Variables: {
-            NivelTanque: ultimo.NivelTanque ?? "",
-            PresionTanque: ultimo.PresionTanque ?? "",
-            TempTanque: ultimo.TempTanque ?? "",
+        CisternaHabilitada:
+            cisternaHabilitada,
 
-            PresionBomba: ultimo.PresionBomba ?? "",
+        Variables:
+            grupos.Variables || {},
 
-            TempVapor: ultimo.TempVapor ?? "",
-            PresionVapor: ultimo.PresionVapor ?? "",
-            PresionMezcla: ultimo.PresionMezcla ?? ""
-        },
+        Cisterna:
+            cisternaHabilitada
+                ? (grupos.Cisterna || {})
+                : null,
 
-        Cisterna: cisternaHabilitada
-            ? {
-                Nivel: ultimo.NivelCisterna ?? "",
-                Presion: ultimo.PresionCisterna ?? "",
-                Temperatura: ultimo.TempCisterna ?? "",
-                Capacidad: ultimo.CapacidadCisterna ?? "",
-                Placa: ultimo.PlacaCisterna ?? ""
-            }
-            : null,
+        Observaciones:
+            valores.observaciones ?? null,
 
-        Observaciones: ultimo.Observaciones ?? "",
+        Encargado:
+            valores.encargado ?? null,
 
-        Encargado: ultimo.Encargado ?? "",
-
-        FechaServidor: ultimo.FechaServidor ?? ""
+        FechaServidor:
+            ultimo.FechaServidor ?? null
     };
+
 
     res.json(registro);
 });

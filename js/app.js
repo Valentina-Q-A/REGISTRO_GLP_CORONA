@@ -7,11 +7,7 @@
 // CONFIGURACIÓN SERVIDOR API
 // ============================================
 
-//const API_URL = "https://glp-api.onrender.com";
-const UBIDOTS_TOKEN = "BBUS-etSh1XzuTj9VZAJIuZLswp9CPxFBTM";
-
-const DEVICE = "planta-glp";
-
+//const API_URL = "https://registro-glp-corona.onrender.com/";
 let ultimoRegistro = null;
 
 let ultimaCisterna = {
@@ -1273,59 +1269,35 @@ function buildRecord(data) {
     };
 }
 
-function createVariablePayload(value, data) {
-    return {
-        value: Number(value),
-        context: {
-            Fecha: data.Fecha,
-            Hora: data.Hora,
-            Encargado: data.Encargado,
-            PlacaCisterna: data.PlacaCisterna,
-            Observaciones: data.Observaciones
-        }
-    };
-}
+async function syncUbidots(data) {
 
-function buildPayload(data) {
+    const response =
+        await fetch(
+            "/sync-ubidots",
+            {
+                method: "POST",
 
-    const payload = {};
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
 
-    for (const [name, variable] of Object.entries(VARIABLES)) {
-
-        if (!variable.ubidots?.variableId) {
-            continue;
-        }
-
-        if (!(name in data)) {
-            continue;
-        }
-
-        const value = data[name];
-
-        if (value === "" || value === null || value === undefined) {
-            continue;
-        }
-
-        let ubidotsValue = value;
-
-        if (variable.type === "number") {
-            ubidotsValue = Number(value);
-
-            if (!Number.isFinite(ubidotsValue)) {
-                console.warn(
-                    `Valor no numérico para "${name}":`,
-                    value
-                );
-                continue;
+                body:
+                    JSON.stringify(data)
             }
-        }
+        );
 
-        payload[name] = {
-            value: ubidotsValue
-        };
+    const result =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.message ||
+            "Error sincronizando con Ubidots"
+        );
     }
 
-    return payload;
+    return result;
 }
 
 async function saveData(data) {
@@ -1388,6 +1360,14 @@ async function saveData(data) {
             resolvedPendings
         );
 
+        const ubidotsResult =
+            await syncUbidots(data);
+
+        console.log(
+            "Sincronización con Ubidots:",
+            ubidotsResult
+        );
+
         showAlert("Registro guardado correctamente", "success");
 
         // Actualizar el resumen local inmediatamente
@@ -1402,6 +1382,7 @@ async function saveData(data) {
         throw error;
     }
 }
+
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
@@ -1475,23 +1456,6 @@ style.textContent = `
 document.head.appendChild(style);
 
 // ============================================
-// FUNCIONES DE DESARROLLO/DEBUG
-// ============================================
-
-// Función para verificar conexión con el servidor
-/*async function testServerConnection() {
-    try {
-        const response = await fetch('http://LJDCOLORADO:3000/health');*/
-async function testServerConnection() {
-
-console.log("Sistema funcionando con Ubidots");
-
-}
-
-// Ejecutar test de conexión al cargar
-testServerConnection();
-
-// ============================================
 // EXPORTAR FUNCIONES 
 // ============================================
 
@@ -1500,13 +1464,9 @@ window.appFunctions = {
     updateSummary,
     resetForm,
     collectFormData,
-    testServerConnection,
-    buildPayload,
     buildRecord
 };
 
 function abrirHistorico(){
     window.open("https://Valentina-Q-A.github.io/REGISTRO_GLP_CORONA/historial.html","_blank")
 }
-
- 

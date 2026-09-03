@@ -5,7 +5,7 @@
 const UBIDOTS_CONFIG = {
 
     deviceUrl:
-        "https://industrial.api.ubidots.com/api/v1.6/devices/planta-glp"
+        "https://industrial.api.ubidots.com/api/v1.6/devices/planta-prueba"
 };
 
 // ============================================
@@ -425,6 +425,8 @@ const VARIABLES = {
         control: "toggle",
         
         field: "valvulasCapuchon",
+
+        excelField: "ValvulasCapuchon",
         recordGroup: "Estado",
         recordField: "ValvulasCapuchon",
 
