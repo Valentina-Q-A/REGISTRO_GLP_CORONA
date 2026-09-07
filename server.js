@@ -106,23 +106,66 @@ function saveRecord(record, filePath = excelFilePath) {
         data.push(flatRecord);
 
         // ============================================
-        // NORMALIZAR COLUMNAS HISTÓRICAS
+        // PRESERVAR COLUMNAS EXISTENTES
         // ============================================
 
-        const excelColumns =
+        const sheetMatrix =
+            XLSX.utils.sheet_to_json(
+                worksheet,
+                {
+                    header: 1,
+                    defval: null,
+                    raw: true
+                }
+            );
+
+        const existingColumns =
+            Array.isArray(sheetMatrix[0])
+                ? sheetMatrix[0]
+                    .map(column =>
+                        column === null ||
+                        column === undefined
+                            ? ""
+                            : String(column).trim()
+                    )
+                    .filter(Boolean)
+                : [];
+
+        // ============================================
+        // COLUMNAS DEFINIDAS POR LA APLICACION
+        // ============================================
+
+        const configuredColumns =
             Object.values(VARIABLES)
-                .filter(
-                    variable =>
-                        variable.excelField
+                .filter(variable =>
+                    Boolean(variable.excelField)
                 )
-                .map(
-                    variable =>
-                        variable.excelField
+                .map(variable =>
+                    variable.excelField
                 );
 
-        excelColumns.push(
+        configuredColumns.push(
             "FechaServidor"
         );
+
+        // ============================================
+        // UNION ESTABLE DE COLUMNAS
+        // ============================================
+        //
+        // Orden:
+        // 1. Columnas existentes en el historico.
+        // 2. Columnas configuradas por la aplicacion.
+        // 3. Campos adicionales del nuevo registro.
+        //
+        // Esto evita perder columnas tecnicas historicas.
+
+        const excelColumns = [
+            ...new Set([
+                ...existingColumns,
+                ...configuredColumns,
+                ...Object.keys(flatRecord)
+            ])
+        ];
 
         data =
             data.map(row => {
