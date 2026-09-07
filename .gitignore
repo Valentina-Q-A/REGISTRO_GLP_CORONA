@@ -15,3 +15,56 @@ reporte-*.xlsx
 registros-conciliados.xlsx
 registros-depurados.xlsx
 registros-antes-de-depuracion.xlsx
+
+# Exportaciones locales de Ubidots
+exportacion-ubidots*.json
+exportacion-ubidots*.xlsx
+registros-ubidots*.xlsx
+reporte-exportacion-ubidots*.xlsx
+auditoria-registros-ubidots*.xlsx
+
+# Clasificacion local de duplicados Ubidots
+clasificacion-registros-ubidots*.json
+reporte-clasificacion-registros-ubidots*.xlsx
+reporte-clasificacion-duplicados-ubidots*.xlsx
+clasificacion-duplicados-ubidots*.json
+
+# Matrices locales de decision
+matriz-decision-duplicados-ubidots*.xlsx
+reporte-validacion-matriz-ubidots*.xlsx
+# ============================================================
+# Artefactos locales del flujo Ubidots
+# ============================================================
+
+# Exportaciones y bases derivadas
+exportacion-ubidots*.json
+exportacion-ubidots*.xlsx
+registros-ubidots*.xlsx
+reporte-exportacion-ubidots*.xlsx
+auditoria-registros-ubidots*.xlsx
+
+# Clasificaciones
+clasificacion-duplicados-ubidots*.json
+reporte-clasificacion-duplicados-ubidots*.xlsx
+
+# Matrices de decisiones
+matriz-decision-duplicados-ubidots*.xlsx
+
+# Validaciones y manifiestos
+validacion-matriz-ubidots*.json
+reporte-validacion-matriz-ubidots*.xlsx
+manifiesto-reglas-depuracion-ubidots*.json
+
+# Temporales y respaldos locales
+*.tmp
+*.temp
+*.bak
+*~
+*-temporal.*
+*-respaldo.*
+
+# Resultados locales de depuracion Ubidots
+registros-ubidots-depurados*.xlsx
+reporte-depuracion-ubidots*.xlsx
+resultado-depuracion-ubidots*.json
+auditoria-registros-ubidots-depurados*.xlsx
