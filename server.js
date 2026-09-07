@@ -83,10 +83,17 @@ function saveRecord(record, filePath = excelFilePath) {
 
     if (fs.existsSync(filePath)) {
 
-        workbook = XLSX.readFile(filePath);
+        workbook =
+            XLSX.readFile(filePath);
 
         worksheet =
-            workbook.Sheets[workbook.SheetNames[0]];
+            workbook.Sheets["Registros"];
+
+        if (!worksheet) {
+            throw new Error(
+                'El archivo Excel no contiene la hoja "Registros".'
+            );
+        }
 
         data =
             XLSX.utils.sheet_to_json(
@@ -104,8 +111,14 @@ function saveRecord(record, filePath = excelFilePath) {
 
         const excelColumns =
             Object.values(VARIABLES)
-                .filter(variable => variable.excelField)
-                .map(variable => variable.excelField);
+                .filter(
+                    variable =>
+                        variable.excelField
+                )
+                .map(
+                    variable =>
+                        variable.excelField
+                );
 
         excelColumns.push(
             "FechaServidor"
@@ -117,7 +130,6 @@ function saveRecord(record, filePath = excelFilePath) {
                 const normalizedRow = {};
 
                 for (const column of excelColumns) {
-
                     normalizedRow[column] =
                         row[column] ?? null;
                 }
@@ -133,9 +145,8 @@ function saveRecord(record, filePath = excelFilePath) {
                 }
             );
 
-        workbook.Sheets[
-            workbook.SheetNames[0]
-        ] = worksheet;
+        workbook.Sheets["Registros"] =
+            worksheet;
 
     } else {
 
@@ -1213,9 +1224,23 @@ app.get('/registros', (req, res) => {
         return res.json([]);
     }
 
-    const workbook = XLSX.readFile(excelFilePath);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(worksheet);
+    const workbook =
+        XLSX.readFile(excelFilePath);
+
+    const worksheet =
+        workbook.Sheets["Registros"];
+
+    if (!worksheet) {
+        return res.status(500).json({
+            error:
+                'El archivo Excel no contiene la hoja "Registros".'
+        });
+    }
+
+    const data =
+        XLSX.utils.sheet_to_json(
+            worksheet
+        );
 
     res.json(data);
 });
@@ -1280,13 +1305,26 @@ app.get('/historial', (req, res) => {
         return res.json([]);
     }
 
-    const workbook = XLSX.readFile(excelFilePath);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const workbook =
+        XLSX.readFile(excelFilePath);
 
-    const data = XLSX.utils.sheet_to_json(worksheet, {
-        defval: null
-    });
+    const worksheet =
+        workbook.Sheets["Registros"];
 
+    if (!worksheet) {
+        return res.status(500).json({
+            error:
+                'El archivo Excel no contiene la hoja "Registros".'
+        });
+    }
+
+    const data =
+        XLSX.utils.sheet_to_json(
+            worksheet,
+            {
+                defval: null
+            }
+        );
     // ============================================
     // NORMALIZAR DATOS
     // ============================================
@@ -1573,10 +1611,18 @@ app.get('/ultimo-registro', (req, res) => {
         return res.json(null);
     }
 
-    const workbook = XLSX.readFile(excelFilePath);
+    const workbook =
+        XLSX.readFile(excelFilePath);
 
     const worksheet =
-        workbook.Sheets[workbook.SheetNames[0]];
+        workbook.Sheets["Registros"];
+
+    if (!worksheet) {
+        return res.status(500).json({
+            error:
+                'El archivo Excel no contiene la hoja "Registros".'
+        });
+    }
 
     const data =
         XLSX.utils.sheet_to_json(

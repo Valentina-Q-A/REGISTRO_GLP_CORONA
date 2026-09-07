@@ -1468,5 +1468,5 @@ window.appFunctions = {
 };
 
 function abrirHistorico(){
-    window.open("https://Valentina-Q-A.github.io/REGISTRO_GLP_CORONA/historial.html","_blank")
+    window.open("/historial.html","_blank");
 }

@@ -5,3 +5,13 @@ node_modules/
 backups/
 
 ubidots-pending.json
+
+# Reportes generados por auditoría, conciliación y depuración
+auditoria-*.xlsx
+auditoria-*.json
+reporte-*.xlsx
+
+# Bases intermedias y respaldos
+registros-conciliados.xlsx
+registros-depurados.xlsx
+registros-antes-de-depuracion.xlsx
