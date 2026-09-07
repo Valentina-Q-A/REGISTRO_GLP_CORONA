@@ -68,3 +68,8 @@ registros-ubidots-depurados*.xlsx
 reporte-depuracion-ubidots*.xlsx
 resultado-depuracion-ubidots*.json
 auditoria-registros-ubidots-depurados*.xlsx
+
+# Resultados locales de conciliacion Historico + Ubidots
+registros-glp-consolidados*.xlsx
+reporte-conciliacion-historico-ubidots*.xlsx
+auditoria-registros-glp-consolidados*.xlsx
