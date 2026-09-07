@@ -1339,16 +1339,15 @@ app.get('/historial', (req, res) => {
     // ============================================
     // ORDENAR DEL MÁS RECIENTE AL MÁS ANTIGUO
     // ============================================
-
     normalizados.sort((a, b) => {
 
-        const fechaHoraA =
-            new Date(`${a.Fecha}T${a.Hora}:00`);
+        const claveA =
+            `${a.Fecha || ""} ${a.Hora || ""}`;
 
-        const fechaHoraB =
-            new Date(`${b.Fecha}T${b.Hora}:00`);
+        const claveB =
+            `${b.Fecha || ""} ${b.Hora || ""}`;
 
-        return fechaHoraB - fechaHoraA;
+        return claveB.localeCompare(claveA);
     });
     // ============================================
     // FILTRAR POR FECHA
