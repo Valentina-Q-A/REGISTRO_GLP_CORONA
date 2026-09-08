@@ -98,3 +98,4 @@ ubidots-sync-checkpoint-propuesto*.json
 manifiesto-aplicacion-sync-propuesto*.json
 backups-sync/
 auditoria-registros-post-sync*.xlsx
+auditoria-registros-post-merge*.xlsx
