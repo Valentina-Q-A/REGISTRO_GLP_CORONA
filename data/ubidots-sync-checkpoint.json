@@ -2,11 +2,11 @@
   "version": 1,
   "descripcion": "Timestamps tecnicos de Ubidots revisados por sincronizacion controlada",
   "fechaCreacionISO": "2026-09-08T16:09:03.326Z",
-  "fechaActualizacionISO": "2026-09-08T16:41:57.813Z",
-  "cantidad": 390,
+  "fechaActualizacionISO": "2026-09-08T18:31:25.619Z",
+  "cantidad": 391,
   "timestampMinimo": 1785543988423,
-  "timestampMaximo": 1788873500263,
-  "sha256Timestamps": "c2d7806c34976e42b4cb6866afaf19ea3cad33eec82a4abd45356b4b49800b35",
+  "timestampMaximo": 1788891488888,
+  "sha256Timestamps": "2df3a8c820419ac5f88fc6b90c2ade16fc114ba783e5b1064d09e952c3e5465a",
   "timestamps": [
     1785543988423,
     1785557324981,
@@ -397,6 +397,7 @@
     1788857496126,
     1788863873587,
     1788873375834,
-    1788873500263
+    1788873500263,
+    1788891488888
   ]
 }
