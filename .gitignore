@@ -89,3 +89,7 @@ registros-ubidots-actualizados*.xlsx
 reporte-exportacion-ubidots-actualizada*.xlsx
 auditoria-registros-ubidots-actualizados*.xlsx
 registros-glp-central.xlsx
+
+# Propuestas locales de sincronizacion Ubidots
+registros-sync-propuesto*.xlsx
+ubidots-sync-checkpoint-propuesto*.json
