@@ -74,3 +74,17 @@ registros-glp-consolidados*.xlsx
 reporte-conciliacion-historico-ubidots*.xlsx
 auditoria-registros-glp-consolidados*.xlsx
 registros-antes-consolidado-*.xlsx
+registros-antes-sincronizacion-*.xlsx
+
+# Resultados locales de sincronizacion incremental Ubidots
+clasificacion-ubidots-incremental*.json
+registros-ubidots-incrementales*.xlsx
+registros-glp-sincronizados*.xlsx
+reporte-clasificacion-ubidots-incremental*.xlsx
+reporte-conciliacion-incremental-ubidots*.xlsx
+auditoria-registros-ubidots-incrementales*.xlsx
+auditoria-registros-glp-sincronizados*.xlsx
+exportacion-ubidots-actualizada*.json
+registros-ubidots-actualizados*.xlsx
+reporte-exportacion-ubidots-actualizada*.xlsx
+auditoria-registros-ubidots-actualizados*.xlsx
