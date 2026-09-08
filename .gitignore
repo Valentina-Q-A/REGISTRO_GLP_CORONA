@@ -93,3 +93,8 @@ registros-glp-central.xlsx
 # Propuestas locales de sincronizacion Ubidots
 registros-sync-propuesto*.xlsx
 ubidots-sync-checkpoint-propuesto*.json
+
+# Aplicacion local de propuestas de sincronizacion
+manifiesto-aplicacion-sync-propuesto*.json
+backups-sync/
+auditoria-registros-post-sync*.xlsx
