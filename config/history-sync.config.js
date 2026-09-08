@@ -29,6 +29,12 @@ module.exports = Object.freeze({
     technicalKey:
         "TimestampUbidots",
 
+    checkpointPath: path.resolve(
+        process.cwd(),
+        process.env.GLP_SYNC_CHECKPOINT ||
+            "data/ubidots-sync-checkpoint.json"
+    ),
+
     syncIntervalMs: Number(
         process.env.GLP_SYNC_INTERVAL_MS ||
         300000
@@ -46,4 +52,3 @@ module.exports = Object.freeze({
             "false"
         ).toLowerCase() === "true"
 });
-
