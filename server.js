@@ -6,9 +6,19 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const XLSX = require('xlsx');
 
 require('dotenv').config();
+
+const historySyncConfig =
+    require('./config/history-sync.config');
+
+const ubidotsSyncService =
+    require('./services/ubidots-sync-service');
+
+const ubidotsHistoryConfig =
+    require('./scripts/config-ubidots-glp');
 
 const {
     VARIABLES,
@@ -47,12 +57,269 @@ const excelFilePath = path.join(__dirname, 'registros.xlsx');
 const ubidotsQueueFilePath =
     path.join(__dirname, 'ubidots-pending.json');
 
+const syncCheckpointFilePath =
+    historySyncConfig.checkpointPath;
+
+const syncBackupDirectory =
+    path.join(__dirname, 'backups-sync');
+
+const syncAdminKey =
+    process.env.GLP_SYNC_ADMIN_KEY || "";
+
+const syncState = {
+    running: false,
+    lastAttemptAt: null,
+    lastSuccessAt: null,
+    lastError: null,
+    lastResult: null
+};
+
 const UBIDOTS_RETRY_INTERVAL =
     5* 60 * 1000;                               // 5 minutes
 
 // ============================================
-// FUNCION GUARDAR EXCEL
+// FUNCIONES AUXILIARES DEL COORDINADOR
 // ============================================
+function secureStringEquals(left, right) {
+    const leftBuffer =
+        Buffer.from(String(left || ""), "utf8");
+
+    const rightBuffer =
+        Buffer.from(String(right || ""), "utf8");
+
+    if (
+        leftBuffer.length === 0 ||
+        rightBuffer.length === 0 ||
+        leftBuffer.length !== rightBuffer.length
+    ) {
+        return false;
+    }
+
+    return crypto.timingSafeEqual(
+        leftBuffer,
+        rightBuffer
+    );
+}
+
+function isSyncRequestAuthorized(req) {
+    if (!syncAdminKey) {
+        return {
+            authorized: false,
+            reason: "SYNC_ADMIN_KEY_NOT_CONFIGURED"
+        };
+    }
+
+    const receivedKey =
+        req.get("X-GLP-Sync-Key") || "";
+
+    if (
+        !secureStringEquals(
+            receivedKey,
+            syncAdminKey
+        )
+    ) {
+        return {
+            authorized: false,
+            reason: "INVALID_SYNC_ADMIN_KEY"
+        };
+    }
+
+    return {
+        authorized: true,
+        reason: null
+    };
+}
+
+function summarizeSynchronizationResult(result) {
+    const summary =
+        result?.synchronization?.summary || {};
+
+    return {
+        mode:
+            result?.mode || null,
+
+        synchronized:
+            Boolean(result?.synchronized),
+
+        canApply:
+            Boolean(result?.canApply),
+
+        applied:
+            Boolean(result?.applied),
+
+        restored:
+            Boolean(result?.restored),
+
+        skipped:
+            Boolean(result?.skipped),
+
+        reason:
+            result?.reason || null,
+
+        cacheRecords:
+            result?.validation?.cacheRecords ??
+            result?.cache?.records ??
+            null,
+
+        visibleTimestamps:
+            result?.validation?.visibleTimestamps ??
+            result?.cache?.visibleTimestamps ??
+            null,
+
+        reviewedTimestamps:
+            result?.validation?.reviewedTimestamps ??
+            result?.checkpoint?.reviewedTimestamps ??
+            null,
+
+        recoveredUbidotsRecords:
+            summary.recoveredUbidotsRecords ?? null,
+
+        newTechnicalRecords:
+            summary.newTechnicalRecords ?? null,
+
+        newOperationalEvents:
+            summary.newOperationalEvents ?? null,
+
+        recordsWithoutOperationalKey:
+            summary.recordsWithoutOperationalKey ?? null,
+
+        conflicts:
+            summary.conflicts ?? null,
+
+        proposedCacheRecords:
+            summary.proposedCacheRecords ?? null,
+
+        pendingUnchanged:
+            result?.pendingUnchanged ??
+            result?.integrity?.pendingUnchanged ??
+            null
+    };
+}
+
+// La cola ubidots-pending.json tiene su propio proceso de
+// reintentos automáticos. El control pendingUnchanged garantiza
+// únicamente que esta sincronización histórica no modifica la cola
+// durante su propia ventana de ejecución
+async function runHistorySynchronization({
+    apply = false
+} = {}) {
+    if (syncState.running) {
+        return {
+            accepted: false,
+            statusCode: 409,
+            result: {
+                running: true,
+                skipped: true,
+                reason: "SYNC_ALREADY_IN_PROGRESS"
+            }
+        };
+    }
+
+    const tokenEnvironment =
+        ubidotsHistoryConfig.tokenEnv ||
+        "UBIDOTS_TOKEN";
+
+    const token =
+        process.env[tokenEnvironment];
+
+    if (!token) {
+        return {
+            accepted: false,
+            statusCode: 503,
+            result: {
+                running: false,
+                skipped: true,
+                reason: "UBIDOTS_TOKEN_NOT_CONFIGURED"
+            }
+        };
+    }
+
+    syncState.running = true;
+    syncState.lastAttemptAt =
+        new Date().toISOString();
+
+    syncState.lastError = null;
+
+    try {
+        const result =
+            await ubidotsSyncService
+                .synchronizeFromUbidots({
+                    apply,
+
+                    cachePath:
+                        excelFilePath,
+
+                    cacheSheet:
+                        historySyncConfig.cacheSheet,
+
+                    checkpointPath:
+                        syncCheckpointFilePath,
+
+                    pendingPath:
+                        ubidotsQueueFilePath,
+
+                    backupDirectory:
+                        syncBackupDirectory,
+
+                    ubidotsConfig:
+                        ubidotsHistoryConfig,
+
+                    token,
+
+                    fetchImpl:
+                        fetch
+                });
+
+        const summarized =
+            summarizeSynchronizationResult(
+                result
+            );
+
+        syncState.lastSuccessAt =
+            new Date().toISOString();
+
+        syncState.lastResult =
+            summarized;
+
+        return {
+            accepted: true,
+            statusCode: 200,
+            result: summarized
+        };
+    }
+    catch (error) {
+        syncState.lastError = {
+            timestamp:
+                new Date().toISOString(),
+
+            message:
+                error.message,
+
+            restored:
+                Boolean(error.restored)
+        };
+
+        return {
+            accepted: false,
+            statusCode: 500,
+            result: {
+                running: false,
+                applied: false,
+                restored:
+                    Boolean(error.restored),
+
+                reason:
+                    "SYNC_EXECUTION_ERROR",
+
+                error:
+                    error.message
+            }
+        };
+    }
+    finally {
+        syncState.running = false;
+    }
+}
 
 // ============================================
 // FUNCION GUARDAR EXCEL - DINÁMICA
@@ -1801,6 +2068,84 @@ app.get('/ultimo-registro', (req, res) => {
 
 
     res.json(registro);
+});
+
+// ============================================
+// ESTADO DE SINCRONIZACION DEL HISTORICO
+// ============================================
+
+app.get('/sync-status', (req, res) => {
+    res.json({
+        enabled:
+            historySyncConfig.autoSyncEnabled,
+
+        startupEnabled:
+            historySyncConfig.syncOnStartup,
+
+        intervalMs:
+            historySyncConfig.syncIntervalMs,
+
+        adminKeyConfigured:
+            Boolean(syncAdminKey),
+
+        running:
+            syncState.running,
+
+        lastAttemptAt:
+            syncState.lastAttemptAt,
+
+        lastSuccessAt:
+            syncState.lastSuccessAt,
+
+        lastError:
+            syncState.lastError,
+
+        lastResult:
+            syncState.lastResult
+    });
+});
+
+// ============================================
+// SINCRONIZACION MANUAL DEL HISTORICO
+// ============================================
+
+app.post('/sync-history', async (req, res) => {
+    const authorization =
+        isSyncRequestAuthorized(req);
+
+    if (!authorization.authorized) {
+        const statusCode =
+            authorization.reason ===
+            "SYNC_ADMIN_KEY_NOT_CONFIGURED"
+                ? 503
+                : 401;
+
+        return res.status(statusCode).json({
+            success: false,
+            reason:
+                authorization.reason
+        });
+    }
+
+    const apply =
+        req.body?.apply === true;
+
+    const execution =
+        await runHistorySynchronization({
+            apply
+        });
+
+    return res
+        .status(execution.statusCode)
+        .json({
+            success:
+                execution.accepted,
+
+            applyRequested:
+                apply,
+
+            ...execution.result
+        });
 });
 
 // ============================================
