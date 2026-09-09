@@ -1,0 +1,226 @@
+﻿"use strict";
+
+const fs = require("fs");
+const path = require("path");
+
+const historySyncConfig =
+    require("../config/history-sync.config");
+
+const ubidotsSyncService =
+    require("../services/ubidots-sync-service");
+
+function loadEnv(filePath) {
+    if (!fs.existsSync(filePath)) {
+        return;
+    }
+
+    const content =
+        fs.readFileSync(
+            filePath,
+            "utf8"
+        );
+
+    for (const line of content.split(/\r?\n/)) {
+        const trimmed =
+            line.trim();
+
+        if (
+            !trimmed ||
+            trimmed.startsWith("#")
+        ) {
+            continue;
+        }
+
+        const equalIndex =
+            trimmed.indexOf("=");
+
+        if (equalIndex < 1) {
+            continue;
+        }
+
+        const key =
+            trimmed
+                .slice(0, equalIndex)
+                .trim();
+
+        let value =
+            trimmed
+                .slice(equalIndex + 1)
+                .trim();
+
+        if (
+            (
+                value.startsWith('"') &&
+                value.endsWith('"')
+            ) ||
+            (
+                value.startsWith("'") &&
+                value.endsWith("'")
+            )
+        ) {
+            value =
+                value.slice(1, -1);
+        }
+
+        if (process.env[key] === undefined) {
+            process.env[key] = value;
+        }
+    }
+}
+
+function simplifyRecord(record) {
+    return {
+        Fecha:
+            record.Fecha,
+
+        Hora:
+            record.Hora,
+
+        TimestampUbidots:
+            record.TimestampUbidots,
+
+        Encargado:
+            record.Encargado,
+
+        VariablesPresentes:
+            record.VariablesPresentes,
+
+        VariablesEsperadas:
+            record.VariablesEsperadas
+    };
+}
+
+async function main() {
+    const envPath =
+        path.resolve(
+            process.cwd(),
+            ".env"
+        );
+
+    const ubidotsConfigPath =
+        path.resolve(
+            process.cwd(),
+            "scripts/config-ubidots-glp.js"
+        );
+
+    const pendingPath =
+        path.resolve(
+            process.cwd(),
+            "ubidots-pending.json"
+        );
+
+    loadEnv(envPath);
+
+    const ubidotsConfig =
+        require(ubidotsConfigPath);
+
+    const tokenEnvironment =
+        ubidotsConfig.tokenEnv ||
+        "UBIDOTS_TOKEN";
+
+    const token =
+        process.env[tokenEnvironment];
+
+    if (!token) {
+        throw new Error(
+            `No se encontrÃ³ ${tokenEnvironment}.`
+        );
+    }
+
+    const result =
+        await ubidotsSyncService.inspectSynchronization({
+            cachePath:
+                historySyncConfig.cachePath,
+
+            cacheSheet:
+                historySyncConfig.cacheSheet,
+
+            checkpointPath:
+                historySyncConfig.checkpointPath,
+
+            pendingPath,
+
+            ubidotsConfig,
+
+            token
+        });
+
+    const output = {
+        mode:
+            result.mode,
+
+        synchronized:
+            result.synchronized,
+
+        canApply:
+            result.canApply,
+
+        cache:
+            result.cache,
+
+        checkpoint:
+            result.checkpoint,
+
+        ubidots:
+            result.ubidots,
+
+        relationshipBefore:
+            result.relationshipBefore,
+
+        summary:
+            result.synchronization.summary,
+
+        newTechnicalRecords:
+            result.synchronization
+                .details
+                .newTechnicalRecords
+                .map(simplifyRecord),
+
+        newOperationalEvents:
+            result.synchronization
+                .details
+                .newOperationalEvents
+                .map(simplifyRecord),
+
+        integrity:
+            result.integrity
+    };
+
+    console.log(
+        "\nPRUEBA DEL SERVICIO DE SINCRONIZACION UBIDOTS\n"
+    );
+
+    console.log(
+        JSON.stringify(
+            output,
+            null,
+            2
+        )
+    );
+
+    if (
+        !result.integrity.cacheUnchanged ||
+        !result.integrity
+            .checkpointUnchanged ||
+        !result.integrity.pendingUnchanged
+    ) {
+        process.exitCode = 1;
+        return;
+    }
+
+    if (!result.canApply) {
+        process.exitCode = 2;
+        return;
+    }
+
+    process.exitCode = 0;
+}
+
+main().catch(error => {
+    console.error(
+        "\nERROR PROBANDO EL SERVICIO:",
+        error.message
+    );
+
+    process.exitCode = 1;
+});
