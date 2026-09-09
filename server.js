@@ -52,16 +52,25 @@ app.get('/js/variables.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'js', 'variables.js'));
 });
 
-const excelFilePath = path.join(__dirname, 'registros.xlsx');
+const excelFilePath =
+    historySyncConfig.cachePath;
 
 const ubidotsQueueFilePath =
-    path.join(__dirname, 'ubidots-pending.json');
+    path.resolve(
+        __dirname,
+        process.env.GLP_SYNC_PENDING_FILE ||
+            'ubidots-pending.json'
+    );
 
 const syncCheckpointFilePath =
     historySyncConfig.checkpointPath;
 
 const syncBackupDirectory =
-    path.join(__dirname, 'backups-sync');
+    path.resolve(
+        __dirname,
+        process.env.GLP_SYNC_BACKUP_DIR ||
+            'backups-sync'
+    );
 
 const syncAdminKey =
     process.env.GLP_SYNC_ADMIN_KEY || "";
@@ -77,6 +86,13 @@ const syncState = {
 const UBIDOTS_RETRY_INTERVAL =
     5* 60 * 1000;                               // 5 minutes
 
+const UBIDOTS_QUEUE_RETRY_ENABLED =
+    String(
+        process.env.UBIDOTS_QUEUE_RETRY_ENABLED ??
+            'true'
+    ).toLowerCase() === 'true';
+    
+    
 // ============================================
 // FUNCIONES AUXILIARES DEL COORDINADOR
 // ============================================
@@ -200,6 +216,7 @@ function summarizeSynchronizationResult(result) {
 // reintentos automáticos. El control pendingUnchanged garantiza
 // únicamente que esta sincronización histórica no modifica la cola
 // durante su propia ventana de ejecución
+
 async function runHistorySynchronization({
     apply = false
 } = {}) {
@@ -1401,10 +1418,17 @@ async function processUbidotsQueue() {
 // REINTENTO AUTOMÁTICO UBIDOTS
 // ============================================
 
-setInterval(
-    processUbidotsQueue,
-    UBIDOTS_RETRY_INTERVAL
-);
+if (UBIDOTS_QUEUE_RETRY_ENABLED) {
+    setInterval(
+        processUbidotsQueue,
+        UBIDOTS_RETRY_INTERVAL
+    );
+}
+else {
+    console.log(
+        'Reintento automático de la cola Ubidots desactivado.'
+    );
+}
 
 // ============================================
 // ENDPOINT GUARDAR

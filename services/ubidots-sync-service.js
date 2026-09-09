@@ -434,6 +434,7 @@ async function synchronizeFromUbidots({
     if (!apply) {
         return {
             ...inspection,
+            mode: "INSPECTION_ONLY",
             applied: false,
             restored: false
         };
@@ -442,6 +443,7 @@ async function synchronizeFromUbidots({
     if (!inspection.canApply) {
         return {
             ...inspection,
+            mode: "APPLICATION",
             applied: false,
             restored: false,
             reason:
@@ -462,6 +464,7 @@ async function synchronizeFromUbidots({
     if (newTechnicalRecords.length === 0) {
         return {
             ...inspection,
+            mode: "APPLICATION",
             applied: false,
             restored: false,
             skipped: true,
@@ -616,6 +619,8 @@ async function synchronizeFromUbidots({
 
         return {
             ...inspection,
+
+            mode: "APPLICATION",
 
             applied: true,
 
