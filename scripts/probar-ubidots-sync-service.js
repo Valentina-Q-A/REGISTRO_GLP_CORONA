@@ -9,6 +9,37 @@ const historySyncConfig =
 const ubidotsSyncService =
     require("../services/ubidots-sync-service");
 
+function parseArguments(argumentsList) {
+    const options = {};
+
+    for (const argument of argumentsList) {
+        if (!argument.startsWith("--")) {
+            continue;
+        }
+
+        const content =
+            argument.slice(2);
+
+        const equalIndex =
+            content.indexOf("=");
+
+        const key =
+            equalIndex === -1
+                ? content
+                : content.slice(0, equalIndex);
+
+        const value =
+            equalIndex === -1
+                ? "true"
+                : content.slice(equalIndex + 1);
+
+        options[key.toLowerCase()] =
+            value;
+    }
+
+    return options;
+}
+
 function loadEnv(filePath) {
     if (!fs.existsSync(filePath)) {
         return;
@@ -91,6 +122,12 @@ function simplifyRecord(record) {
 }
 
 async function main() {
+    
+    const options =
+    parseArguments(
+        process.argv.slice(2)
+    );
+
     const envPath =
         path.resolve(
             process.cwd(),
@@ -103,10 +140,25 @@ async function main() {
             "scripts/config-ubidots-glp.js"
         );
 
+    const cachePath =
+        path.resolve(
+            process.cwd(),
+            options.cache ||
+                historySyncConfig.cachePath
+        );
+
+    const checkpointPath =
+        path.resolve(
+            process.cwd(),
+            options.checkpoint ||
+                historySyncConfig.checkpointPath
+        );
+
     const pendingPath =
         path.resolve(
             process.cwd(),
-            "ubidots-pending.json"
+            options.pending ||
+                "ubidots-pending.json"
         );
 
     loadEnv(envPath);
@@ -129,14 +181,12 @@ async function main() {
 
     const result =
         await ubidotsSyncService.inspectSynchronization({
-            cachePath:
-                historySyncConfig.cachePath,
+            cachePath,
 
             cacheSheet:
                 historySyncConfig.cacheSheet,
 
-            checkpointPath:
-                historySyncConfig.checkpointPath,
+            checkpointPath,
 
             pendingPath,
 

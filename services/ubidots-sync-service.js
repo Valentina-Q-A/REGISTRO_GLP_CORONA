@@ -9,6 +9,11 @@ const historyCacheService =
 const ubidotsHistoryService =
     require("./ubidots-history-service");
 
+const path = require("path");
+
+const syncProposalService =
+    require("./sync-proposal-service");
+    
 function hashFile(filePath) {
     return crypto
         .createHash("sha256")
@@ -296,9 +301,375 @@ async function inspectSynchronization({
     };
 }
 
+function createBackupPaths({
+    backupDirectory,
+    cachePath,
+    checkpointPath
+}) {
+    const suffix =
+        new Date()
+            .toISOString()
+            .replace(/[:.]/g, "-");
+
+    return {
+        cacheBackup:
+            path.join(
+                backupDirectory,
+                `${path.basename(
+                    cachePath,
+                    path.extname(cachePath)
+                )}-antes-sync-${suffix}${path.extname(cachePath)}`
+            ),
+
+        checkpointBackup:
+            path.join(
+                backupDirectory,
+                `${path.basename(
+                    checkpointPath,
+                    path.extname(checkpointPath)
+                )}-antes-sync-${suffix}${path.extname(checkpointPath)}`
+            )
+    };
+}
+
+function restoreFromBackups({
+    cacheBackup,
+    checkpointBackup,
+    cachePath,
+    checkpointPath
+}) {
+    if (fs.existsSync(cacheBackup)) {
+        fs.copyFileSync(
+            cacheBackup,
+            cachePath
+        );
+    }
+
+    if (fs.existsSync(checkpointBackup)) {
+        fs.copyFileSync(
+            checkpointBackup,
+            checkpointPath
+        );
+    }
+}
+
+function validateAppliedState({
+    cachePath,
+    cacheSheet,
+    checkpointPath
+}) {
+    const cache =
+        historyCacheService.readSheet(
+            cachePath,
+            cacheSheet
+        );
+
+    const checkpointData =
+        readCheckpoint(
+            checkpointPath
+        );
+
+    const relationship =
+        inspectCacheRelationship({
+            cacheRecords:
+                cache.records,
+
+            reviewedTimestamps:
+                checkpointData.timestamps
+        });
+
+    const operationalKeys =
+        cache.records.map(record => [
+            String(record.Fecha ?? "").trim(),
+            String(record.Hora ?? "").trim()
+        ].join("|"));
+
+    return {
+        cacheRecords:
+            cache.records.length,
+
+        uniqueOperationalKeys:
+            new Set(operationalKeys).size,
+
+        duplicates:
+            cache.records.length -
+            new Set(operationalKeys).size,
+
+        reviewedTimestamps:
+            checkpointData.timestamps.length,
+
+        visibleTimestamps:
+            relationship.visibleTimestamps,
+
+        visibleNotReviewed:
+            relationship.visibleNotReviewed,
+
+        reviewedNotVisible:
+            relationship.reviewedNotVisible
+    };
+}
+
+async function synchronizeFromUbidots({
+    apply = false,
+    cachePath,
+    cacheSheet,
+    checkpointPath,
+    pendingPath,
+    backupDirectory,
+    ubidotsConfig,
+    token,
+    fetchImpl = globalThis.fetch
+}) {
+    const inspection =
+        await inspectSynchronization({
+            cachePath,
+            cacheSheet,
+            checkpointPath,
+            pendingPath,
+            ubidotsConfig,
+            token,
+            fetchImpl
+        });
+
+    if (!apply) {
+        return {
+            ...inspection,
+            applied: false,
+            restored: false
+        };
+    }
+
+    if (!inspection.canApply) {
+        return {
+            ...inspection,
+            applied: false,
+            restored: false,
+            reason:
+                "SYNC_CONFLICTS_DETECTED"
+        };
+    }
+
+    const newTechnicalRecords =
+        inspection.synchronization
+            .details
+            .newTechnicalRecords;
+
+    const newOperationalEvents =
+        inspection.synchronization
+            .details
+            .newOperationalEvents;
+
+    if (newTechnicalRecords.length === 0) {
+        return {
+            ...inspection,
+            applied: false,
+            restored: false,
+            skipped: true,
+            reason:
+                "NO_NEW_RECORDS"
+        };
+    }
+
+    const cache =
+        historyCacheService.readSheet(
+            cachePath,
+            cacheSheet
+        );
+
+    const checkpointData =
+        readCheckpoint(
+            checkpointPath
+        );
+
+    const pendingHashBefore =
+        hashFile(pendingPath);
+
+    const resolvedBackupDirectory =
+        path.resolve(
+            backupDirectory ||
+                "backups-sync"
+        );
+
+    fs.mkdirSync(
+        resolvedBackupDirectory,
+        {
+            recursive: true
+        }
+    );
+
+    const backupPaths =
+        createBackupPaths({
+            backupDirectory:
+                resolvedBackupDirectory,
+
+            cachePath,
+
+            checkpointPath
+        });
+
+    fs.copyFileSync(
+        cachePath,
+        backupPaths.cacheBackup
+    );
+
+    fs.copyFileSync(
+        checkpointPath,
+        backupPaths.checkpointBackup
+    );
+
+    const cacheExtension =
+        path.extname(cachePath);
+
+    const checkpointExtension =
+        path.extname(checkpointPath);
+
+    const proposedCachePath =
+        path.join(
+            path.dirname(cachePath),
+            `${path.basename(
+                cachePath,
+                cacheExtension
+            )}.proposed${cacheExtension}`
+        );
+
+    const proposedCheckpointPath =
+        path.join(
+            path.dirname(checkpointPath),
+            `${path.basename(
+                checkpointPath,
+                checkpointExtension
+            )}.proposed${checkpointExtension}`
+        );
+
+    let restored = false;
+
+    try {
+        syncProposalService.writeProposedCache({
+            cacheData:
+                cache,
+
+            newOperationalEvents,
+
+            sheetName:
+                cacheSheet,
+
+            outputPath:
+                proposedCachePath
+        });
+
+        syncProposalService.writeProposedCheckpoint({
+            currentCheckpoint:
+                checkpointData.checkpoint,
+
+            newTechnicalRecords,
+
+            outputPath:
+                proposedCheckpointPath
+        });
+
+        fs.copyFileSync(
+            proposedCachePath,
+            cachePath
+        );
+
+        fs.copyFileSync(
+            proposedCheckpointPath,
+            checkpointPath
+        );
+
+        const validation =
+            validateAppliedState({
+                cachePath,
+                cacheSheet,
+                checkpointPath
+            });
+
+        const expectedCacheRecords =
+            inspection.cache.records +
+            newOperationalEvents.length;
+
+        const expectedReviewedTimestamps =
+            inspection.checkpoint
+                .reviewedTimestamps +
+            newTechnicalRecords.length;
+
+        const pendingUnchanged =
+            pendingHashBefore ===
+            hashFile(pendingPath);
+
+        const valid =
+            validation.cacheRecords ===
+                expectedCacheRecords &&
+            validation.uniqueOperationalKeys ===
+                validation.cacheRecords &&
+            validation.duplicates === 0 &&
+            validation.reviewedTimestamps ===
+                expectedReviewedTimestamps &&
+            validation.visibleNotReviewed.length === 0 &&
+            pendingUnchanged;
+
+        if (!valid) {
+            throw new Error(
+                "La validación posterior de la sincronización falló."
+            );
+        }
+
+        return {
+            ...inspection,
+
+            applied: true,
+
+            restored: false,
+
+            skipped: false,
+
+            validation,
+
+            pendingUnchanged,
+
+            backups: backupPaths
+        };
+    }
+    catch (error) {
+        restoreFromBackups({
+            ...backupPaths,
+            cachePath,
+            checkpointPath
+        });
+
+        restored = true;
+
+        throw Object.assign(
+            new Error(
+                `Sincronización restaurada: ${error.message}`
+            ),
+            {
+                restored
+            }
+        );
+    }
+    finally {
+        if (fs.existsSync(proposedCachePath)) {
+            fs.unlinkSync(
+                proposedCachePath
+            );
+        }
+
+        if (fs.existsSync(proposedCheckpointPath)) {
+            fs.unlinkSync(
+                proposedCheckpointPath
+            );
+        }
+    }
+}
+
 module.exports = {
+    createBackupPaths,
     hashFile,
     inspectCacheRelationship,
     inspectSynchronization,
-    readCheckpoint
+    readCheckpoint,
+    restoreFromBackups,
+    synchronizeFromUbidots,
+    validateAppliedState
 };
