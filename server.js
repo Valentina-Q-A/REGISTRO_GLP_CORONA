@@ -2236,6 +2236,43 @@ app.get('/health', (req,res)=>{
 });
 
 // ============================================
+// SINCRONIZACIÓN HISTÓRICA
+// ============================================
+
+async function runStartupHistorySynchronization() {
+    if (!historySyncConfig.syncOnStartup) {
+        console.log(
+            "Sincronización histórica al iniciar desactivada."
+        );
+
+        return;
+    }
+
+    console.log(
+        "Iniciando sincronización histórica de arranque..."
+    );
+
+    const execution =
+        await runHistorySynchronization({
+            apply: true
+        });
+
+    if (!execution.accepted) {
+        console.error(
+            "La sincronización histórica de arranque no pudo completarse:",
+            execution.result
+        );
+
+        return;
+    }
+
+    console.log(
+        "Sincronización histórica de arranque completada:",
+        execution.result
+    );
+}
+
+// ============================================
 // INICIAR SERVIDOR
 // ============================================
 
@@ -2244,6 +2281,16 @@ app.listen(PORT, () => {
     console.log("Backend corriendo en:");
     console.log(`http://localhost:${PORT}`);
     console.log("===================================");
+
+    setImmediate(() => {
+        runStartupHistorySynchronization()
+            .catch(error => {
+                console.error(
+                    "Error inesperado en la sincronización histórica de arranque:",
+                    error
+                );
+            });
+    });
 });
 
 

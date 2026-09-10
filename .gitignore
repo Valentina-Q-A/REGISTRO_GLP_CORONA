@@ -104,3 +104,8 @@ auditoria-registros-post-merge*.xlsx
 tmp-sync-*.xlsx
 tmp-sync-*.json
 backups-sync-temporal/
+
+# Pruebas temporales de sincronizacion al arranque
+tmp-startup-*.xlsx
+tmp-startup-*.json
+backups-startup-temporal/
