@@ -10,7 +10,7 @@
 // El token NO debe incluirse en este archivo.
 // Debe almacenarse localmente en .env:
 //
-//   UBIDOTS_TOKEN=token_vigente
+//   Configurar UBIDOTS_TOKEN mediante una variable de entorno.
 //
 // Ejecucion:
 //   node scripts/inspeccionar-ubidots.js \
@@ -42,7 +42,10 @@ module.exports = {
         2,
 
     timeoutMs:
-        30000,
+        Number(
+            process.env.GLP_UBIDOTS_QUERY_TIMEOUT_MS ||
+            120000
+        ),
 
     maxPaginas:
         10000,
