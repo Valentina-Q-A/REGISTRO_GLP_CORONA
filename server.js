@@ -62,6 +62,50 @@ const ubidotsQueueFilePath =
             'ubidots-pending.json'
     );
 
+function ensureUbidotsQueueFile() {
+    if (fs.existsSync(ubidotsQueueFilePath)) {
+        return {
+            created: false,
+            path: ubidotsQueueFilePath
+        };
+    }
+
+    try {
+        fs.writeFileSync(
+            ubidotsQueueFilePath,
+            "[]\n",
+            {
+                encoding: "utf8",
+                flag: "wx"
+            }
+        );
+
+        console.log(
+            "Cola de pendientes Ubidots inicializada."
+        );
+
+        return {
+            created: true,
+            path: ubidotsQueueFilePath
+        };
+    }
+    catch (error) {
+        if (
+            error &&
+            error.code === "EEXIST"
+        ) {
+            return {
+                created: false,
+                path: ubidotsQueueFilePath
+            };
+        }
+
+        throw new Error(
+            `No se pudo inicializar la cola de Ubidots: ${error.message}`
+        );
+    }
+}
+
 const syncCheckpointFilePath =
     historySyncConfig.checkpointPath;
 
@@ -1417,6 +1461,7 @@ async function processUbidotsQueue() {
 // ============================================
 // REINTENTO AUTOMÁTICO UBIDOTS
 // ============================================
+ensureUbidotsQueueFile();
 
 if (UBIDOTS_QUEUE_RETRY_ENABLED) {
     setInterval(
