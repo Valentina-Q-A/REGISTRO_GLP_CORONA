@@ -203,26 +203,72 @@ function inspectProposedRecords(records) {
             String(record.Hora ?? "").trim()
         ].join("|"));
 
-    const recordsWithTimestamp =
-        records.filter(record =>
-            record.TimestampUbidots !== null &&
-            record.TimestampUbidots !== undefined &&
-            record.TimestampUbidots !== ""
+    const operationalKeyRepetitions =
+        records.length -
+        new Set(operationalKeys).size;
+
+    const timestamps =
+        records
+            .map(record =>
+                Number(
+                    record.TimestampUbidots
+                )
+            )
+            .filter(timestamp =>
+                Number.isFinite(timestamp) &&
+                timestamp > 0
+            );
+
+    const timestampCounts =
+        new Map();
+
+    for (const timestamp of timestamps) {
+        timestampCounts.set(
+            timestamp,
+            (
+                timestampCounts.get(timestamp) ||
+                0
+            ) + 1
         );
+    }
+
+    const duplicateTechnicalTimestamps =
+        [...timestampCounts.entries()]
+            .filter(([, count]) =>
+                count > 1
+            )
+            .map(([timestamp, count]) => ({
+                timestamp,
+                count
+            }));
 
     return {
         records:
             records.length,
 
         uniqueOperationalKeys:
-            new Set(operationalKeys).size,
+            new Set(
+                operationalKeys
+            ).size,
 
+        // Compatibilidad con scripts anteriores.
+        // Representa repeticiones de Fecha + Hora,
+        // no necesariamente duplicados técnicos.
         duplicates:
-            records.length -
-            new Set(operationalKeys).size,
+            operationalKeyRepetitions,
+
+        operationalKeyRepetitions,
 
         recordsWithUbidotsTimestamp:
-            recordsWithTimestamp.length
+            timestamps.length,
+
+        uniqueTechnicalTimestamps:
+            timestampCounts.size,
+
+        duplicateTechnicalTimestamps,
+
+        duplicateTechnicalTimestampCount:
+            duplicateTechnicalTimestamps.length
     };
 }
 

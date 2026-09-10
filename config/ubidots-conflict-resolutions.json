@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "resolutions": [
+    {
+      "operationalKey": "2026-09-09|20:10:00",
+      "type": "KEEP_BOTH_DISTINCT_EVENTS",
+      "timestamps": [
+        1789002785126,
+        1789007872427
+      ],
+      "reason": "Los registros fueron recibidos con 84.79 minutos de diferencia y presentan una evolución operacional coherente del nivel del tanque después de finalizar el trasiego.",
+      "approved": true,
+      "evidence": {
+        "separationMinutes": 84.79,
+        "timestampAReceptionColombia": "09/09/2026, 20:13:05",
+        "timestampBReceptionColombia": "09/09/2026, 21:37:52",
+        "levelA": 85,
+        "levelB": 81,
+        "observationA": "Finaliza trasiego\nSe apaga bomba de salida 1",
+        "observationB": "Sin novedad",
+        "classification": "EVENTOS_DISTINTOS_CON_CLAVE_DECLARADA_REPETIDA"
+      }
+    }
+  ]
+}

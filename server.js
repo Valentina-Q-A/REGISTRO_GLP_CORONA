@@ -109,6 +109,13 @@ function ensureUbidotsQueueFile() {
 const syncCheckpointFilePath =
     historySyncConfig.checkpointPath;
 
+const syncConflictResolutionsFilePath =
+    path.resolve(
+        __dirname,
+        process.env.GLP_SYNC_CONFLICT_RESOLUTIONS ||
+            "config/ubidots-conflict-resolutions.json"
+    );
+
 const syncBackupDirectory =
     path.resolve(
         __dirname,
@@ -318,6 +325,9 @@ async function runHistorySynchronization({
 
                     pendingPath:
                         ubidotsQueueFilePath,
+
+                    conflictResolutionsPath:
+                        syncConflictResolutionsFilePath,
 
                     backupDirectory:
                         syncBackupDirectory,

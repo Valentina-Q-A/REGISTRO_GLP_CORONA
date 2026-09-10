@@ -175,7 +175,7 @@ async function main() {
 
     if (!token) {
         throw new Error(
-            `No se encontrÃ³ ${tokenEnvironment}.`
+            `No se encontró ${tokenEnvironment}.`
         );
     }
 
@@ -189,6 +189,12 @@ async function main() {
             checkpointPath,
 
             pendingPath,
+
+            conflictResolutionsPath:
+                path.resolve(
+                    process.cwd(),
+                    "config/ubidots-conflict-resolutions.json"
+                ),
 
             ubidotsConfig,
 
@@ -216,6 +222,9 @@ async function main() {
 
         relationshipBefore:
             result.relationshipBefore,
+        
+        conflictResolution:
+            result.conflictResolution,
 
         summary:
             result.synchronization.summary,
@@ -231,6 +240,16 @@ async function main() {
                 .details
                 .newOperationalEvents
                 .map(simplifyRecord),
+
+        resolvedConflicts:
+            result.synchronization
+                .details
+                .resolvedConflicts,
+
+        unresolvedConflicts:
+            result.synchronization
+                .details
+                .conflicts,
 
         integrity:
             result.integrity
