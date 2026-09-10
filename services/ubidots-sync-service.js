@@ -13,7 +13,10 @@ const path = require("path");
 
 const syncProposalService =
     require("./sync-proposal-service");
-    
+
+const conflictResolutionService =
+    require("./ubidots-conflict-resolution-service");
+
 function hashFile(filePath) {
     return crypto
         .createHash("sha256")
@@ -119,6 +122,7 @@ async function inspectSynchronization({
     cacheSheet,
     checkpointPath,
     pendingPath,
+    conflictResolutionsPath,
     ubidotsConfig,
     token,
     fetchImpl = globalThis.fetch
@@ -165,6 +169,7 @@ async function inspectSynchronization({
             reviewedTimestamps:
                 checkpointData.timestamps
         });
+        
 
     const history =
         await ubidotsHistoryService.fetchHistory({
@@ -176,7 +181,7 @@ async function inspectSynchronization({
             fetchImpl
         });
 
-    const simulation =
+    const originalSimulation =
         ubidotsHistoryService.simulateIncrementalSync({
             cacheRecords:
                 cache.records,
@@ -190,6 +195,21 @@ async function inspectSynchronization({
             config:
                 ubidotsConfig
         });
+
+    const resolutionConfiguration =
+        conflictResolutionService
+            .loadConflictResolutions(
+                conflictResolutionsPath
+            );
+
+    const simulation =
+        conflictResolutionService
+            .resolveApprovedConflicts({
+                simulation:
+                    originalSimulation,
+
+                resolutionConfiguration
+            });
 
     const hashesAfter = {
         cache:
@@ -216,8 +236,11 @@ async function inspectSynchronization({
             hashesAfter.pending
     };
 
-    const conflicts =
-        simulation.summary.conflicts +
+    const unresolvedConflicts =
+        simulation.unresolvedConflicts.length;
+
+    const totalBlockingConditions =
+        unresolvedConflicts +
         simulation.summary
             .recordsWithoutOperationalKey +
         history.contextConflicts.length;
@@ -231,10 +254,10 @@ async function inspectSynchronization({
                 .newTechnicalRecords === 0 &&
             simulation.summary
                 .newOperationalEvents === 0 &&
-            conflicts === 0,
+            totalBlockingConditions === 0,
 
         canApply:
-            conflicts === 0,
+            totalBlockingConditions === 0,
 
         cache: {
             records:
@@ -272,6 +295,22 @@ async function inspectSynchronization({
 
         relationshipBefore,
 
+        conflictResolution: {
+            resolved:
+                simulation
+                    .resolvedConflicts
+                    .length,
+
+            unresolved:
+                simulation
+                    .unresolvedConflicts
+                    .length,
+
+            resolvedConflicts:
+                simulation
+                    .resolvedConflicts
+        },
+
         synchronization: {
             summary:
                 simulation.summary,
@@ -293,7 +332,10 @@ async function inspectSynchronization({
                     simulation.recordsWithoutOperationalKey,
 
                 conflicts:
-                    simulation.conflicts
+                    simulation.unresolvedConflicts,
+
+                resolvedConflicts:
+                    simulation.resolvedConflicts
             }
         },
 
@@ -356,7 +398,8 @@ function restoreFromBackups({
 function validateAppliedState({
     cachePath,
     cacheSheet,
-    checkpointPath
+    checkpointPath,
+    conflictResolutionsPath
 }) {
     const cache =
         historyCacheService.readSheet(
@@ -369,6 +412,12 @@ function validateAppliedState({
             checkpointPath
         );
 
+    const resolutionConfiguration =
+        conflictResolutionService
+            .loadConflictResolutions(
+                conflictResolutionsPath
+            );
+
     const relationship =
         inspectCacheRelationship({
             cacheRecords:
@@ -377,6 +426,152 @@ function validateAppliedState({
             reviewedTimestamps:
                 checkpointData.timestamps
         });
+
+    const operationalGroups =
+        new Map();
+
+    const timestampCounts =
+        new Map();
+
+    for (const record of cache.records) {
+        const operationalKey = [
+            String(record.Fecha ?? "").trim(),
+            String(record.Hora ?? "").trim()
+        ].join("|");
+
+        if (!operationalGroups.has(operationalKey)) {
+            operationalGroups.set(
+                operationalKey,
+                []
+            );
+        }
+
+        operationalGroups
+            .get(operationalKey)
+            .push(record);
+
+        const timestamp =
+            Number(record.TimestampUbidots);
+
+        if (
+            Number.isFinite(timestamp) &&
+            timestamp > 0
+        ) {
+            timestampCounts.set(
+                timestamp,
+                (
+                    timestampCounts.get(timestamp) ||
+                    0
+                ) + 1
+            );
+        }
+    }
+
+    const duplicateTechnicalTimestamps =
+        [...timestampCounts.entries()]
+            .filter(([, count]) =>
+                count > 1
+            )
+            .map(([timestamp, count]) => ({
+                timestamp,
+                count
+            }));
+
+    const operationalCollisions = [];
+    const approvedOperationalCollisions = [];
+    const unresolvedOperationalCollisions = [];
+
+    for (
+        const [
+            operationalKey,
+            records
+        ]
+        of operationalGroups.entries()
+    ) {
+        if (records.length < 2) {
+            continue;
+        }
+
+        const timestamps =
+            records
+                .map(record =>
+                    Number(
+                        record.TimestampUbidots
+                    )
+                )
+                .filter(timestamp =>
+                    Number.isFinite(timestamp) &&
+                    timestamp > 0
+                )
+                .sort((left, right) =>
+                    left - right
+                );
+
+        const collision = {
+            operationalKey,
+            records:
+                records.length,
+            timestamps
+        };
+
+        operationalCollisions.push(
+            collision
+        );
+
+        const approvedResolution =
+            resolutionConfiguration
+                .resolutions
+                .find(resolution =>
+                    resolution.approved === true &&
+                    resolution.type ===
+                        "KEEP_BOTH_DISTINCT_EVENTS" &&
+                    resolution.operationalKey ===
+                        operationalKey &&
+                    conflictResolutionService
+                        .sameTimestampSet(
+                            resolution.timestamps,
+                            timestamps
+                        )
+                );
+
+        const allRecordsHaveTimestamp =
+            timestamps.length ===
+            records.length;
+
+        const timestampsAreUnique =
+            new Set(timestamps).size ===
+            timestamps.length;
+
+        if (
+            approvedResolution &&
+            allRecordsHaveTimestamp &&
+            timestampsAreUnique
+        ) {
+            approvedOperationalCollisions.push({
+                ...collision,
+
+                type:
+                    approvedResolution.type,
+
+                reason:
+                    approvedResolution.reason ||
+                    null
+            });
+
+            continue;
+        }
+
+        unresolvedOperationalCollisions.push({
+            ...collision,
+
+            reason:
+                !allRecordsHaveTimestamp
+                    ? "OPERATIONAL_COLLISION_WITHOUT_COMPLETE_TIMESTAMPS"
+                    : !timestampsAreUnique
+                        ? "DUPLICATE_TECHNICAL_TIMESTAMP"
+                        : "OPERATIONAL_COLLISION_NOT_APPROVED"
+        });
+    }
 
     const operationalKeys =
         cache.records.map(record => [
@@ -389,11 +584,38 @@ function validateAppliedState({
             cache.records.length,
 
         uniqueOperationalKeys:
-            new Set(operationalKeys).size,
+            new Set(
+                operationalKeys
+            ).size,
 
-        duplicates:
+        operationalKeyRepetitions:
             cache.records.length -
-            new Set(operationalKeys).size,
+            new Set(
+                operationalKeys
+            ).size,
+
+        uniqueTechnicalTimestamps:
+            timestampCounts.size,
+
+        duplicateTechnicalTimestamps,
+
+        duplicateTechnicalTimestampCount:
+            duplicateTechnicalTimestamps.length,
+
+        operationalCollisions:
+            operationalCollisions.length,
+
+        approvedOperationalCollisions:
+            approvedOperationalCollisions.length,
+
+        unresolvedOperationalCollisions:
+            unresolvedOperationalCollisions.length,
+
+        approvedOperationalCollisionDetails:
+            approvedOperationalCollisions,
+
+        unresolvedOperationalCollisionDetails:
+            unresolvedOperationalCollisions,
 
         reviewedTimestamps:
             checkpointData.timestamps.length,
@@ -415,6 +637,7 @@ async function synchronizeFromUbidots({
     cacheSheet,
     checkpointPath,
     pendingPath,
+    conflictResolutionsPath,
     backupDirectory,
     ubidotsConfig,
     token,
@@ -426,6 +649,7 @@ async function synchronizeFromUbidots({
             cacheSheet,
             checkpointPath,
             pendingPath,
+            conflictResolutionsPath,
             ubidotsConfig,
             token,
             fetchImpl
@@ -584,7 +808,8 @@ async function synchronizeFromUbidots({
             validateAppliedState({
                 cachePath,
                 cacheSheet,
-                checkpointPath
+                checkpointPath,
+                conflictResolutionsPath
             });
 
         const expectedCacheRecords =
@@ -603,12 +828,14 @@ async function synchronizeFromUbidots({
         const valid =
             validation.cacheRecords ===
                 expectedCacheRecords &&
-            validation.uniqueOperationalKeys ===
-                validation.cacheRecords &&
-            validation.duplicates === 0 &&
+            validation.duplicateTechnicalTimestampCount ===
+                0 &&
+            validation.unresolvedOperationalCollisions ===
+                0 &&
             validation.reviewedTimestamps ===
                 expectedReviewedTimestamps &&
-            validation.visibleNotReviewed.length === 0 &&
+            validation.visibleNotReviewed.length ===
+                0 &&
             pendingUnchanged;
 
         if (!valid) {

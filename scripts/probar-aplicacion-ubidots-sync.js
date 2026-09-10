@@ -122,6 +122,12 @@ async function main() {
                         process.cwd(),
                         "tmp-sync-pending.json"
                     ),
+                    
+                conflictResolutionsPath:
+                    path.resolve(
+                        process.cwd(),
+                        "config/ubidots-conflict-resolutions.json"
+                    ),
 
                 backupDirectory:
                     path.resolve(
