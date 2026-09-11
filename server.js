@@ -2272,6 +2272,96 @@ async function runStartupHistorySynchronization() {
     );
 }
 
+let historySynchronizationInterval = null;
+
+async function runPeriodicHistorySynchronization() {
+    console.log(
+        "Iniciando sincronización histórica periódica..."
+    );
+
+    try {
+        const execution =
+            await runHistorySynchronization({
+                apply: true
+            });
+
+        if (!execution.accepted) {
+            if (
+                execution.result?.reason ===
+                "SYNC_ALREADY_IN_PROGRESS"
+            ) {
+                console.log(
+                    "Sincronización periódica omitida: ya existe una ejecución en curso."
+                );
+
+                return;
+            }
+
+            console.error(
+                "La sincronización histórica periódica no pudo completarse:",
+                execution.result
+            );
+
+            return;
+        }
+
+        console.log(
+            "Sincronización histórica periódica completada:",
+            execution.result
+        );
+    }
+    catch (error) {
+        console.error(
+            "Error inesperado en la sincronización histórica periódica:",
+            error
+        );
+    }
+}
+
+function startPeriodicHistorySynchronization() {
+    if (!historySyncConfig.autoSyncEnabled) {
+        console.log(
+            "Sincronización histórica periódica desactivada."
+        );
+
+        return null;
+    }
+
+    const intervalMs =
+        Number(
+            historySyncConfig.syncIntervalMs
+        );
+
+    if (
+        !Number.isFinite(intervalMs) ||
+        intervalMs <= 0
+    ) {
+        console.error(
+            "No se inició la sincronización histórica periódica: GLP_SYNC_INTERVAL_MS debe ser un entero positivo."
+        );
+
+        return null;
+    }
+
+    console.log(
+        `Sincronización histórica periódica activada cada ${intervalMs} ms.`
+    );
+
+    historySynchronizationInterval =
+        setInterval(() => {
+            void runPeriodicHistorySynchronization();
+        }, intervalMs);
+
+    if (
+        typeof historySynchronizationInterval.unref ===
+        "function"
+    ) {
+        historySynchronizationInterval.unref();
+    }
+
+    return historySynchronizationInterval;
+}
+
 // ============================================
 // INICIAR SERVIDOR
 // ============================================
@@ -2291,6 +2381,8 @@ app.listen(PORT, () => {
                 );
             });
     });
+    
+    startPeriodicHistorySynchronization();
 });
 
 
