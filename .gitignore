@@ -109,3 +109,8 @@ backups-sync-temporal/
 tmp-startup-*.xlsx
 tmp-startup-*.json
 backups-startup-temporal/
+
+# Pruebas temporales de sincronizacion periodica
+tmp-periodic-*.xlsx
+tmp-periodic-*.json
+backups-periodic-temporal/
