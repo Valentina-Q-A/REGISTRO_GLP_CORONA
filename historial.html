@@ -140,7 +140,12 @@ async function cargarHistorico() {
     try {
 
         const response =
-            await fetch("/historial");
+            await fetch(
+                `/historial?t=${Date.now()}`,
+                {
+                    cache: "no-store"
+                }
+            );
 
         if (!response.ok) {
             throw new Error(
@@ -285,7 +290,10 @@ async function buscar() {
 
         const response =
             await fetch(
-                `/historial?fecha=${encodeURIComponent(fecha)}`
+                `/historial?fecha=${encodeURIComponent(fecha)}&t=${Date.now()}`,
+                {
+                    cache: "no-store"
+                }
             );
 
         if (!response.ok) {
