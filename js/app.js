@@ -15,6 +15,13 @@ let ultimaCisterna = {
     capacidad: null
 };
 
+let cisternaTechnicalReferenceState = {
+    lastValidReference: null,
+    fetchStatus: "NOT_LOADED",
+    serverReason: null,
+    errorCode: null
+};
+
 let pendientesActivos = [];
 
 // Configuración de controles y sus valores
@@ -34,11 +41,583 @@ document.addEventListener('DOMContentLoaded', function() {
     setCurrentDateTime();
     updateSummary();
     initializeForm();
+    loadCisternaTechnicalReference();
 });
 
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
+
+function normalizeRequiredReferenceNumber(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        (typeof value === "string" && value.trim() === "") ||
+        (typeof value !== "number" && typeof value !== "string")
+    ) {
+        return null;
+    }
+
+    let number;
+
+    try {
+        number = Number(value);
+    } catch (error) {
+        return null;
+    }
+
+    return Number.isFinite(number)
+        ? number
+        : null;
+}
+
+function normalizeRequiredReferenceText(value) {
+
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    const text = String(value).trim();
+
+    return text || null;
+}
+
+function normalizeCisternaReferenceField(
+    value,
+    field
+) {
+    if (
+        field.type === "number" ||
+        field.type === "range"
+    ) {
+        return normalizeRequiredReferenceNumber(
+            value
+        );
+    }
+
+    if (field.type === "text") {
+        return normalizeRequiredReferenceText(
+            value
+        );
+    }
+
+    return null;
+}
+
+function normalizeCisternaTechnicalReference(payload) {
+    const invalidResult = {
+        valid: false,
+        found: false,
+        reference: null,
+        reason: "INVALID_RESPONSE"
+    };
+
+    if (
+        !payload ||
+        typeof payload !== "object" ||
+        Array.isArray(payload) ||
+        payload.success !== true ||
+        typeof payload.encontrada !== "boolean"
+    ) {
+        return invalidResult;
+    }
+
+    if (payload.encontrada === false) {
+        if (
+            payload.referencia !== null ||
+            ![
+                "NOT_INITIALIZED",
+                "NO_COMPLETE_CISTERNA_REFERENCE"
+            ].includes(payload.razon)
+        ) {
+            return invalidResult;
+        }
+
+        return {
+            valid: true,
+            found: false,
+            reference: null,
+            reason: payload.razon
+        };
+    }
+
+    const reference =
+        payload.referencia;
+
+    if (
+        !reference ||
+        typeof reference !== "object" ||
+        Array.isArray(reference)
+    ) {
+        return invalidResult;
+    }
+
+    const cisternaContract =
+        buildCisternaVariableContract(
+            VARIABLES
+        );
+
+    if (
+        !cisternaContract ||
+        cisternaContract.valid !== true ||
+        !Array.isArray(
+            cisternaContract.fields
+        ) ||
+        cisternaContract.fields.length === 0
+    ) {
+        return invalidResult;
+    }
+
+    const normalizedReference = {};
+
+    for (
+        const field
+        of cisternaContract.fields
+    ) {
+        const normalizedValue =
+            normalizeCisternaReferenceField(
+                reference[
+                    field.canonicalName
+                ],
+                field
+            );
+
+        if (
+            field.referenceRequired === true &&
+            normalizedValue === null
+        ) {
+            return invalidResult;
+        }
+
+        normalizedReference[
+            field.canonicalName
+        ] =
+            normalizedValue;
+    }
+
+    const TimestampUbidots =
+        normalizeRequiredReferenceNumber(
+            reference.TimestampUbidots
+        );
+
+    const Fecha =
+        normalizeRequiredReferenceText(
+            reference.Fecha
+        );
+
+    const Hora =
+        normalizeRequiredReferenceText(
+            reference.Hora
+        );
+
+    if (
+        TimestampUbidots === null ||
+        TimestampUbidots <= 0 ||
+        !Fecha ||
+        !Hora
+    ) {
+        return invalidResult;
+    }
+
+    normalizedReference.TimestampUbidots =
+        TimestampUbidots;
+
+    normalizedReference.Fecha =
+        Fecha;
+
+    normalizedReference.Hora =
+        Hora;
+
+    return {
+        valid: true,
+        found: true,
+        reference:
+            normalizedReference,
+        reason: null
+    };
+}
+
+function buildCisternaCurrentMeasurement({
+    data,
+    contractFields,
+    reusedFields = []
+}) {
+    const reusedSet =
+        new Set(
+            Array.isArray(reusedFields)
+                ? reusedFields
+                : []
+        );
+
+    const currentMeasurement = {};
+
+    for (const field of contractFields) {
+        currentMeasurement[
+            field.canonicalName
+        ] =
+            reusedSet.has(
+                field.canonicalName
+            )
+                ? null
+                : data[
+                    field.logicalName
+                ] ?? null;
+    }
+
+    return currentMeasurement;
+}
+
+function hasCompleteCisternaReference({
+    reference,
+    contractFields
+}) {
+    if (
+        !reference ||
+        typeof reference !== "object" ||
+        Array.isArray(reference)
+    ) {
+        return false;
+    }
+
+    const timestamp =
+        normalizeRequiredReferenceNumber(
+            reference.TimestampUbidots
+        );
+
+    const fecha =
+        normalizeRequiredReferenceText(
+            reference.Fecha
+        );
+
+    const hora =
+        normalizeRequiredReferenceText(
+            reference.Hora
+        );
+
+    if (
+        timestamp === null ||
+        timestamp <= 0 ||
+        !fecha ||
+        !hora
+    ) {
+        return false;
+    }
+
+    for (const field of contractFields) {
+        if (
+            field.referenceRequired !== true
+        ) {
+            continue;
+        }
+
+        const normalizedValue =
+            normalizeCisternaReferenceField(
+                reference[
+                    field.canonicalName
+                ],
+                field
+            );
+
+        if (normalizedValue === null) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function buildCisternaProvenanceCommand({
+    data,
+    sameCisterna = false,
+    technicalReference = null
+} = {}) {
+    if (
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+    ) {
+        return {
+            valid: false,
+            cisternaProvenance: null,
+            errorCode:
+                "CISTERNA_COMMAND_DATA_INVALID"
+        };
+    }
+
+    const cisternaContract =
+        buildCisternaVariableContract(
+            VARIABLES
+        );
+
+    if (
+        !cisternaContract ||
+        cisternaContract.valid !== true ||
+        !Array.isArray(
+            cisternaContract.fields
+        ) ||
+        cisternaContract.fields.length === 0
+    ) {
+        return {
+            valid: false,
+            cisternaProvenance: null,
+            errorCode:
+                "CISTERNA_VARIABLE_CONTRACT_INVALID"
+        };
+    }
+
+    const contractFields =
+        cisternaContract.fields;
+    if (
+        typeof data.cisterna_habilitada !==
+            "boolean"
+    ) {
+        return {
+            valid: false,
+            cisternaProvenance: null,
+            errorCode:
+                "CISTERNA_ENABLED_STATE_INVALID"
+        };
+    }
+
+    const enabled =
+        data.cisterna_habilitada === true;
+
+    if (!enabled) {
+        const allCanonicalFields =
+            contractFields.map(
+                field =>
+                    field.canonicalName
+            );
+
+        return {
+            valid: true,
+
+            cisternaProvenance: {
+                protocolVersion:
+                    "cisterna-provenance-v1",
+
+                origin:
+                    "ausentes",
+
+                currentMeasurement:
+                    buildCisternaCurrentMeasurement({
+                        data,
+                        contractFields,
+                        reusedFields:
+                            allCanonicalFields
+                    }),
+
+                referenceTimestamp:
+                    null,
+
+                reusedFields:
+                    []
+            },
+
+            errorCode:
+                null
+        };
+    }
+
+    if (!sameCisterna) {
+        return {
+            valid: true,
+
+            cisternaProvenance: {
+                protocolVersion:
+                    "cisterna-provenance-v1",
+
+                origin:
+                    "actualizados",
+
+                currentMeasurement:
+                    buildCisternaCurrentMeasurement({
+                        data,
+                        contractFields
+                    }),
+
+                referenceTimestamp:
+                    null,
+
+                reusedFields:
+                    []
+            },
+
+            errorCode:
+                null
+        };
+    }
+
+    if (
+        !hasCompleteCisternaReference({
+            reference:
+                technicalReference,
+
+            contractFields
+        })
+    ) {
+        return {
+            valid: false,
+            cisternaProvenance: null,
+            errorCode:
+                "CISTERNA_TECHNICAL_REFERENCE_REQUIRED"
+        };
+    }
+
+    const reusedFields =
+        contractFields
+            .filter(field =>
+                field.reuseFromLast ===
+                    true
+            )
+            .map(field =>
+                field.canonicalName
+            );
+
+    if (reusedFields.length === 0) {
+        return {
+            valid: false,
+            cisternaProvenance: null,
+            errorCode:
+                "CISTERNA_REUSABLE_FIELDS_NOT_FOUND"
+        };
+    }
+
+    return {
+        valid: true,
+
+        cisternaProvenance: {
+            protocolVersion:
+                "cisterna-provenance-v1",
+
+            origin:
+                "mixtos",
+
+            currentMeasurement:
+                buildCisternaCurrentMeasurement({
+                    data,
+                    contractFields,
+                    reusedFields
+                }),
+
+            referenceTimestamp:
+                Number(
+                    technicalReference
+                        .TimestampUbidots
+                ),
+
+            reusedFields
+        },
+
+        errorCode:
+            null
+    };
+}
+
+async function loadCisternaTechnicalReference() {
+
+    cisternaTechnicalReferenceState.fetchStatus =
+        "LOADING";
+
+    cisternaTechnicalReferenceState.serverReason =
+        null;
+
+    cisternaTechnicalReferenceState.errorCode =
+        null;
+
+    try {
+        const response = await fetch(
+            "/ultima-referencia-cisterna",
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept": "application/json",
+                    "Cache-Control": "no-cache"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            cisternaTechnicalReferenceState.fetchStatus =
+                "HTTP_ERROR";
+
+            cisternaTechnicalReferenceState.errorCode =
+                `HTTP_${response.status}`;
+
+            return;
+        }
+
+        const normalized =
+            normalizeCisternaTechnicalReference(
+                await response.json()
+            );
+
+        if (!normalized.valid) {
+            cisternaTechnicalReferenceState.fetchStatus =
+                "INVALID_RESPONSE";
+
+            cisternaTechnicalReferenceState.errorCode =
+                "INVALID_RESPONSE";
+
+            return;
+        }
+
+        if (!normalized.found) {
+            cisternaTechnicalReferenceState.fetchStatus =
+                normalized.reason;
+
+            cisternaTechnicalReferenceState.serverReason =
+                normalized.reason;
+
+            return;
+        }
+
+        const currentReference =
+            cisternaTechnicalReferenceState
+                .lastValidReference;
+
+        const currentTimestamp =
+            currentReference?.TimestampUbidots;
+
+        if (
+            currentReference &&
+            normalized.reference.TimestampUbidots <
+                currentTimestamp
+        ) {
+            cisternaTechnicalReferenceState.fetchStatus =
+                "STALE_REFERENCE";
+
+            cisternaTechnicalReferenceState.errorCode =
+                "STALE_REFERENCE";
+
+            return;
+        }
+
+        if (
+            !currentReference ||
+            normalized.reference.TimestampUbidots >
+                currentTimestamp
+        ) {
+            cisternaTechnicalReferenceState.lastValidReference = {
+                ...normalized.reference
+            };
+        }
+
+        cisternaTechnicalReferenceState.fetchStatus =
+            "AVAILABLE";
+    } catch (error) {
+        cisternaTechnicalReferenceState.fetchStatus =
+            "REQUEST_ERROR";
+
+        cisternaTechnicalReferenceState.serverReason =
+            null;
+
+        cisternaTechnicalReferenceState.errorCode =
+            "REQUEST_FAILED";
+    }
+}
 
 function initializeControls() {
     controls.forEach(s => {

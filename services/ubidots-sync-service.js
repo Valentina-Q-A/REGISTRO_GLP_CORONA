@@ -124,6 +124,7 @@ async function inspectSynchronization({
     pendingPath,
     conflictResolutionsPath,
     ubidotsConfig,
+    cisternaContract,
     token,
     fetchImpl = globalThis.fetch
 }) {
@@ -180,6 +181,18 @@ async function inspectSynchronization({
 
             fetchImpl
         });
+
+    const cisternaReference =
+        ubidotsHistoryService
+            .findLatestCompleteCisternaReference({
+                records:
+                    history.records,
+
+                contextConflicts:
+                    history.contextConflicts,
+
+                cisternaContract
+            });
 
     const originalSimulation =
         ubidotsHistoryService.simulateIncrementalSync({
@@ -290,7 +303,9 @@ async function inspectSynchronization({
             contextConflicts:
                 history
                     .contextConflicts
-                    .length
+                    .length,
+
+            cisternaReference
         },
 
         relationshipBefore,
@@ -640,6 +655,7 @@ async function synchronizeFromUbidots({
     conflictResolutionsPath,
     backupDirectory,
     ubidotsConfig,
+    cisternaContract,
     token,
     fetchImpl = globalThis.fetch
 }) {
@@ -651,6 +667,7 @@ async function synchronizeFromUbidots({
             pendingPath,
             conflictResolutionsPath,
             ubidotsConfig,
+            cisternaContract,
             token,
             fetchImpl
         });

@@ -774,6 +774,463 @@ async function fetchHistory({
     };
 }
 
+function findLatestCompleteCisternaReference({
+    records,
+    contextConflicts = [],
+    cisternaContract
+} = {}) {
+    const sourceRecords =
+        Array.isArray(records)
+            ? records
+            : [];
+
+    const sourceConflicts =
+        Array.isArray(contextConflicts)
+            ? contextConflicts
+            : [];
+
+    const descartes = {
+        INVALID_CISTERNA_CONTRACT: 0,
+        MISSING_TIMESTAMP: 0,
+        AMBIGUOUS_CONTEXT: 0,
+        MISSING_OPERATIONAL_DATE_TIME: 0,
+        MISSING_REQUIRED_CISTERNA_FIELD: 0,
+        INVALID_REQUIRED_CISTERNA_FIELD: 0
+    };
+
+    const diagnosticBase = {
+        registrosEvaluados:
+            sourceRecords.length,
+
+        camposCisterna:
+            0,
+
+        camposRequeridos:
+            0
+    };
+
+    if (
+        !cisternaContract ||
+        typeof cisternaContract !== "object" ||
+        Array.isArray(cisternaContract) ||
+        cisternaContract.valid !== true ||
+        !Array.isArray(
+            cisternaContract.fields
+        ) ||
+        cisternaContract.fields.length === 0
+    ) {
+        descartes
+            .INVALID_CISTERNA_CONTRACT =
+                sourceRecords.length || 1;
+
+        return {
+            encontrada: false,
+            referencia: null,
+            razon:
+                "INVALID_CISTERNA_CONTRACT",
+
+            diagnostico: {
+                ...diagnosticBase,
+
+                candidatosCompletos:
+                    0,
+
+                registrosDescartados:
+                    Object.values(descartes)
+                        .reduce(
+                            (total, count) =>
+                                total + count,
+                            0
+                        ),
+
+                descartes
+            }
+        };
+    }
+
+    const logicalNames =
+        new Set();
+
+    const canonicalNames =
+        new Set();
+
+    const contractFields = [];
+
+    for (
+        const field
+        of cisternaContract.fields
+    ) {
+        if (
+            !field ||
+            typeof field !== "object" ||
+            Array.isArray(field)
+        ) {
+            descartes
+                .INVALID_CISTERNA_CONTRACT =
+                    sourceRecords.length || 1;
+
+            return {
+                encontrada: false,
+                referencia: null,
+                razon:
+                    "INVALID_CISTERNA_CONTRACT",
+
+                diagnostico: {
+                    ...diagnosticBase,
+
+                    candidatosCompletos:
+                        0,
+
+                    registrosDescartados:
+                        Object.values(descartes)
+                            .reduce(
+                                (total, count) =>
+                                    total + count,
+                                0
+                            ),
+
+                    descartes
+                }
+            };
+        }
+
+        const logicalName =
+            typeof field.logicalName ===
+                "string"
+                ? field.logicalName.trim()
+                : "";
+
+        const canonicalName =
+            typeof field.canonicalName ===
+                "string"
+                ? field.canonicalName.trim()
+                : "";
+
+        const type =
+            typeof field.type === "string"
+                ? field.type.trim()
+                : "";
+
+        if (
+            !logicalName ||
+            !canonicalName ||
+            ![
+                "number",
+                "range",
+                "text"
+            ].includes(type) ||
+            logicalNames.has(logicalName) ||
+            canonicalNames.has(
+                canonicalName
+            )
+        ) {
+            descartes
+                .INVALID_CISTERNA_CONTRACT =
+                    sourceRecords.length || 1;
+
+            return {
+                encontrada: false,
+                referencia: null,
+                razon:
+                    "INVALID_CISTERNA_CONTRACT",
+
+                diagnostico: {
+                    ...diagnosticBase,
+
+                    candidatosCompletos:
+                        0,
+
+                    registrosDescartados:
+                        Object.values(descartes)
+                            .reduce(
+                                (total, count) =>
+                                    total + count,
+                                0
+                            ),
+
+                    descartes
+                }
+            };
+        }
+
+        logicalNames.add(
+            logicalName
+        );
+
+        canonicalNames.add(
+            canonicalName
+        );
+
+        contractFields.push({
+            logicalName,
+            canonicalName,
+            type,
+
+            referenceRequired:
+                field.referenceRequired ===
+                    true
+        });
+    }
+
+    const requiredFields =
+        contractFields.filter(
+            field =>
+                field.referenceRequired
+        );
+
+    if (requiredFields.length === 0) {
+        descartes
+            .INVALID_CISTERNA_CONTRACT =
+                sourceRecords.length || 1;
+
+        return {
+            encontrada: false,
+            referencia: null,
+            razon:
+                "INVALID_CISTERNA_CONTRACT",
+
+            diagnostico: {
+                registrosEvaluados:
+                    sourceRecords.length,
+
+                camposCisterna:
+                    contractFields.length,
+
+                camposRequeridos:
+                    0,
+
+                candidatosCompletos:
+                    0,
+
+                registrosDescartados:
+                    Object.values(descartes)
+                        .reduce(
+                            (total, count) =>
+                                total + count,
+                            0
+                        ),
+
+                descartes
+            }
+        };
+    }
+
+    let candidatosCompletos = 0;
+    let mejorCandidato = null;
+
+    function hasRawValue(value) {
+        return (
+            value !== null &&
+            value !== undefined &&
+            (
+                typeof value !== "string" ||
+                value.trim() !== ""
+            )
+        );
+    }
+
+    function normalizeFieldValue(
+        value,
+        field
+    ) {
+        if (!hasRawValue(value)) {
+            return null;
+        }
+
+        if (
+            field.type === "number" ||
+            field.type === "range"
+        ) {
+            const numericValue =
+                Number(value);
+
+            return Number.isFinite(
+                numericValue
+            )
+                ? numericValue
+                : null;
+        }
+
+        const textValue =
+            String(value).trim();
+
+        return textValue || null;
+    }
+
+    function hasContextConflict(timestamp) {
+        return sourceConflicts.some(
+            conflict =>
+                Number(
+                    conflict
+                        ?.TimestampUbidots
+                ) === timestamp
+        );
+    }
+
+    for (const record of sourceRecords) {
+        const timestamp =
+            Number(
+                record?.TimestampUbidots
+            );
+
+        if (
+            !Number.isFinite(timestamp) ||
+            timestamp <= 0
+        ) {
+            descartes.MISSING_TIMESTAMP++;
+            continue;
+        }
+
+        if (
+            hasContextConflict(timestamp)
+        ) {
+            descartes.AMBIGUOUS_CONTEXT++;
+            continue;
+        }
+
+        const fecha =
+            typeof record?.Fecha === "string"
+                ? record.Fecha.trim()
+                : String(
+                    record?.Fecha ?? ""
+                ).trim();
+
+        const hora =
+            typeof record?.Hora === "string"
+                ? record.Hora.trim()
+                : String(
+                    record?.Hora ?? ""
+                ).trim();
+
+        if (!fecha || !hora) {
+            descartes
+                .MISSING_OPERATIONAL_DATE_TIME++;
+
+            continue;
+        }
+
+        const normalizedValues = {};
+        let missingRequiredField = false;
+        let invalidRequiredField = false;
+
+        for (const field of contractFields) {
+            const rawValue =
+                record?.[
+                    field.canonicalName
+                ];
+
+            if (!hasRawValue(rawValue)) {
+                normalizedValues[
+                    field.canonicalName
+                ] =
+                    null;
+
+                if (field.referenceRequired) {
+                    missingRequiredField =
+                        true;
+                }
+
+                continue;
+            }
+
+            const normalizedValue =
+                normalizeFieldValue(
+                    rawValue,
+                    field
+                );
+
+            normalizedValues[
+                field.canonicalName
+            ] =
+                normalizedValue;
+
+            if (
+                field.referenceRequired &&
+                normalizedValue === null
+            ) {
+                invalidRequiredField =
+                    true;
+            }
+        }
+
+        if (missingRequiredField) {
+            descartes
+                .MISSING_REQUIRED_CISTERNA_FIELD++;
+
+            continue;
+        }
+
+        if (invalidRequiredField) {
+            descartes
+                .INVALID_REQUIRED_CISTERNA_FIELD++;
+
+            continue;
+        }
+
+        candidatosCompletos++;
+
+        if (
+            !mejorCandidato ||
+            timestamp >
+                mejorCandidato
+                    .TimestampUbidots
+        ) {
+            mejorCandidato = {
+                ...normalizedValues,
+
+                TimestampUbidots:
+                    timestamp,
+
+                Fecha:
+                    fecha,
+
+                Hora:
+                    hora
+            };
+        }
+    }
+
+    const diagnostico = {
+        registrosEvaluados:
+            sourceRecords.length,
+
+        camposCisterna:
+            contractFields.length,
+
+        camposRequeridos:
+            requiredFields.length,
+
+        candidatosCompletos,
+
+        registrosDescartados:
+            Object.values(descartes)
+                .reduce(
+                    (total, count) =>
+                        total + count,
+                    0
+                ),
+
+        descartes
+    };
+
+    if (!mejorCandidato) {
+        return {
+            encontrada: false,
+            referencia: null,
+            razon:
+                "NO_COMPLETE_CISTERNA_REFERENCE",
+            diagnostico
+        };
+    }
+
+    return {
+        encontrada: true,
+        referencia:
+            mejorCandidato,
+        diagnostico
+    };
+}
+
 module.exports = {
     buildOperationalKey,
     compareOperationalRecords,
@@ -781,5 +1238,6 @@ module.exports = {
     flattenRecord,
     operationalColumns,
     reconstructRecords,
-    simulateIncrementalSync
+    simulateIncrementalSync,
+    findLatestCompleteCisternaReference
 };

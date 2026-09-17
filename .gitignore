@@ -114,3 +114,8 @@ backups-startup-temporal/
 tmp-periodic-*.xlsx
 tmp-periodic-*.json
 backups-periodic-temporal/
+
+# Prueba E2E aislada con planta-prueba
+tmp-e2e-*.xlsx
+tmp-e2e-*.json
+backups-e2e-temporal/

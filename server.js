@@ -17,12 +17,35 @@ const historySyncConfig =
 const ubidotsSyncService =
     require('./services/ubidots-sync-service');
 
-const ubidotsHistoryConfig =
-    require('./scripts/config-ubidots-glp');
+const {
+    createRegistrationPlan
+} = require(
+    './services/registration-command-service'
+);
 
 const {
+    createCisternaReferenceState,
+    updateCisternaReferenceState,
+    getCisternaReferenceState
+} = require(
+    './services/cisterna-reference-state-service'
+);
+
+const ubidotsHistoryConfigPath =
+    path.resolve(
+        __dirname,
+        process.env.GLP_UBIDOTS_HISTORY_CONFIG ||
+            "scripts/config-ubidots-glp.js"
+    );
+
+const ubidotsHistoryConfig =
+    require(
+        ubidotsHistoryConfigPath
+    );
+const {
     VARIABLES,
-    UBIDOTS_CONFIG
+    UBIDOTS_CONFIG,
+    buildCisternaVariableContract
 } = require('./js/variables.js');
 
 const app = express();
@@ -134,6 +157,9 @@ const syncState = {
     lastResult: null
 };
 
+let cisternaReferenceState =
+    createCisternaReferenceState();
+
 const UBIDOTS_RETRY_INTERVAL =
     5* 60 * 1000;                               // 5 minutes
 
@@ -166,6 +192,102 @@ function secureStringEquals(left, right) {
         leftBuffer,
         rightBuffer
     );
+}
+
+function getRegistrationPlanStatus(plan) {
+    const errors =
+        Array.isArray(plan?.errors)
+            ? plan.errors
+            : [];
+
+    if (
+        errors.includes(
+            "CISTERNA_REFERENCE_TIMESTAMP_MISMATCH"
+        )
+    ) {
+        return {
+            statusCode: 409,
+            reason: "STALE_CISTERNA_REFERENCE"
+        };
+    }
+
+    return {
+        statusCode: 400,
+        reason: "INVALID_REGISTRATION_COMMAND"
+    };
+}
+
+function summarizeRegistrationPlan(
+    plan,
+    cisternaContract
+) {
+    const historicalData =
+        plan?.historicalData &&
+        typeof plan.historicalData ===
+            "object"
+            ? plan.historicalData
+            : {};
+
+    const ubidotsData =
+        plan?.ubidotsData &&
+        typeof plan.ubidotsData ===
+            "object"
+            ? plan.ubidotsData
+            : {};
+
+    const contractFields =
+        cisternaContract?.valid ===
+            true &&
+        Array.isArray(
+            cisternaContract.fields
+        )
+            ? cisternaContract.fields
+            : [];
+
+    const historicalCisternaFields =
+        contractFields
+            .filter(field =>
+                historicalData[
+                    field.logicalName
+                ] !== null &&
+                historicalData[
+                    field.logicalName
+                ] !== undefined
+            )
+            .length;
+
+    const ubidotsCisternaFields =
+        contractFields
+            .filter(field =>
+                ubidotsData[
+                    field.logicalName
+                ] !== null &&
+                ubidotsData[
+                    field.logicalName
+                ] !== undefined
+            )
+            .length;
+
+    return {
+        historicalCisternaFields,
+        ubidotsCisternaFields,
+
+        hasHistoricalMetadata:
+            Boolean(
+                plan?.historicalMetadata &&
+                typeof plan
+                    .historicalMetadata ===
+                    "object"
+            ),
+
+        hasContextMetadata:
+            Boolean(
+                plan?.contextMetadata &&
+                typeof plan
+                    .contextMetadata ===
+                    "object"
+            )
+    };
 }
 
 function isSyncRequestAuthorized(req) {
@@ -309,6 +431,11 @@ async function runHistorySynchronization({
     syncState.lastError = null;
 
     try {
+        const cisternaContract =
+            buildCisternaVariableContract(
+                VARIABLES
+            );
+
         const result =
             await ubidotsSyncService
                 .synchronizeFromUbidots({
@@ -334,12 +461,23 @@ async function runHistorySynchronization({
 
                     ubidotsConfig:
                         ubidotsHistoryConfig,
+                    cisternaContract,
 
                     token,
 
                     fetchImpl:
                         fetch
                 });
+
+        const inspectionAt =
+            new Date().toISOString();
+
+        cisternaReferenceState =
+            updateCisternaReferenceState(
+                cisternaReferenceState,
+                result,
+                inspectionAt
+            );
 
         const summarized =
             summarizeSynchronizationResult(
@@ -911,7 +1049,8 @@ function buildRecordRow(record) {
         let value =
             getVariableValue(
                 record,
-                variable
+                variable,
+                name
             );
 
         // ========================================
@@ -1088,58 +1227,52 @@ function getRecordTimestamp(data) {
     return timestamp;
 }
 
-function buildUbidotsContext(data, pendientesActivos = []) {
+function isUbidotsContextEnabled(variable) {
+    return Boolean(
+        variable?.ubidotsContext &&
+        variable.ubidotsContext.enabled !== false
+    );
+}
 
-    const context = {};
+function hasContextValue(value) {
+    return value !== null &&
+        value !== undefined &&
+        value !== "";
+}
 
+function serializePendingSummary(value) {
+    const values =
+        Array.isArray(value)
+            ? value
+            : [];
+
+    const uniqueValues = [
+        ...new Set(
+            values
+                .map(item => String(item ?? "").trim())
+                .filter(Boolean)
+        )
+    ];
+
+    const options =
+        VARIABLES.pendientes?.options || [];
+
+    const knownValues = options
+        .map(option => option.value)
+        .filter(value => uniqueValues.includes(value));
+
+    const unknownValues = uniqueValues
+        .filter(value => !options.some(option => option.value === value));
+
+    return [
+        ...knownValues,
+        ...unknownValues
+    ];
+}
+
+function buildActivePendingsContext(pendientesActivos) {
     const pendientesConfig =
         VARIABLES.pendientes;
-
-    // ========================================
-    // ESTADO DE OPERACIÓN
-    // ========================================
-
-    const estadoOperacion =
-        getVariableValue(
-            data,
-            VARIABLES.estado_operacion
-        );
-
-    if (
-        estadoOperacion !== null &&
-        estadoOperacion !== undefined &&
-        estadoOperacion !== ""
-    ) {
-
-        context.estado_operacion =
-            estadoOperacion;
-    }
-
-
-    // ========================================
-    // ENCARGADO
-    // ========================================
-
-    const encargado =
-        getVariableValue(
-            data,
-            VARIABLES.encargado
-        );
-
-    if (
-        encargado !== null &&
-        encargado !== undefined &&
-        encargado !== ""
-    ) {
-
-        context.encargado =
-            encargado;
-    }
-
-
-    // ========================================
-    // CONFIGURACIÓN DE PENDIENTES
-    // ========================================
 
     const recordFields =
         pendientesConfig?.record || {};
@@ -1147,100 +1280,101 @@ function buildUbidotsContext(data, pendientesActivos = []) {
     const contextFields =
         pendientesConfig?.context?.fields || {};
 
+    return (Array.isArray(pendientesActivos)
+        ? pendientesActivos
+        : []
+    ).map(pendiente => {
 
-    // ========================================
-    // PENDIENTES ACTIVOS
-    // ========================================
+        const resultado = {};
 
-    const pendientesUbidots =
-        pendientesActivos.map(pendiente => {
+        if (recordFields.id) {
+            resultado.id =
+                pendiente[recordFields.id] ?? null;
+        }
 
-            const resultado = {};
+        if (recordFields.type) {
+            resultado.tipo =
+                pendiente[recordFields.type] ?? null;
+        }
 
+        if (recordFields.description) {
+            resultado.descripcion =
+                pendiente[recordFields.description] ?? null;
+        }
 
-            // ------------------------------------
-            // CAMPOS DEL REGISTRO
-            // ------------------------------------
+        for (
+            const [nombreCampo, nombreFuente]
+            of Object.entries(contextFields)
+        ) {
 
-            if (recordFields.id) {
+            const columna =
+                toExcelFieldName(nombreCampo);
 
-                resultado.id =
-                    pendiente[
-                        recordFields.id
-                    ] ?? null;
+            const valor =
+                pendiente[columna] ??
+                pendiente[nombreFuente] ??
+                null;
+
+            if (!hasContextValue(valor)) {
+                continue;
             }
 
-            if (recordFields.type) {
+            if (nombreCampo === "encargadoRegistro") {
+                resultado.encargado = valor;
+            } else if (nombreCampo === "fechaRegistro") {
+                resultado.fecha = valor;
+            }
+        }
 
-                resultado.tipo =
-                    pendiente[
-                        recordFields.type
-                    ] ?? null;
+        return resultado;
+    });
+}
+
+function buildUbidotsContext(data, pendientesActivos = []) {
+    const context = {};
+
+    for (const [name, variable] of Object.entries(VARIABLES)) {
+        if (!isUbidotsContextEnabled(variable)) {
+            continue;
+        }
+
+        const configuration =
+            variable.ubidotsContext;
+
+        let value =
+            getVariableValue(
+                data,
+                variable,
+                name
+            );
+
+        if (
+            configuration.serializer ===
+            "pendingSummary"
+        ) {
+            value =
+                serializePendingSummary(value);
+        }
+
+        if (!hasContextValue(value)) {
+            if (configuration.required === true) {
+                throw new Error(
+                    `Falta contexto Ubidots obligatorio: ${configuration.field}`
+                );
             }
 
-            if (recordFields.description) {
+            continue;
+        }
 
-                resultado.descripcion =
-                    pendiente[
-                        recordFields.description
-                    ] ?? null;
-            }
-
-
-            // ------------------------------------
-            // CAMPOS DE CONTEXTO
-            // ------------------------------------
-
-            for (
-                const [nombreCampo, nombreFuente]
-                of Object.entries(contextFields)
-            ) {
-
-                const columna =
-                    toExcelFieldName(
-                        nombreCampo
-                    );
-
-                const valor =
-                    pendiente[columna] ??
-                    pendiente[nombreFuente] ??
-                    null;
-
-                if (
-                    valor !== null &&
-                    valor !== undefined &&
-                    valor !== ""
-                ) {
-
-                    if (
-                        nombreCampo ===
-                        "encargadoRegistro"
-                    ) {
-
-                        resultado.encargado =
-                            valor;
-
-                    } else if (
-                        nombreCampo ===
-                        "fechaRegistro"
-                    ) {
-
-                        resultado.fecha =
-                            valor;
-                    }
-                }
-            }
-
-
-            return resultado;
-        });
-
+        context[configuration.field] = value;
+    }
 
     context.pendientes_json =
         JSON.stringify(
-            pendientesUbidots
+            buildActivePendingsContext(
+                pendientesActivos
+            )
         );
-
 
     return context;
 }
@@ -2152,6 +2286,106 @@ app.get('/ultimo-registro', (req, res) => {
 // ============================================
 // ESTADO DE SINCRONIZACION DEL HISTORICO
 // ============================================
+
+app.get('/ultima-referencia-cisterna', (req, res) => {
+    res.set({
+        "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
+
+        "Pragma":
+            "no-cache",
+
+        "Expires":
+            "0"
+    });
+
+    res.status(200).json({
+        success: true,
+        ...getCisternaReferenceState(
+            cisternaReferenceState
+        )
+    });
+});
+
+app.post('/registro/plan', (req, res) => {
+    const data =
+        req.body;
+
+    if (
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+    ) {
+        return res.status(400).json({
+            success: false,
+            valid: false,
+            reason:
+                "INVALID_REGISTRATION_COMMAND",
+            errors: [
+                "REGISTRATION_DATA_INVALID"
+            ]
+        });
+    }
+
+    const cisternaContract =
+        buildCisternaVariableContract(
+            VARIABLES
+        );
+
+    const referenceState =
+        getCisternaReferenceState(
+            cisternaReferenceState
+        );
+
+    const trustedReference =
+        referenceState.encontrada === true
+            ? referenceState.referencia
+            : null;
+
+    const plan =
+        createRegistrationPlan({
+            data,
+            trustedReference,
+            cisternaContract
+        });
+
+    if (!plan.valid) {
+        const responseStatus =
+            getRegistrationPlanStatus(
+                plan
+            );
+
+        return res
+            .status(responseStatus.statusCode)
+            .json({
+                success: false,
+                valid: false,
+                reason:
+                    responseStatus.reason,
+
+                errors:
+                    Array.isArray(plan.errors)
+                        ? [...plan.errors]
+                        : []
+            });
+    }
+
+    return res.status(200).json({
+        success: true,
+        valid: true,
+        mode:
+            plan.mode,
+
+        origin:
+            plan.origin,
+
+        summary:
+            summarizeRegistrationPlan(
+                plan,
+                cisternaContract
+            )
+    });
+});
 
 app.get('/sync-status', (req, res) => {
     res.json({

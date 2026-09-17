@@ -9,6 +9,20 @@ const historySyncConfig =
 const ubidotsSyncService =
     require("../services/ubidots-sync-service");
 
+    const {
+    enrichUbidotsHistoryConfig
+} = require(
+    "../services/ubidots-history-config-service"
+);
+
+const {
+    VARIABLES,
+    buildCisternaVariableContract,
+    buildPendingLifecycleContract
+} = require(
+    "../js/variables"
+);
+
 function parseArguments(argumentsList) {
     const options = {};
 
@@ -137,7 +151,8 @@ async function main() {
     const ubidotsConfigPath =
         path.resolve(
             process.cwd(),
-            "scripts/config-ubidots-glp.js"
+            options.config ||
+                "scripts/config-ubidots-glp.js"
         );
 
     const cachePath =
@@ -163,12 +178,13 @@ async function main() {
 
     loadEnv(envPath);
 
-    const ubidotsConfig =
+    const sourceUbidotsConfig =
         require(ubidotsConfigPath);
 
     const tokenEnvironment =
-        ubidotsConfig.tokenEnv ||
+        sourceUbidotsConfig.tokenEnv ||
         "UBIDOTS_TOKEN";
+
 
     const token =
         process.env[tokenEnvironment];
@@ -178,6 +194,75 @@ async function main() {
             `No se encontró ${tokenEnvironment}.`
         );
     }
+
+    const cisternaContract =
+        buildCisternaVariableContract(
+            VARIABLES
+        );
+
+    if (
+        !cisternaContract ||
+        cisternaContract.valid !== true
+    ) {
+        throw new Error(
+            "El contrato dinámico de cisterna es inválido."
+        );
+    }
+
+    const pendingContract =
+        buildPendingLifecycleContract(
+            VARIABLES
+        );
+
+    if (
+        !pendingContract ||
+        pendingContract.valid !== true
+    ) {
+        throw new Error(
+            [
+                "El contrato del ciclo de vida",
+                "de pendientes es inválido:",
+                ...(
+                    Array.isArray(
+                        pendingContract?.errors
+                    )
+                        ? pendingContract.errors
+                        : []
+                )
+            ].join(" ")
+        );
+    }
+
+    const enrichedConfigResult =
+        enrichUbidotsHistoryConfig({
+            config:
+                sourceUbidotsConfig,
+
+            pendingContract
+        });
+
+    if (
+        !enrichedConfigResult ||
+        enrichedConfigResult.valid !== true ||
+        !enrichedConfigResult.config
+    ) {
+        throw new Error(
+            [
+                "No se pudo enriquecer",
+                "la configuración histórica:",
+                ...(
+                    Array.isArray(
+                        enrichedConfigResult?.errors
+                    )
+                        ? enrichedConfigResult.errors
+                        : []
+                )
+            ].join(" ")
+        );
+    }
+
+    const ubidotsConfig =
+        enrichedConfigResult.config;
 
     const result =
         await ubidotsSyncService.inspectSynchronization({
@@ -198,6 +283,8 @@ async function main() {
 
             ubidotsConfig,
 
+            cisternaContract,
+
             token
         });
 
@@ -211,6 +298,25 @@ async function main() {
         canApply:
             result.canApply,
 
+        historyConfig: {
+            sourceContextFields:
+                Object.keys(
+                    sourceUbidotsConfig
+                        .contextoSalida || {}
+                ).length,
+
+            enrichedContextFields:
+                Object.keys(
+                    ubidotsConfig
+                        .contextoSalida || {}
+                ).length,
+
+            pendingLifecycleFields:
+                Object.keys(
+                    enrichedConfigResult
+                        .pendingContextOutput || {}
+                )
+        },
         cache:
             result.cache,
 

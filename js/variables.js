@@ -36,6 +36,10 @@ const VARIABLES = {
 
         ubidots: {
             variableId: "69b9845f00fab5d8ef22b54d"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     presion_tanque: {
@@ -60,6 +64,10 @@ const VARIABLES = {
 
         ubidots: {
             variableId: "69b9846000fab5d8ef22b54e"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     temp_tanque: {
@@ -81,8 +89,13 @@ const VARIABLES = {
         max: 30,
         step: 1,
         defaultValue: 19,
+
         ubidots: {
             variableId: "69b984613609a6ccc5146aa2"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     cisterna_habilitada: {
@@ -120,6 +133,18 @@ const VARIABLES = {
             variableId: "69b9845f00fab5d8ef22b54c"
         },
 
+        comparison: {
+            type: "number",
+            requiredWhen: {
+                variable: "cisterna_habilitada",
+                equals: true
+            }
+        },
+
+        cisternaReference: {
+            required: true
+        },
+
         dependsOn: "cisterna_habilitada"
     },
     presion_cisterna: {
@@ -143,6 +168,18 @@ const VARIABLES = {
         defaultValue: 110,
         ubidots: {
             variableId: "6a8dbf62d9a262f5af22bdab"
+        },
+
+        comparison: {
+            type: "number",
+            requiredWhen: {
+                variable: "cisterna_habilitada",
+                equals: true
+            }
+        },
+
+        cisternaReference: {
+            required: true
         },
 
         dependsOn: "cisterna_habilitada"
@@ -171,6 +208,18 @@ const VARIABLES = {
             variableId: "6a8dbf6455e95e1d147d97dc"
         },
 
+        comparison: {
+            type: "number",
+            requiredWhen: {
+                variable: "cisterna_habilitada",
+                equals: true
+            }
+        },
+
+        cisternaReference: {
+            required: true
+        },
+
         dependsOn: "cisterna_habilitada"
     },
     capacidad_cisterna: {
@@ -193,7 +242,24 @@ const VARIABLES = {
         },
 
         dependsOn: "cisterna_habilitada",
-        reuseFromLast: true
+
+        comparison: {
+            type: "number",
+            requiredWhen: {
+                variable: "cisterna_habilitada",
+                equals: true
+            }
+        },
+
+        cisternaReference: {
+            required: true
+        },
+
+        reuseFromLast: true,
+
+        eventProjection: {
+            includeWhenReused: true
+        }
     },
     placa_cisterna: {
         category: "administrativo",
@@ -208,7 +274,27 @@ const VARIABLES = {
 
         label: "Placa Cisterna",
         dependsOn: "cisterna_habilitada",
-        reuseFromLast: true
+        ubidotsContext: {
+            field: "PlacaCisterna",
+            required: false
+        },
+        comparison: {
+            type: "text",
+            requiredWhen: {
+                variable: "cisterna_habilitada",
+                equals: true
+            }
+        },
+
+        cisternaReference: {
+            required: true
+        },
+
+        reuseFromLast: true,
+
+        eventProjection: {
+            includeWhenReused: true
+        }
     },
     presion_bomba: {
         category: "proceso",
@@ -232,6 +318,10 @@ const VARIABLES = {
 
         ubidots: {
             variableId: "69b984609ae1225920346415"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     temp_vapor: {
@@ -256,6 +346,10 @@ const VARIABLES = {
 
         ubidots: {
             variableId: "69b9846100fab5d8ef22b54f"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     presion_vapor: {
@@ -280,6 +374,10 @@ const VARIABLES = {
 
         ubidots: {
             variableId: "69b984603384289118c238ca"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     presion_mezcla: {
@@ -304,6 +402,10 @@ const VARIABLES = {
 
         ubidots: {
             variableId: "69b98460f0f71673e8da7976"
+        },
+        comparison: {
+            type: "number",
+            required: true
         }
     },
     estado_operacion: {
@@ -334,7 +436,15 @@ const VARIABLES = {
                 value: "sin_novedad",
                 label: "Sin novedad"
             }
-        ]
+        ],
+        ubidotsContext: {
+            field: "EstadoOperacion",
+            required: true
+        },
+        comparison: {
+            type: "text",
+            required: true
+        }
     },
     pendientes: {
         category: "estado",
@@ -363,6 +473,36 @@ const VARIABLES = {
                 }
             }
         },
+        lifecycleProjection: {
+            protocolVersion:
+                "pending-lifecycle-v1",
+
+            protocolField:
+                "pendingLifecycleProtocol",
+
+            createdField:
+                "pendientes_creados_json",
+
+            resolvedField:
+                "pendientes_resueltos_json",
+
+            activeSnapshotField:
+                "pendientes_json",
+
+            outputColumns: {
+                protocol:
+                    "PendingLifecycleProtocol",
+
+                created:
+                    "PendientesCreadosJSON",
+
+                resolved:
+                    "PendientesResueltosJSON",
+
+                activeSnapshot:
+                    "PendientesActivosJSON"
+            }
+        },
         record: {
             id: "ID",
             type: "Tipo",
@@ -386,7 +526,17 @@ const VARIABLES = {
                 label: "Otro",
                 descriptionField: "otroProblema"
             }
-        ]
+        ],
+        ubidotsContext: {
+            field: "Pendientes",
+            required: true,
+            serializer: "pendingSummary",
+            source: "record"
+        },
+        comparison: {
+            type: "pending-list",
+            required: true
+        }
     },
     observaciones: {
         category: "administrativo",
@@ -401,7 +551,15 @@ const VARIABLES = {
         recordGroup: "Administrativo",
         recordField: "Observaciones",
 
-        label: "Observaciones"
+        label: "Observaciones",
+        ubidotsContext: {
+            field: "Observaciones",
+            required: false
+        },
+        comparison: {
+            type: "text",
+            required: false
+        }
     },
      encargado: {
         category: "administrativo",
@@ -416,7 +574,15 @@ const VARIABLES = {
         recordGroup: "Administrativo",
         recordField: "Encargado",
 
-        label: "Encargado"
+        label: "Encargado",
+        ubidotsContext: {
+            field: "Encargado",
+            required: true
+        },
+        comparison: {
+            type: "text",
+            required: true
+        }
     },
         valvulas_capuchon: {
         category: "estado",
@@ -430,24 +596,54 @@ const VARIABLES = {
         recordGroup: "Estado",
         recordField: "ValvulasCapuchon",
 
-        label: "¿Las válvulas tienen capuchón?"
+        label: "¿Las válvulas tienen capuchón?",
+        ubidotsContext: {
+            field: "ValvulasCapuchon",
+            required: false,
+            enabled: false
+        },
+        comparison: {
+            type: "boolean",
+            enabled: false
+        }
     },
     fecha: {
         category: "administrativo",
+
         type: "date",
         control: "date",
+
         field: "fecha",
         excelField: "Fecha",
-        label: "Fecha"
-    },
 
+        label: "Fecha",
+        ubidotsContext: {
+            field: "Fecha",
+            required: true
+        },
+        comparison: {
+            type: "date",
+            required: true
+        }
+    },
     hora: {
         category: "administrativo",
+
         type: "time",
         control: "time",
+
         field: "hora",
         excelField: "Hora",
-        label: "Hora"
+
+        label: "Hora",
+        ubidotsContext: {
+            field: "Hora",
+            required: true
+        },
+        comparison: {
+            type: "time",
+            required: true
+        }
     },
 };
 
@@ -666,6 +862,139 @@ function groupVariablesByCategory(data) {
     return grouped;
 }
 
+function buildCisternaVariableContract(
+    variables = VARIABLES
+) {
+    const fields = [];
+
+    if (
+        !variables ||
+        typeof variables !== "object" ||
+        Array.isArray(variables)
+    ) {
+        return {
+            valid: false,
+            fields: [],
+            errors: [
+                "CISTERNA_VARIABLES_INVALID"
+            ]
+        };
+    }
+
+    const canonicalNames =
+        new Set();
+
+    for (
+        const [logicalName, variable]
+        of Object.entries(variables)
+    ) {
+        if (
+            !variable ||
+            typeof variable !== "object" ||
+            Array.isArray(variable) ||
+            variable.dependsOn !==
+                "cisterna_habilitada"
+        ) {
+            continue;
+        }
+
+        const canonicalName =
+            typeof variable.excelField ===
+                "string"
+                ? variable.excelField.trim()
+                : "";
+
+        if (!canonicalName) {
+            return {
+                valid: false,
+                fields: [],
+                errors: [
+                    "CISTERNA_CANONICAL_NAME_MISSING"
+                ]
+            };
+        }
+
+        if (
+            canonicalNames.has(
+                canonicalName
+            )
+        ) {
+            return {
+                valid: false,
+                fields: [],
+                errors: [
+                    "CISTERNA_CANONICAL_NAME_DUPLICATE"
+                ]
+            };
+        }
+
+        canonicalNames.add(
+            canonicalName
+        );
+
+        fields.push({
+            logicalName,
+            canonicalName,
+
+            type:
+                variable.type || null,
+
+            telemetryEnabled:
+                Boolean(
+                    variable.ubidots
+                        ?.variableId
+                ),
+
+            contextEnabled:
+                Boolean(
+                    variable.ubidotsContext
+                ),
+
+            reuseFromLast:
+                variable.reuseFromLast ===
+                    true,
+
+            referenceRequired:
+                variable.cisternaReference
+                    ?.required === true,
+
+            measurementRequired:
+                variable.comparison
+                    ?.requiredWhen
+                    ?.variable ===
+                        "cisterna_habilitada" &&
+                variable.comparison
+                    ?.requiredWhen
+                    ?.equals ===
+                        true,
+            includeWhenReused:
+                variable.eventProjection
+                    ?.includeWhenReused === true
+        });
+    }
+
+    if (fields.length === 0) {
+        return {
+            valid: false,
+            fields: [],
+            errors: [
+                "CISTERNA_VARIABLES_NOT_FOUND"
+            ]
+        };
+    }
+
+    return {
+        valid: true,
+
+        fields:
+            fields.map(field => ({
+                ...field
+            })),
+
+        errors: []
+    };
+}
+
 function getVariablesByCategory(category) {
     return Object.entries(VARIABLES)
         .filter(([, variable]) => variable.category === category)
@@ -677,6 +1006,603 @@ function getVariablesByCategory(category) {
 
 function variableExists(nombre) {
     return Object.prototype.hasOwnProperty.call(VARIABLES, nombre);
+}
+
+function buildPendingLifecycleContract(
+    variables = VARIABLES
+) {
+    const invalidResult = errors => ({
+        valid: false,
+        record: null,
+        projection: null,
+        creationFields: [],
+        resolutionFields: [],
+        options: [],
+        errors: [
+            ...new Set(errors)
+        ]
+    });
+
+    if (
+        !variables ||
+        typeof variables !== "object" ||
+        Array.isArray(variables)
+    ) {
+        return invalidResult([
+            "PENDING_VARIABLES_INVALID"
+        ]);
+    }
+
+    const pendingVariable =
+        variables.pendientes;
+
+    if (
+        !pendingVariable ||
+        typeof pendingVariable !== "object" ||
+        Array.isArray(pendingVariable)
+    ) {
+        return invalidResult([
+            "PENDING_CONFIGURATION_MISSING"
+        ]);
+    }
+    const lifecycleProjection =
+        pendingVariable.lifecycleProjection;
+
+    if (
+        !lifecycleProjection ||
+        typeof lifecycleProjection !== "object" ||
+        Array.isArray(lifecycleProjection)
+    ) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_PROJECTION_INVALID"
+        ]);
+    }
+
+    const protocolVersion =
+        typeof lifecycleProjection
+            .protocolVersion === "string"
+            ? lifecycleProjection
+                .protocolVersion
+                .trim()
+            : "";
+
+    const protocolField =
+    typeof lifecycleProjection
+        .protocolField === "string"
+        ? lifecycleProjection
+            .protocolField
+            .trim()
+        : "";
+
+    const createdField =
+        typeof lifecycleProjection
+            .createdField === "string"
+            ? lifecycleProjection
+                .createdField
+                .trim()
+            : "";
+
+    const resolvedField =
+        typeof lifecycleProjection
+            .resolvedField === "string"
+            ? lifecycleProjection
+                .resolvedField
+                .trim()
+            : "";
+
+    const activeSnapshotField =
+        typeof lifecycleProjection
+            .activeSnapshotField === "string"
+            ? lifecycleProjection
+                .activeSnapshotField
+                .trim()
+            : "";
+
+    const outputColumns =
+        lifecycleProjection.outputColumns;
+
+    if (
+        !outputColumns ||
+        typeof outputColumns !== "object" ||
+        Array.isArray(outputColumns)
+    ) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_OUTPUT_COLUMNS_INVALID"
+        ]);
+    }
+
+    const protocolOutputColumn =
+        typeof outputColumns.protocol ===
+            "string"
+            ? outputColumns.protocol.trim()
+            : "";
+
+    const createdOutputColumn =
+        typeof outputColumns.created ===
+            "string"
+            ? outputColumns.created.trim()
+            : "";
+
+    const resolvedOutputColumn =
+        typeof outputColumns.resolved ===
+            "string"
+            ? outputColumns.resolved.trim()
+            : "";
+
+    const activeSnapshotOutputColumn =
+        typeof outputColumns
+            .activeSnapshot === "string"
+            ? outputColumns
+                .activeSnapshot
+                .trim()
+            : "";
+
+    if (
+        !protocolOutputColumn ||
+        !createdOutputColumn ||
+        !resolvedOutputColumn ||
+        !activeSnapshotOutputColumn
+    ) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_OUTPUT_COLUMNS_INVALID"
+        ]);
+    }
+
+    const outputColumnValues = [
+        protocolOutputColumn,
+        createdOutputColumn,
+        resolvedOutputColumn,
+        activeSnapshotOutputColumn
+    ];
+
+    if (
+        new Set(outputColumnValues).size !==
+        outputColumnValues.length
+    ) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_OUTPUT_COLUMN_DUPLICATE"
+        ]);
+    }
+
+    if (
+        !protocolVersion ||
+        !protocolField ||
+        !createdField ||
+        !resolvedField ||
+        !activeSnapshotField
+    ) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_PROJECTION_INVALID"
+        ]);
+    }
+
+    const projectionFields = [
+        protocolField,
+        createdField,
+        resolvedField,
+        activeSnapshotField
+    ];
+
+    if (
+        new Set(projectionFields).size !==
+        projectionFields.length
+    ) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_PROJECTION_DUPLICATE"
+        ]);
+    }
+
+    const record =
+        pendingVariable.record;
+
+    if (
+        !record ||
+        typeof record !== "object" ||
+        Array.isArray(record)
+    ) {
+        return invalidResult([
+            "PENDING_RECORD_CONTRACT_INVALID"
+        ]);
+    }
+
+    const idColumn =
+        typeof record.id === "string"
+            ? record.id.trim()
+            : "";
+
+    const typeColumn =
+        typeof record.type === "string"
+            ? record.type.trim()
+            : "";
+
+    const descriptionColumn =
+        typeof record.description === "string"
+            ? record.description.trim()
+            : "";
+
+    if (
+        !idColumn ||
+        !typeColumn ||
+        !descriptionColumn
+    ) {
+        return invalidResult([
+            "PENDING_RECORD_CONTRACT_INVALID"
+        ]);
+    }
+
+    const recordColumns = [
+        idColumn,
+        typeColumn,
+        descriptionColumn
+    ];
+
+    if (
+        new Set(recordColumns).size !==
+        recordColumns.length
+    ) {
+        return invalidResult([
+            "PENDING_RECORD_COLUMN_DUPLICATE"
+        ]);
+    }
+
+    function buildContextFields(
+        sourceFields,
+        errorCode
+    ) {
+        if (
+            !sourceFields ||
+            typeof sourceFields !== "object" ||
+            Array.isArray(sourceFields)
+        ) {
+            return {
+                valid: false,
+                fields: [],
+                errorCode
+            };
+        }
+
+        const fields = [];
+
+        for (
+            const [targetField, sourceVariable]
+            of Object.entries(sourceFields)
+        ) {
+            const normalizedTarget =
+                typeof targetField === "string"
+                    ? targetField.trim()
+                    : "";
+
+            const normalizedSource =
+                typeof sourceVariable === "string"
+                    ? sourceVariable.trim()
+                    : "";
+
+            if (
+                !normalizedTarget ||
+                !normalizedSource ||
+                !variables[normalizedSource]
+            ) {
+                return {
+                    valid: false,
+                    fields: [],
+                    errorCode
+                };
+            }
+
+            fields.push({
+                targetField:
+                    normalizedTarget,
+
+                sourceVariable:
+                    normalizedSource
+            });
+        }
+
+        return {
+            valid: true,
+            fields,
+            errorCode: null
+        };
+    }
+
+    const creation =
+        buildContextFields(
+            pendingVariable.context?.fields,
+            "PENDING_CREATION_CONTEXT_INVALID"
+        );
+
+    if (!creation.valid) {
+        return invalidResult([
+            creation.errorCode
+        ]);
+    }
+
+    const resolution =
+        buildContextFields(
+            pendingVariable
+                .context
+                ?.resolution
+                ?.fields,
+
+            "PENDING_RESOLUTION_CONTEXT_INVALID"
+        );
+
+    if (!resolution.valid) {
+        return invalidResult([
+            resolution.errorCode
+        ]);
+    }
+
+    const sourceOptions =
+        Array.isArray(
+            pendingVariable.options
+        )
+            ? pendingVariable.options
+            : [];
+
+    const optionValues =
+        new Set();
+
+    const options = [];
+
+    for (const option of sourceOptions) {
+        if (
+            !option ||
+            typeof option !== "object" ||
+            Array.isArray(option)
+        ) {
+            return invalidResult([
+                "PENDING_OPTION_INVALID"
+            ]);
+        }
+
+        const value =
+            typeof option.value === "string"
+                ? option.value.trim()
+                : "";
+
+        const label =
+            typeof option.label === "string"
+                ? option.label.trim()
+                : "";
+
+        if (
+            !value ||
+            !label ||
+            optionValues.has(value)
+        ) {
+            return invalidResult([
+                "PENDING_OPTION_INVALID"
+            ]);
+        }
+
+        optionValues.add(value);
+
+        options.push({
+            value,
+            label,
+
+            descriptionField:
+                typeof option
+                    .descriptionField ===
+                    "string"
+                    ? option
+                        .descriptionField
+                        .trim() || null
+                    : null
+        });
+    }
+
+    if (options.length === 0) {
+        return invalidResult([
+            "PENDING_OPTIONS_NOT_FOUND"
+        ]);
+    }
+
+    const creationTargets =
+        new Set(
+            creation.fields.map(
+                field =>
+                    field.targetField
+            )
+        );
+
+    const duplicatedLifecycleTarget =
+        resolution.fields.some(
+            field =>
+                creationTargets.has(
+                    field.targetField
+                )
+        );
+
+    if (duplicatedLifecycleTarget) {
+        return invalidResult([
+            "PENDING_LIFECYCLE_FIELD_DUPLICATE"
+        ]);
+    }
+
+    return {
+        valid: true,
+
+        record: {
+            idColumn,
+            typeColumn,
+            descriptionColumn
+        },
+        projection: {
+            protocolVersion,
+            protocolField,
+            createdField,
+            resolvedField,
+            activeSnapshotField,
+
+            outputColumns: {
+                protocol:
+                    protocolOutputColumn,
+
+                created:
+                    createdOutputColumn,
+
+                resolved:
+                    resolvedOutputColumn,
+
+                activeSnapshot:
+                    activeSnapshotOutputColumn
+            }
+        },
+
+        creationFields:
+            creation.fields.map(
+                field => ({
+                    ...field
+                })
+            ),
+
+        resolutionFields:
+            resolution.fields.map(
+                field => ({
+                    ...field
+                })
+            ),
+
+        options:
+            options.map(option => ({
+                ...option
+            })),
+
+        errors: []
+    };
+}
+
+function buildPendingLifecycleContextOutput(
+    pendingContract
+) {
+    if (
+        !pendingContract ||
+        typeof pendingContract !== "object" ||
+        Array.isArray(pendingContract) ||
+        pendingContract.valid !== true ||
+        !pendingContract.projection ||
+        typeof pendingContract.projection !==
+            "object" ||
+        Array.isArray(
+            pendingContract.projection
+        )
+    ) {
+        return {
+            valid: false,
+            contextoSalida: null,
+            errors: [
+                "PENDING_LIFECYCLE_CONTRACT_INVALID"
+            ]
+        };
+    }
+
+    const projection =
+        pendingContract.projection;
+
+    const outputColumns =
+        projection.outputColumns;
+
+    if (
+        !outputColumns ||
+        typeof outputColumns !== "object" ||
+        Array.isArray(outputColumns)
+    ) {
+        return {
+            valid: false,
+            contextoSalida: null,
+            errors: [
+                "PENDING_LIFECYCLE_OUTPUT_COLUMNS_INVALID"
+            ]
+        };
+    }
+
+    const entries = [
+        [
+            projection.protocolField,
+            outputColumns.protocol
+        ],
+        [
+            projection.createdField,
+            outputColumns.created
+        ],
+        [
+            projection.resolvedField,
+            outputColumns.resolved
+        ],
+        [
+            projection.activeSnapshotField,
+            outputColumns.activeSnapshot
+        ]
+    ];
+
+    const invalidEntry =
+        entries.some(
+            ([contextField, outputColumn]) =>
+                typeof contextField !==
+                    "string" ||
+                contextField.trim() === "" ||
+                typeof outputColumn !==
+                    "string" ||
+                outputColumn.trim() === ""
+        );
+
+    if (invalidEntry) {
+        return {
+            valid: false,
+            contextoSalida: null,
+            errors: [
+                "PENDING_LIFECYCLE_CONTEXT_OUTPUT_INVALID"
+            ]
+        };
+    }
+
+    const contextFields =
+        entries.map(
+            ([contextField]) =>
+                contextField.trim()
+        );
+
+    const localColumns =
+        entries.map(
+            ([, outputColumn]) =>
+                outputColumn.trim()
+        );
+
+    if (
+        new Set(contextFields).size !==
+            contextFields.length ||
+        new Set(localColumns).size !==
+            localColumns.length
+    ) {
+        return {
+            valid: false,
+            contextoSalida: null,
+            errors: [
+                "PENDING_LIFECYCLE_CONTEXT_OUTPUT_DUPLICATE"
+            ]
+        };
+    }
+
+    return {
+        valid: true,
+
+        contextoSalida:
+            Object.fromEntries(
+                entries.map(
+                    ([
+                        contextField,
+                        outputColumn
+                    ]) => [
+                        contextField.trim(),
+                        outputColumn.trim()
+                    ]
+                )
+            ),
+
+        errors: []
+    };
 }
 
 function createPending(type, description = null) {
@@ -878,9 +1804,12 @@ if (typeof module !== "undefined" && module.exports) {
         groupVariablesByCategory,
         buildRecordVariables,
         buildRecordGroups,
+        buildPendingLifecycleContract,
+        buildPendingLifecycleContextOutput,
         createPending,
         normalizePending,
         normalizePendings,
-        mergePendings
+        mergePendings,
+        buildCisternaVariableContract
     };
 }
