@@ -18,6 +18,12 @@ const ubidotsSyncService =
     require('./services/ubidots-sync-service');
 
 const {
+    buildUbidotsDeviceUrl
+} = require(
+    "./services/ubidots-device-target-service"
+);
+
+const {
     createRegistrationPlan
 } = require(
     './services/registration-command-service'
@@ -44,7 +50,6 @@ const ubidotsHistoryConfig =
     );
 const {
     VARIABLES,
-    UBIDOTS_CONFIG,
     buildCisternaVariableContract
 } = require('./js/variables.js');
 
@@ -1525,9 +1530,13 @@ async function sendToUbidots(payload) {
         );
     }
 
+    const {
+        deviceUrl
+    } = buildUbidotsDeviceUrl();
+
     const response =
         await fetch(
-            UBIDOTS_CONFIG.deviceUrl,
+            deviceUrl,
             {
                 method: "POST",
 

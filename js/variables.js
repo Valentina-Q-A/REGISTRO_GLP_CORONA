@@ -1,14 +1,4 @@
 // ============================================
-// CONFIGURACIÓN UBIDOTS
-// ============================================
-
-const UBIDOTS_CONFIG = {
-
-    deviceUrl:
-        "https://industrial.api.ubidots.com/api/v1.6/devices/planta-prueba"
-};
-
-// ============================================
 // CONFIGURACIÓN CENTRAL DE VARIABLES
 // ============================================
 
@@ -1793,7 +1783,6 @@ function buildRecordGroups(data) {
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
         VARIABLES,
-        UBIDOTS_CONFIG,
         getVariable,
         getVariablesByCategory,
         variableExists,
