@@ -324,10 +324,62 @@ function isSyncRequestAuthorized(req) {
     };
 }
 
+function summarizeConflict(conflict) {
+    return {
+        key:
+            conflict?.Clave ?? null,
+
+        type:
+            conflict?.Tipo ?? null,
+
+        referenceTimestamp:
+            conflict?.TimestampReferencia ??
+            conflict?.TimestampUbidots ??
+            null,
+
+        comparedTimestamp:
+            conflict?.TimestampComparado ??
+            null,
+
+        differentFields:
+            Array.isArray(
+                conflict?.Diferencias
+            )
+                ? conflict.Diferencias
+                    .map((difference) =>
+                        difference?.Campo ??
+                        difference?.field ??
+                        difference?.Columna ??
+                        difference?.column ??
+                        null
+                    )
+                    .filter(Boolean)
+                : []
+    };
+}
+
 function summarizeSynchronizationResult(result) {
     const summary =
         result?.synchronization?.summary || {};
+    const details =
+        result?.synchronization?.details ||
+        {};
 
+    const conflicts =
+        Array.isArray(details.conflicts)
+            ? details.conflicts.map(
+                summarizeConflict
+            )
+            : [];
+
+    const resolvedConflicts =
+        Array.isArray(
+            details.resolvedConflicts
+        )
+            ? details.resolvedConflicts.map(
+                summarizeConflict
+            )
+            : [];
     return {
         mode:
             result?.mode || null,
@@ -379,6 +431,12 @@ function summarizeSynchronizationResult(result) {
 
         conflicts:
             summary.conflicts ?? null,
+
+        conflictDetails:
+            conflicts,
+
+        resolvedConflictDetails:
+            resolvedConflicts,
 
         proposedCacheRecords:
             summary.proposedCacheRecords ?? null,
