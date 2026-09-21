@@ -10,7 +10,8 @@ const conflictRegistryService =
 const SUPPORTED_RESOLUTION_TYPES =
     new Set([
         "KEEP_BOTH_DISTINCT_EVENTS",
-        "KEEP_LAST_DECLARATION"
+        "KEEP_LAST_DECLARATION",
+        "KEEP_FIRST_DECLARATION"
     ]);
 
 function normalizeText(value) {
@@ -239,6 +240,27 @@ function findApprovedResolution({
     ) || null;
 }
 
+function selectResolutionRecords(
+    resolution,
+    records
+) {
+    switch (resolution?.type) {
+        case "KEEP_LAST_DECLARATION":
+            return records.length > 0
+                ? [records[records.length - 1]]
+                : [];
+
+        case "KEEP_FIRST_DECLARATION":
+            return records.length > 0
+                ? [records[0]]
+                : [];
+
+        case "KEEP_BOTH_DISTINCT_EVENTS":
+        default:
+            return records;
+    }
+}
+
 function resolveApprovedConflicts({
     simulation,
     resolutionConfiguration
@@ -339,6 +361,12 @@ function resolveApprovedConflicts({
                 )
                 .filter(Boolean);
 
+        const selectedRecords =
+            selectResolutionRecords(
+                resolution,
+                records
+            );
+
         const recordKeys =
             new Set(
                 records.map(record =>
@@ -365,7 +393,7 @@ function resolveApprovedConflicts({
             continue;
         }
 
-        for (const record of records) {
+        for (const record of selectedRecords) {
             const timestamp =
                 normalizeTimestamp(
                     record.TimestampUbidots
