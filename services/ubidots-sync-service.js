@@ -556,8 +556,6 @@ function validateAppliedState({
                 .resolutions
                 .find(resolution =>
                     resolution.approved === true &&
-                    resolution.type ===
-                        "KEEP_BOTH_DISTINCT_EVENTS" &&
                     resolution.operationalKey ===
                         operationalKey &&
                     conflictResolutionService
