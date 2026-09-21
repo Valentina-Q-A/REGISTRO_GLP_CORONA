@@ -398,6 +398,89 @@ function approveOperationalResolution(
                 null
         },
 
+        promotion: {
+            promoted: false,
+
+            promotedAt: null,
+
+            promotedBy: null
+        },
+
+        updatedAt:
+            new Date()
+                .toISOString()
+    };
+
+    saveRegistry(
+        filePath,
+        registry
+    );
+
+    return registry.conflicts[index];
+}
+
+function promoteConflict(
+    filePath,
+    conflictId,
+    promotion
+) {
+    const registry =
+        loadRegistry(filePath);
+
+    const index =
+        registry.conflicts.findIndex(
+            conflict =>
+                conflict.conflictId ===
+                conflictId
+        );
+
+    if (index < 0) {
+        throw new Error(
+            "CONFLICT_NOT_FOUND"
+        );
+    }
+
+    const conflict =
+        registry.conflicts[index];
+
+    if (
+        conflict.status !==
+        "RESOLVED"
+    ) {
+        throw new Error(
+            "CONFLICT_NOT_RESOLVED"
+        );
+    }
+
+    if (
+        conflict
+            ?.operationalApproval
+            ?.approved !== true
+    ) {
+        throw new Error(
+            "CONFLICT_NOT_OPERATIONALLY_APPROVED"
+        );
+    }
+
+    registry.conflicts[index] = {
+        ...conflict,
+
+        promotion: {
+            promoted: true,
+
+            promotedBy:
+                promotion?.promotedBy ||
+                null,
+
+            promotedAt:
+                new Date()
+                    .toISOString(),
+
+            note:
+                promotion?.note ||
+                null
+        },
+
         updatedAt:
             new Date()
                 .toISOString()
@@ -507,6 +590,81 @@ function listApprovedOperationalConflicts(
     });
 }
 
+function listPromotableConflicts(
+    filePath
+) {
+    return listApprovedOperationalConflicts(
+        filePath
+    ).filter(
+        conflict =>
+            conflict
+                ?.promotion
+                ?.promoted !== true
+    );
+}
+
+function listPromotedConflicts(
+    filePath
+) {
+    return listApprovedOperationalConflicts(
+        filePath
+    ).filter(
+        conflict =>
+            conflict
+                ?.promotion
+                ?.promoted === true
+    );
+}
+
+function buildOperationalResolution(
+    conflict
+) {
+    if (
+        !conflict ||
+        conflict.status !==
+            "RESOLVED"
+    ) {
+        throw new Error(
+            "CONFLICT_NOT_RESOLVED"
+        );
+    }
+
+    return {
+        operationalKey:
+            conflict.operationalKey,
+
+        type:
+            conflict.resolution?.type,
+
+        timestamps:
+            Array.isArray(
+                conflict.timestamps
+            )
+                ? [
+                    ...conflict.timestamps
+                ]
+                : [],
+
+        reason:
+            conflict.resolution
+                ?.reason || "",
+
+        approved: true
+    };
+}
+
+function exportPromotedConflicts(
+    filePath
+) {
+    return listPromotedConflicts(
+        filePath
+    ).map(conflict =>
+        buildOperationalResolution(
+            conflict
+        )
+    );
+}
+
 function getOperationalResolution(
     filePath,
     operationalKey
@@ -544,9 +702,14 @@ module.exports = {
     listConflicts,
     resolveConflict,
     approveOperationalResolution,
+    promoteConflict,
     listActiveConflicts,
     listOperationalResolutions,
     listApprovedOperationalConflicts,
+    listPromotableConflicts,
+    buildOperationalResolution,
+    listPromotedConflicts,
+    exportPromotedConflicts,
     getOperationalResolution,
     hasOperationalResolution,
     CONFLICT_RESOLUTIONS
