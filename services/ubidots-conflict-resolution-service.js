@@ -11,7 +11,9 @@ const SUPPORTED_RESOLUTION_TYPES =
     new Set([
         "KEEP_BOTH_DISTINCT_EVENTS",
         "KEEP_LAST_DECLARATION",
-        "KEEP_FIRST_DECLARATION"
+        "KEEP_FIRST_DECLARATION",
+        "MANUAL_CORRECTION_REQUIRED",
+        "INVALID_OPERATIONAL_EVENT"
     ]);
 
 function normalizeText(value) {
@@ -255,6 +257,12 @@ function selectResolutionRecords(
                 ? [records[0]]
                 : [];
 
+        case "MANUAL_CORRECTION_REQUIRED":
+            return [];
+
+        case "INVALID_OPERATIONAL_EVENT":
+            return [];
+
         case "KEEP_BOTH_DISTINCT_EVENTS":
         default:
             return records;
@@ -414,6 +422,10 @@ function resolveApprovedConflicts({
 
             timestamps:
                 resolution.timestamps,
+            selectedTimestamps:
+                selectedRecords.map(
+                    record => record.TimestampUbidots
+                ),
 
             reason:
                 resolution.reason || null,
