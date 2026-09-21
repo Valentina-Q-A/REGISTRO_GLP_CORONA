@@ -9,7 +9,8 @@ const conflictRegistryService =
 
 const SUPPORTED_RESOLUTION_TYPES =
     new Set([
-        "KEEP_BOTH_DISTINCT_EVENTS"
+        "KEEP_BOTH_DISTINCT_EVENTS",
+        "KEEP_LAST_DECLARATION"
     ]);
 
 function normalizeText(value) {
@@ -231,8 +232,6 @@ function findApprovedResolution({
         resolution =>
             resolution.approved === true &&
             resolution.operationalKey === key &&
-            resolution.type ===
-                "KEEP_BOTH_DISTINCT_EVENTS" &&
             sameTimestampSet(
                 resolution.timestamps,
                 timestamps

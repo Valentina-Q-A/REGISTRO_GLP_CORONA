@@ -3,7 +3,7 @@
   "conflicts": [
     {
       "conflictId": "CONFLICTO_INCREMENTAL|2026-09-12|19:30:00",
-      "status": "DETECTED",
+      "status": "RESOLVED",
       "operationalKey": "2026-09-12|19:30:00",
       "type": "CONFLICTO_INCREMENTAL",
       "timestamps": [
@@ -17,8 +17,27 @@
       ],
       "detectedAt": "2026-09-21T16:32:12.079Z",
       "createdAt": "2026-09-21T16:32:12.079Z",
-      "updatedAt": "2026-09-21T16:32:12.079Z",
-      "review": null
+      "updatedAt": "2026-09-21T16:58:17.677Z",
+      "review": null,
+      "resolution": {
+        "type": "KEEP_LAST_DECLARATION",
+        "reviewer": "Juan Pablo Mesa",
+        "reason": "Prueba E2E",
+        "operational": true,
+        "resolvedAt": "2026-09-21T16:57:48.644Z"
+      },
+      "operationalApproval": {
+        "approved": true,
+        "approvedBy": "Juan Pablo Mesa",
+        "approvedAt": "2026-09-21T16:57:48.646Z",
+        "note": null
+      },
+      "promotion": {
+        "promoted": true,
+        "promotedBy": "Juan Pablo Mesa",
+        "promotedAt": "2026-09-21T16:57:48.648Z",
+        "note": null
+      }
     }
   ]
 }
