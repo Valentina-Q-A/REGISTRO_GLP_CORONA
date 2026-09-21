@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "conflicts": [
+    {
+      "conflictId": "CONFLICTO_INCREMENTAL|2026-09-12|19:30:00",
+      "status": "RESOLVED",
+      "operationalKey": "2026-09-12|19:30:00",
+      "type": "CONFLICTO_INCREMENTAL",
+      "timestamps": [
+        1789259859368,
+        1789267373148
+      ],
+      "differentFields": [
+        "NivelTanque",
+        "TempVapor",
+        "PresionMezcla"
+      ],
+      "detectedAt": "2026-09-18T19:20:15.129Z",
+      "review": {
+        "reviewer": "Juan Pablo Mesa",
+        "note": "Conflicto bajo análisis arquitectónico"
+      },
+      "updatedAt": "2026-09-21T15:30:12.297Z",
+      "resolution": {
+        "type": "KEEP_LAST_DECLARATION",
+        "reviewer": "Juan Pablo Mesa",
+        "reason": "Prueba del ciclo de vida del conflicto",
+        "resolvedAt": "2026-09-18T19:49:23.904Z"
+      },
+      "operationalApproval": {
+        "approved": true,
+        "approvedBy": "Juan Pablo Mesa",
+        "approvedAt": "2026-09-21T15:30:12.289Z",
+        "note": "Aprobación operacional para pruebas"
+      }
+    }
+  ]
+}

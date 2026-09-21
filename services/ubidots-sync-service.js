@@ -17,6 +17,11 @@ const syncProposalService =
 const conflictResolutionService =
     require("./ubidots-conflict-resolution-service");
 
+const conflictRegistryService =
+    require(
+        "./conflict-registry-service"
+    );
+
 function hashFile(filePath) {
     return crypto
         .createHash("sha256")
@@ -251,7 +256,14 @@ async function inspectSynchronization({
 
     const unresolvedConflicts =
         simulation.unresolvedConflicts.length;
-
+    conflictRegistryService
+        .registerDetectedConflicts(
+            path.resolve(
+                process.cwd(),
+                "data/conflicts-pending.json"
+            ),
+            simulation.unresolvedConflicts
+        );
     const totalBlockingConditions =
         unresolvedConflicts +
         simulation.summary
