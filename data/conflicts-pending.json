@@ -1,4 +1,24 @@
 {
   "version": 1,
-  "conflicts": []
+  "conflicts": [
+    {
+      "conflictId": "CONFLICTO_INCREMENTAL|2026-09-12|19:30:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-12|19:30:00",
+      "type": "CONFLICTO_INCREMENTAL",
+      "timestamps": [
+        1789259859368,
+        1789267373148
+      ],
+      "differentFields": [
+        "NivelTanque",
+        "TempVapor",
+        "PresionMezcla"
+      ],
+      "detectedAt": "2026-09-21T16:32:12.079Z",
+      "createdAt": "2026-09-21T16:32:12.079Z",
+      "updatedAt": "2026-09-21T16:32:12.079Z",
+      "review": null
+    }
+  ]
 }

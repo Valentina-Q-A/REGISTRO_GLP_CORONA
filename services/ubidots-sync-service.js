@@ -216,9 +216,15 @@ async function inspectSynchronization({
 
     const resolutionConfiguration =
         conflictResolutionService
-            .loadConflictResolutions(
-                conflictResolutionsPath
-            );
+            .loadAvailableResolutions({
+                conflictResolutionsPath,
+
+                conflictRegistryPath:
+                    path.resolve(
+                        process.cwd(),
+                        "data/conflicts-pending.json"
+                    )
+            });
 
     const simulation =
         conflictResolutionService

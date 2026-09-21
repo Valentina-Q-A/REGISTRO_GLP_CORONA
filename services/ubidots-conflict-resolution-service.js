@@ -2,6 +2,11 @@
 
 const fs = require("fs");
 
+const conflictRegistryService =
+    require(
+        "./conflict-registry-service"
+    );
+
 const SUPPORTED_RESOLUTION_TYPES =
     new Set([
         "KEEP_BOTH_DISTINCT_EVENTS"
@@ -170,6 +175,34 @@ function loadConflictResolutions(filePath) {
             configuration.version,
 
         resolutions
+    };
+}
+
+function loadAvailableResolutions({
+    conflictResolutionsPath,
+    conflictRegistryPath
+}) {
+    const configured =
+        loadConflictResolutions(
+            conflictResolutionsPath,
+        );
+
+    const exported =
+        conflictRegistryPath
+            ? conflictRegistryService
+                .loadExportedResolutions(
+                    conflictRegistryPath
+                )
+            : [];
+
+    return {
+        version:
+            configured.version,
+
+        resolutions: [
+            ...configured.resolutions,
+            ...exported
+        ]
     };
 }
 
@@ -428,6 +461,7 @@ module.exports = {
     conflictTimestamps,
     findApprovedResolution,
     loadConflictResolutions,
+    loadAvailableResolutions,
     normalizeText,
     operationalKey,
     resolveApprovedConflicts,

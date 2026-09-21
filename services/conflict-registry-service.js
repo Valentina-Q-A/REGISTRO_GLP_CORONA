@@ -665,6 +665,27 @@ function exportPromotedConflicts(
     );
 }
 
+function buildConflictResolutionConfiguration(
+    filePath
+) {
+    return {
+        version: 1,
+
+        resolutions:
+            exportPromotedConflicts(
+                filePath
+            )
+    };
+}
+
+function loadExportedResolutions(
+    filePath
+) {
+    return buildConflictResolutionConfiguration(
+        filePath
+    ).resolutions;
+}
+
 function getOperationalResolution(
     filePath,
     operationalKey
@@ -679,7 +700,6 @@ function getOperationalResolution(
         ) || null
     );
 }
-
 
 function hasOperationalResolution(
     filePath,
@@ -710,6 +730,8 @@ module.exports = {
     buildOperationalResolution,
     listPromotedConflicts,
     exportPromotedConflicts,
+    buildConflictResolutionConfiguration,
+    loadExportedResolutions,
     getOperationalResolution,
     hasOperationalResolution,
     CONFLICT_RESOLUTIONS
