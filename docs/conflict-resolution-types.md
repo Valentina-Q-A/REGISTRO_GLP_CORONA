@@ -1,0 +1,12 @@
+# Tipos de Resolución Soportados
+
+## Actualmente soportados
+
+- KEEP_BOTH_DISTINCT_EVENTS
+- KEEP_LAST_DECLARATION
+- KEEP_FIRST_DECLARATION
+
+## Planeados
+
+- MANUAL_CORRECTION_REQUIRED
+- INVALID_OPERATIONAL_EVENT
