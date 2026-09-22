@@ -37,6 +37,11 @@ const {
     './services/cisterna-reference-state-service'
 );
 
+const captureJournalService =
+    require(
+        "./services/capture-journal-service"
+    );
+
 const ubidotsHistoryConfigPath =
     path.resolve(
         __dirname,
@@ -1654,6 +1659,15 @@ async function processUbidotsQueue() {
             await sendToUbidots(
                 item.payload
             );
+            captureJournalService
+                .markSyncedToUbidots(
+                    path.resolve(
+                        __dirname,
+                        "data/capture-journal.json"
+                    ),
+                    item.payload?.Fecha,
+                    item.payload?.Hora
+                );
 
         } catch (err) {
 
@@ -1705,7 +1719,26 @@ app.post('/save', async (req, res) => {
 
         data.FechaServidor = new Date().toLocaleString('es-CO');
 
+        captureJournalService
+            .appendRecord(
+                path.resolve(
+                    __dirname,
+                    "data/capture-journal.json"
+                ),
+                data
+            );
+
+
         saveRecord(data);
+        captureJournalService
+            .markSyncedToExcel(
+                path.resolve(
+                    __dirname,
+                    "data/capture-journal.json"
+                ),
+                data.Fecha,
+                data.Hora
+            );
 
         res.status(200).json({
             success: true,
@@ -1770,13 +1803,31 @@ app.post('/sync-ubidots', async (req, res) => {
         console.log(
             "Ubidots sincronizado correctamente."
         );
-
+        captureJournalService
+            .markSyncedToUbidots(
+                path.resolve(
+                    __dirname,
+                    "data/capture-journal.json"
+                ),
+                data.Fecha,
+                data.Hora
+            );
         } catch (err) {
 
             console.error(
                 "Advertencia: no se pudo sincronizar con Ubidots. Se agregará a la cola:",
                 err.message
             );
+            captureJournalService
+                .markPendingUbidots(
+                    path.resolve(
+                        __dirname,
+                        "data/capture-journal.json"
+                    ),
+                    data.Fecha,
+                    data.Hora,
+                    err.message
+                );
 
             addToUbidotsQueue(
                 data,
@@ -1789,7 +1840,18 @@ app.post('/sync-ubidots', async (req, res) => {
             message: "Sincronización con Ubidots procesada"
         });
 
-    } catch (err) {
+   } catch (err) {
+
+        captureJournalService
+            .markPendingUbidots(
+                path.resolve(
+                    __dirname,
+                    "data/capture-journal.json"
+                ),
+                data?.Fecha,
+                data?.Hora,
+                err.message
+            );
 
         console.error(
             "Error sincronizando Ubidots:",
