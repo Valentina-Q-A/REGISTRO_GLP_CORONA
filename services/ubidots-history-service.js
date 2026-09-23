@@ -1,5 +1,11 @@
 ﻿"use strict";
 
+const {
+    VARIABLES
+} = require(
+    "../js/variables"
+);
+
 const TECHNICAL_COLUMNS = new Set([
     "TimestampUbidots",
     "FechaRecepcionUbidotsUTC",
@@ -468,18 +474,43 @@ function flattenRecord(record, config) {
     return row;
 }
 
-function operationalColumns(config) {
+function operationalColumns() {
+
+    const columns = [];
+
+    for (const variable of Object.values(VARIABLES)) {
+
+        const comparison =
+            variable.comparison;
+
+        if (!comparison) {
+            continue;
+        }
+
+        const participates =
+            comparison.required === true ||
+            comparison.requiredWhen;
+
+        if (!participates) {
+            continue;
+        }
+
+        if (
+            variable.recordField &&
+            !TECHNICAL_COLUMNS.has(
+                variable.recordField
+            )
+        ) {
+
+            columns.push(
+                variable.recordField
+            );
+        }
+    }
+
     return [
-        ...Object.values(config.mapeoSalida || {}),
-        ...Object.values(config.contextoSalida || {}),
-        "Fecha",
-        "Hora"
-    ].filter(
-        (value, index, array) =>
-            value &&
-            !TECHNICAL_COLUMNS.has(value) &&
-            array.indexOf(value) === index
-    );
+        ...new Set(columns)
+    ];
 }
 
 function normalizeComparable(value) {

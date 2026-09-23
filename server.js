@@ -1111,7 +1111,6 @@ function getVariableValue(data, variable, name) {
     return value;
 }
 
-
 // ============================================
 // CONSTRUIR PAYLOAD PARA UBIDOTS
 // ============================================
