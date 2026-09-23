@@ -551,7 +551,7 @@ const VARIABLES = {
             required: false
         }
     },
-     encargado: {
+    encargado: {
         category: "administrativo",
 
         type: "text",
@@ -574,7 +574,7 @@ const VARIABLES = {
             required: true
         }
     },
-        valvulas_capuchon: {
+    valvulas_capuchon: {
         category: "estado",
 
         type: "boolean",
@@ -586,12 +586,87 @@ const VARIABLES = {
         recordGroup: "Estado",
         recordField: "ValvulasCapuchon",
 
-        label: "¿Las válvulas tienen capuchón?",
+        label: "¿Las válvulas de alivio tienen capuchón?",
         ubidotsContext: {
             field: "ValvulasCapuchon",
             required: false,
             enabled: false
         },
+        comparison: {
+            type: "boolean",
+            enabled: false
+        }
+    },
+    hermeticidad_conexiones: {
+        category: "estado",
+
+        type: "boolean",
+        control: "toggle",
+
+        field: "hermeticidadConexiones",
+
+        excelField: "HermeticidadConexiones",
+        recordGroup: "Estado",
+        recordField: "HermeticidadConexiones",
+
+        label: "¿Las conexiones están libres de fugas?",
+
+        ubidotsContext: {
+            field: "HermeticidadConexiones",
+            required: false,
+            enabled: false
+        },
+
+        comparison: {
+            type: "boolean",
+            enabled: false
+        }
+    },
+    hermeticidad_accesorios: {
+        category: "estado",
+
+        type: "boolean",
+        control: "toggle",
+
+        field: "hermeticidadAccesorios",
+
+        excelField: "HermeticidadAccesorios",
+        recordGroup: "Estado",
+        recordField: "HermeticidadAccesorios",
+
+        label: "¿Los accesorios están libres de fugas?",
+
+        ubidotsContext: {
+            field: "HermeticidadAccesorios",
+            required: false,
+            enabled: false
+        },
+
+        comparison: {
+            type: "boolean",
+            enabled: false
+        }
+    },
+    hermeticidad_instrumentacion: {
+        category: "estado",
+
+        type: "boolean",
+        control: "toggle",
+
+        field: "hermeticidadInstrumentacion",
+
+        excelField: "HermeticidadInstrumentacion",
+        recordGroup: "Estado",
+        recordField: "HermeticidadInstrumentacion",
+
+        label: "¿La instrumentación está libre de fugas?",
+
+        ubidotsContext: {
+            field: "HermeticidadInstrumentacion",
+            required: false,
+            enabled: false
+        },
+
         comparison: {
             type: "boolean",
             enabled: false

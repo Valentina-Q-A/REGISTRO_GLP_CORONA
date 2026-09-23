@@ -69,17 +69,30 @@
                 <h3>Cisterna / Camión Tanque</h3>
 
                 <div class="control-group">
-                    <label for="cisternaHabilitada">¿Desea Ingresar datos de cisterna?</label>
+                    <label for="cisternaHabilitada">
+                        ¿Desea Ingresar datos de cisterna?
+                        <span class="help-icon">
+                            ⓘ
+                            <span class="tooltip-text">
+                                Seleccione únicamente si va a ingresar los datos de la cisterna.
+                            </span>
+                        </span>
+                    </label>
                     <input type="checkbox" id="cisternaHabilitada">
+
                     <div
                         id="mismaCisternaContainer"
                         style="display: none;"
                     >
-
                         <label for="mismaCisterna">
                             ¿Es la misma cisterna?
+                            <span class="help-icon">
+                                ⓘ
+                                <span class="tooltip-text">
+                                    Seleccione únicamente si es la misma cisterna del registro anterior. De ser así, se llenarán automáticamente Capacidad y Placa.
+                                </span>
+                            </span>
                         </label>
-
                         <input
                             type="checkbox"
                             id="mismaCisterna"
@@ -116,7 +129,7 @@
                     </div>
 
                     <div class="control-group">
-                        <label for="placaCisterna">Placa Cisterna * NOTA: SI ES LA MISMA PLACA PONER 0</label>
+                        <label for="placaCisterna">Placa Cisterna *</label>
                         <input type="text" id="placaCisterna" required placeholder="ABC-123">
                     </div>
 
@@ -128,8 +141,8 @@
                 <img src="assets/mixer.svg" alt="Mezclador" class="component-img">
                 <h3>Mezclador</h3>
                 <div class="control-group">
-                    <label>Presión Mezcla (9-11 PSI)</label>
-                    <input type="number" id="presionMezcla" min="9" max="11" value="10">
+                    <label>Presión Mezcla (9-12 PSI)</label>
+                    <input type="number" id="presionMezcla" min="9" max="12" value="10">
                     <span id="presionMezclaValue" class="value-display">10 PSI</span>
                 </div>
             </div>
@@ -137,22 +150,130 @@
         <!-- Formulario de registro -->
         <form id="glpForm" class="registro-form">
             <h2>Registro de Operación</h2>
-            <!-- Estado de Operación -->
+            <!-- OPERACION + VERIFICACIONES -->
             <div class="form-row registro-opciones">
-
+                <!-- Estado de Operación -->
                 <div class="form-group">
-                    <label for="estadoOperacion">ESTADO DE OPERACIÓN</label>
-
+                    <label for="estadoOperacion">
+                        ESTADO DE OPERACIÓN
+                    </label>
                     <select id="estadoOperacion">
-                        <option value="inicia_trasego">Inicia trasego</option>
-                        <option value="finaliza_trasego">Finaliza trasego</option>
-                        <option value="sin_novedad">Sin novedad</option>
+                        <option value="inicia_trasego">
+                            Inicia trasego
+                        </option>
+                        <option value="finaliza_trasego">
+                            Finaliza trasego
+                        </option>
+                        <option value="sin_novedad">
+                            Sin novedad
+                        </option>
                     </select>
                 </div>
 
+                <!-- Verificaciones Operacionales -->
+                <div class="form-group">
+                    <label>
+                        VERIFICACIONES OPERACIONALES
+                    </label>
+                    <div class="verification-item">
+                        <div class="verification-label">
+                            ¿Todas las válvulas de alivio tienen capuchón?
+                            <span class="help-icon">
+                                ⓘ
+                                <span class="tooltip-text">
+                                    Seleccione únicamente si se verificó que todas las válvulas de alivio de la planta cuentan con su respectivo capuchón.
+                                </span>
+                            </span>
+                        </div>
+                        <input
+                            class="verification-checkbox"
+                            type="checkbox"
+                            id="valvulasCapuchon"
+                        >
+                    </div>
+                </div>
+            </div>
+            <!-- HERMETICIDAD -->
+            <div class="hermeticidad-container">
+                <h3 class="subsection-title">
+                    Hermeticidad
+                </h3>
+                <div class="form-row registro-opciones">
+                    <div class="form-group">
+                        <div class="verification-item">
+                            <div class="verification-label">
+                                Conexiones sin fugas
+                                <span class="help-icon">
+                                    ⓘ
+                                    <span class="tooltip-text">
+                                        Verificó ausencia de fugas en las conexiones del sistema.
+                                    </span>
+                                </span>
+                            </div>
+                            <input
+                                class="verification-checkbox"
+                                type="checkbox"
+                                id="hermeticidadConexiones"
+                            >
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="verification-item">
+                            <div class="verification-label">
+                                Accesorios sin fugas
+                                <span class="help-icon">
+                                    ⓘ
+                                    <span class="tooltip-text">
+                                        Verificó ausencia de fugas en los accesorios del sistema.
+                                    </span>
+                                </span>
+                            </div>
+                            <input
+                                class="verification-checkbox"
+                                type="checkbox"
+                                id="hermeticidadAccesorios"
+                            >
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="verification-item">
+                            <div class="verification-label">
+                                Instrumentación sin fugas
+                                <span class="help-icon">
+                                    ⓘ
+                                    <span class="tooltip-text">
+                                        Verificó ausencia de fugas en los instrumentos y medidores del sistema.
+                                    </span>
+                                </span>
+                            </div>
+                            <input
+                                class="verification-checkbox"
+                                type="checkbox"
+                                id="hermeticidadInstrumentacion"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- GESTION DE PENDIENTES -->
+        <div class="gestion-pendientes-container">
+
+            <h3 class="subsection-title">
+                Gestión de pendientes
+            </h3>
+
+            <div class="form-row registro-opciones">
                 <!-- Problemas nuevos -->
                 <div class="form-group">
-                    <label>¿Ocurrió algún problema?</label>
+                    <label>¿Ocurrió algún problema?
+                        <span class="help-icon">
+                            ⓘ
+                            <span class="tooltip-text">
+                                Seleccione SÍ únicamente si durante esta ronda se presentó un problema y va a registrarlo.
+                            </span>
+                        </span>
+                    </label>
 
                     <select id="problemaReportado">
                         <option value="false">No</option>
@@ -228,8 +349,15 @@
 
                 <!-- Resolución de pendientes -->
                 <div class="form-group">
-
-                    <label>¿Se resolvió algún pendiente?</label>
+                    <label>
+                        ¿Se resolvió algún pendiente?
+                        <span class="help-icon">
+                            ⓘ
+                            <span class="tooltip-text">
+                                Seleccione SÍ únicamente si durante esta ronda se solucionó un pendiente registrado previamente.
+                            </span>
+                        </span>
+                    </label>
 
                     <select id="pendienteResuelto">
                         <option value="false">No</option>
@@ -248,11 +376,17 @@
                     <div
                         id="pendientesResolverList"
                         class="checkbox-group"
-                    >
-                        <!-- Se llenará dinámicamente -->
+                    ><!-- Se llenará dinámicamente -->
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="registro-info-container">
+            <h3 class="subsection-title">
+                Información del registro
+            </h3>
+
+        </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="fecha">Fecha *</label>

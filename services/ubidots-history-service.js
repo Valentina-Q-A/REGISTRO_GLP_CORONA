@@ -97,6 +97,18 @@ function buildOperationalKey(record) {
     ].join("|");
 }
 
+function isOperationallyComplete(
+    record
+) {
+    return Boolean(
+        normalizeDate(record.Fecha) &&
+        normalizeTime(record.Hora) &&
+        String(
+            record.Encargado || ""
+        ).trim()
+    );
+}
+
 function formatUtc(timestamp) {
     if (!isValidTimestamp(timestamp)) {
         return null;
@@ -558,13 +570,21 @@ function simulateIncrementalSync({
     const groups = new Map();
 
     for (const record of technicalNewRecords) {
-        const key =
-            buildOperationalKey(record);
+        if (
+            !isOperationallyComplete(
+                record
+            )
+        ) {
 
-        if (key === "|") {
-            withoutOperationalKey.push(record);
+            withoutOperationalKey.push(
+                record
+            );
+
             continue;
         }
+
+        const key =
+            buildOperationalKey(record);
 
         if (!groups.has(key)) {
             groups.set(key, []);

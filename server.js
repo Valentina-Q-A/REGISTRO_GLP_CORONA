@@ -9,7 +9,25 @@ const path = require('path');
 const crypto = require('crypto');
 const XLSX = require('xlsx');
 
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+const envArgument =
+    process.argv.find(argument =>
+        argument.startsWith('--env=')
+    );
+
+const envFile =
+    envArgument
+        ? envArgument.replace('--env=', '')
+        : '.env';
+
+dotenv.config({
+    path: envFile
+});
+
+console.log(
+    `[ENV] archivo cargado: ${envFile}`
+);
 
 const historySyncConfig =
     require('./config/history-sync.config');
@@ -87,6 +105,11 @@ app.get('/js/variables.js', (req, res) => {
 
 const excelFilePath =
     historySyncConfig.cachePath;
+
+console.log(
+    "[CACHE]",
+    excelFilePath
+);
 
 const ubidotsQueueFilePath =
     path.resolve(
@@ -1794,30 +1817,37 @@ app.post('/sync-ubidots', async (req, res) => {
             JSON.stringify(payload, null, 2)
         );
 
+        let queuedForRetry = false;
+
         try {
 
             await sendToUbidots(
                 payload
             );
 
-        console.log(
-            "Ubidots sincronizado correctamente."
-        );
-        captureJournalService
-            .markSyncedToUbidots(
-                path.resolve(
-                    __dirname,
-                    "data/capture-journal.json"
-                ),
-                data.Fecha,
-                data.Hora
+            console.log(
+                "Ubidots sincronizado correctamente."
             );
+
+            captureJournalService
+                .markSyncedToUbidots(
+                    path.resolve(
+                        __dirname,
+                        "data/capture-journal.json"
+                    ),
+                    data.Fecha,
+                    data.Hora
+                );
+
         } catch (err) {
+
+            queuedForRetry = true;
 
             console.error(
                 "Advertencia: no se pudo sincronizar con Ubidots. Se agregará a la cola:",
                 err.message
             );
+
             captureJournalService
                 .markPendingUbidots(
                     path.resolve(
@@ -1836,11 +1866,17 @@ app.post('/sync-ubidots', async (req, res) => {
         }
 
         res.status(200).json({
-            success: true,
-            message: "Sincronización con Ubidots procesada"
-        });
+        success:
+            !queuedForRetry,
 
-   } catch (err) {
+        queuedForRetry,
+
+        message:
+            queuedForRetry
+                ? "El envío quedó pendiente y será reintentado automáticamente"
+                : "Registro enviado exitosamente"
+    });
+    } catch (err) {
 
         captureJournalService
             .markPendingUbidots(
@@ -2546,6 +2582,93 @@ app.get('/sync-status', (req, res) => {
             syncState.lastResult
     });
 });
+
+// ============================================
+// OBSERVABILIDAD DEL CAPTURE JOURNAL
+// ============================================
+
+app.get(
+    '/journal/status',
+    (req, res) => {
+
+        try {
+
+            const summary =
+                captureJournalService
+                    .summarizeJournal(
+                        path.resolve(
+                            __dirname,
+                            'data/capture-journal.json'
+                        )
+                    );
+
+            res.json({
+                success: true,
+                ...summary
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message:
+                    error.message
+            });
+        }
+    }
+);
+
+// ============================================
+// OBSERVABILIDAD DEL CAPTURE JOURNAL
+// REGISTROS
+// ============================================
+
+app.get(
+    '/journal/records',
+    (req, res) => {
+
+        try {
+
+            const status =
+                String(
+                    req.query.status || ""
+                ).trim();
+
+            const records =
+                status
+                    ? captureJournalService
+                        .listRecordsByStatus(
+                            path.resolve(
+                                __dirname,
+                                'data/capture-journal.json'
+                            ),
+                            status
+                        )
+                    : captureJournalService
+                        .loadJournal(
+                            path.resolve(
+                                __dirname,
+                                'data/capture-journal.json'
+                            )
+                        ).records;
+
+            res.json({
+                success: true,
+                total:
+                    records.length,
+                records
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message:
+                    error.message
+            });
+        }
+    }
+);
 
 // ============================================
 // SINCRONIZACION MANUAL DEL HISTORICO

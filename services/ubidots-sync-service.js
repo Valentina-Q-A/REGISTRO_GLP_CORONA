@@ -272,8 +272,6 @@ async function inspectSynchronization({
         );
     const totalBlockingConditions =
         unresolvedConflicts +
-        simulation.summary
-            .recordsWithoutOperationalKey +
         history.contextConflicts.length;
 
     return {
