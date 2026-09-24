@@ -514,12 +514,47 @@ function operationalColumns() {
 }
 
 function normalizeComparable(value) {
-    if (value === null || value === undefined) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return null;
     }
 
-    if (typeof value === "string") {
-        return value.trim();
+    // Arrays vacíos equivalen a "sin pendientes"
+    if (
+        Array.isArray(value) &&
+        value.length === 0
+    ) {
+        return null;
+    }
+
+    if (
+        typeof value === "string"
+    ) {
+
+        const trimmed =
+            value.trim();
+
+        if (
+            trimmed === "" ||
+            trimmed === "Sin pendientes"
+        ) {
+            return null;
+        }
+
+        const numeric =
+            Number(trimmed);
+
+        if (
+            Number.isFinite(numeric) &&
+            trimmed !== ""
+        ) {
+            return numeric;
+        }
+
+        return trimmed;
     }
 
     return value;
