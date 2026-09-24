@@ -689,6 +689,11 @@ function initializeCisterna() {
 
     const info =
         document.getElementById('ultimaCisternaInfo');
+    
+    const nuevaCisternaContainer =
+    document.getElementById(
+        'nuevaCisternaContainer'
+    );
 
     if (!toggle || !fields) {
         return;
@@ -702,6 +707,12 @@ function initializeCisterna() {
 
     const capacidadInput =
         document.getElementById('capacidadCisterna');
+    
+    const placaContainer =
+        placaInput.closest('.control-group');
+
+    const capacidadContainer =
+        capacidadInput.closest('.control-group');
 
 
     function updateState() {
@@ -728,16 +739,36 @@ function initializeCisterna() {
         if (sameContainer) {
 
             sameContainer.style.display =
-                enabled &&
-                esValorCisternaValido(ultimaCisterna.placa) &&
-                esValorCisternaValido(ultimaCisterna.capacidad)
+                enabled 
                     ? ''
                     : 'none';
+            if (!enabled) {
+
+                if (nuevaCisternaContainer) {
+                    nuevaCisternaContainer.style.display =
+                        "none";
+                }
+
+                if (info) {
+                    info.style.display = "none";
+                }
+            }
+        }
+
+        if (!enabled) {
+
+            if (info) {
+                info.style.display = "none";
+            }
+
+            if (nuevaCisternaContainer) {
+                nuevaCisternaContainer.style.display =
+                    "none";
+            }
         }
 
         updateSameCisternaState();
     }
-
 
     function updateSameCisternaState() {
 
@@ -745,30 +776,51 @@ function initializeCisterna() {
             return;
         }
 
-        const same =
+        const registrarNuevaCisterna =
             sameToggle.checked &&
             toggle.checked;
 
+        const existeReferencia =
+            esValorCisternaValido(
+                ultimaCisterna.placa
+            ) &&
+            esValorCisternaValido(
+                ultimaCisterna.capacidad
+            );
 
-        if (
-            same &&
-            esValorCisternaValido(ultimaCisterna.placa) &&
-            esValorCisternaValido(ultimaCisterna.capacidad)
-        ) {
+        // ==========================
+        // NUEVA CISTERNA
+        // ==========================
 
-            placaInput.value =
-                ultimaCisterna.placa;
-
-            capacidadInput.value =
-                ultimaCisterna.capacidad;
-
-            placaInput.disabled = true;
-            capacidadInput.disabled = true;
-
-            placaInput.required = false;
-            capacidadInput.required = false;
+        if (registrarNuevaCisterna) {
 
             if (info) {
+                info.style.display = "none";
+            }
+
+            if (nuevaCisternaContainer) {
+                nuevaCisternaContainer.style.display =
+                    "block";
+            }
+
+            placaInput.value = "";
+            capacidadInput.value = "";
+
+            placaInput.required = true;
+            capacidadInput.required = true;
+
+            return;
+        }
+
+        // ==========================
+        // REUTILIZAR REFERENCIA
+        // ==========================
+
+        if (info) {
+
+            if (existeReferencia) {
+
+                info.style.display = "block";
 
                 info.innerHTML = `
                     <small>
@@ -782,28 +834,39 @@ function initializeCisterna() {
                         </strong>
                     </small>
                 `;
-            }
 
-        } else {
+            } else {
 
-            placaInput.disabled =
-                !toggle.checked;
-
-            capacidadInput.disabled =
-                !toggle.checked;
-
-            placaInput.required =
-                toggle.checked;
-
-            capacidadInput.required =
-                toggle.checked;
-
-            if (info) {
+                info.style.display = "none";
                 info.innerHTML = "";
             }
         }
-    }
 
+        if (nuevaCisternaContainer) {
+            nuevaCisternaContainer.style.display =
+                "none";
+        }
+
+        if (existeReferencia) {
+
+            placaInput.value =
+                ultimaCisterna.placa;
+
+            capacidadInput.value =
+                ultimaCisterna.capacidad;
+
+            placaInput.required = false;
+            capacidadInput.required = false;
+
+        } else {
+
+            placaInput.value = "";
+            capacidadInput.value = "";
+
+            placaInput.required = true;
+            capacidadInput.required = true;
+        }
+    }
 
     toggle.addEventListener(
         'change',
@@ -890,7 +953,7 @@ function refrescarEstadoCisterna() {
         esValorCisternaValido(ultimaCisterna.capacidad);
 
     sameContainer.style.display =
-        toggle.checked && cisternaDisponible
+        toggle.checked
             ? ''
             : 'none';
 
@@ -1315,7 +1378,14 @@ function mostrarComparativo() {
         return;
     }
 
-    const variables = getVariablesByCategory("proceso");
+    const variables =
+        getVariablesByCategory(
+            "proceso"
+        ).filter(
+            variable =>
+                variable.field !==
+                "capacidadCisterna"
+        );
 
     const filas = variables.map(variable => {
 
@@ -1325,8 +1395,20 @@ function mostrarComparativo() {
         const actualNumero = parseFloat(actual);
         const anteriorNumero = parseFloat(anterior);
 
-        let diferencia = "";
+        let diferencia = "-";
         let claseCambio = "";
+
+        const actualDisplay =
+            formatSummaryValue(
+                actual,
+                variable.unit || ""
+            );
+
+        const anteriorDisplay =
+            formatSummaryValue(
+                anterior,
+                variable.unit || ""
+            );
 
         if (!isNaN(actualNumero) && !isNaN(anteriorNumero)) {
 
@@ -1342,6 +1424,17 @@ function mostrarComparativo() {
                 diferencia = "0";
                 claseCambio = "change-neutral";
             }
+        }else if (
+            !isNaN(actualNumero) &&
+            (anterior === "" ||
+            anterior === null ||
+            anterior === undefined)
+        ) {
+
+            diferencia = "Nuevo";
+
+            claseCambio =
+                "change-positive";
         }
 
         return `
@@ -1349,11 +1442,11 @@ function mostrarComparativo() {
                 <td>${variable.label}</td>
 
                 <td>
-                    ${actual} ${variable.unit}
+                    ${actualDisplay}
                 </td>
 
                 <td>
-                    ${anterior} ${variable.unit}
+                    ${anteriorDisplay}
                 </td>
 
                 <td class="${claseCambio}">
@@ -1854,21 +1947,27 @@ function normalizarDatosCisterna(data) {
     }
 
     // ============================================
-    // MISMA CISTERNA
+    // ¿REGISTRAR NUEVA CISTERNA?
     // ============================================
 
-    const mismaToggle =
-        document.getElementById("mismaCisterna");
+    const nuevaCisternaToggle =
+        document.getElementById(
+            "mismaCisterna"
+        );
 
-    const misma =
-        mismaToggle?.checked === true;
+    const registrarNuevaCisterna =
+        nuevaCisternaToggle?.checked === true;
 
-    if (!misma) {
+    // ============================================
+    // NUEVA CISTERNA
+    // ============================================
+
+    if (registrarNuevaCisterna) {
         return data;
     }
 
     // ============================================
-    // REUTILIZAR VARIABLES CONFIGURADAS
+    // REUTILIZAR ÚLTIMA CISTERNA
     // ============================================
 
     for (const [name, variable] of Object.entries(VARIABLES)) {
@@ -1883,7 +1982,11 @@ function normalizarDatosCisterna(data) {
         const valorAnterior =
             ultimaCisterna[source];
 
-        if (esValorCisternaValido(valorAnterior)) {
+        if (
+            esValorCisternaValido(
+                valorAnterior
+            )
+        ) {
             data[name] = valorAnterior;
         }
     }

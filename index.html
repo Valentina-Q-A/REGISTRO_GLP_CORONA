@@ -63,6 +63,17 @@
                 </div>
             </div>
 
+            <!-- Mezclador -->
+            <div class="component">
+                <img src="assets/mixer.svg" alt="Mezclador" class="component-img">
+                <h3>Mezclador</h3>
+                <div class="control-group">
+                    <label>Presión Mezcla (9-12 PSI)</label>
+                    <input type="number" id="presionMezcla" min="9" max="12" value="10">
+                    <span id="presionMezclaValue" class="value-display">10 PSI</span>
+                </div>
+            </div>
+
            <!-- Cisterna -->
             <div class="component">
                 <img src="assets/cisterna.svg" alt="Cisterna" class="component-img">
@@ -79,30 +90,7 @@
                         </span>
                     </label>
                     <input type="checkbox" id="cisternaHabilitada">
-
-                    <div
-                        id="mismaCisternaContainer"
-                        style="display: none;"
-                    >
-                        <label for="mismaCisterna">
-                            ¿Es la misma cisterna?
-                            <span class="help-icon">
-                                ⓘ
-                                <span class="tooltip-text">
-                                    Seleccione únicamente si es la misma cisterna del registro anterior. De ser así, se llenarán automáticamente Capacidad y Placa.
-                                </span>
-                            </span>
-                        </label>
-                        <input
-                            type="checkbox"
-                            id="mismaCisterna"
-                        >
-
-                        <div id="ultimaCisternaInfo"></div>
-
-                    </div>
                 </div>
-
                 <div id="cisternaFields">
 
                     <div class="control-group">
@@ -122,31 +110,76 @@
                         <input type="number" id="tempCisterna" min="16" max="30" value="22">
                         <span id="tempCisternaValue" class="value-display">22 °C</span>
                     </div>
+                    
+                    <div
+                        id="mismaCisternaContainer"
+                        style="display: none;"
+                    >
 
-                    <div class="control-group">
-                        <label for="capacidadCisterna">Capacidad Cisterna (GL) *</label>
-                        <input type="number" id="capacidadCisterna" required>
+                        <div id="ultimaCisternaInfo"></div>
+
+                        <label for="mismaCisterna">
+                            Registrar una nueva cisterna
+
+                            <span class="help-icon">
+                                ⓘ
+
+                                <span class="tooltip-text">
+                                    Marque esta opción únicamente cuando desee registrar
+                                    una cisterna diferente a la última registrada.
+                                </span>
+
+                            </span>
+                        </label>
+
+                        <input
+                            type="checkbox"
+                            id="mismaCisterna"
+                        >
+
                     </div>
 
-                    <div class="control-group">
-                        <label for="placaCisterna">Placa Cisterna *</label>
-                        <input type="text" id="placaCisterna" required placeholder="ABC-123">
+                    <div
+                        id="nuevaCisternaContainer"
+                        style="display: none;"
+                    >
+
+                        <div class="control-group">
+
+                            <label for="capacidadCisterna">
+                                Capacidad Cisterna (GL) *
+                            </label>
+
+                            <input
+                                type="number"
+                                id="capacidadCisterna"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="control-group">
+
+                            <label for="placaCisterna">
+                                Placa Cisterna *
+                            </label>
+
+                            <input
+                                type="text"
+                                id="placaCisterna"
+                                required
+                                placeholder="ABC-123"
+                            >
+
+                        </div>
+
                     </div>
-
                 </div>
-            </div>
-
-            <!-- Mezclador -->
-            <div class="component">
-                <img src="assets/mixer.svg" alt="Mezclador" class="component-img">
-                <h3>Mezclador</h3>
-                <div class="control-group">
-                    <label>Presión Mezcla (9-12 PSI)</label>
-                    <input type="number" id="presionMezcla" min="9" max="12" value="10">
-                    <span id="presionMezclaValue" class="value-display">10 PSI</span>
-                </div>
+                
             </div>
         </div>
+        
+<!-------------------------------------------------------------------------------------------------------------->
         <!-- Formulario de registro -->
         <form id="glpForm" class="registro-form">
             <h2>Registro de Operación</h2>
@@ -193,6 +226,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- HERMETICIDAD -->
             <div class="hermeticidad-container">
                 <h3 class="subsection-title">
