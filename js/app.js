@@ -7,8 +7,9 @@
 // CONFIGURACIÓN SERVIDOR API
 // ============================================
 
-//const API_URL = "https://registro-glp-corona.onrender.com/";
 let ultimoRegistro = null;
+
+let lastSyncSuccessAt = null;
 
 let ultimaCisterna = {
     placa: null,
@@ -42,6 +43,11 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSummary();
     initializeForm();
     loadCisternaTechnicalReference();
+    monitorSyncStatus();
+    setInterval(
+        monitorSyncStatus,
+        60000
+    );
 });
 
 // ============================================
@@ -1369,6 +1375,81 @@ async function updateSummary() {
             'summaryDisplay'
         ).innerHTML =
             '<p>No se pudo cargar el último registro</p>';
+    }
+}
+
+async function monitorSyncStatus() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/sync-status",
+                {
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const status =
+            await response.json();
+
+        const currentSuccessAt =
+            status.lastSuccessAt || null;
+
+        if (!currentSuccessAt) {
+            return;
+        }
+
+        if (
+            lastSyncSuccessAt === null
+        ) {
+
+            lastSyncSuccessAt =
+                currentSuccessAt;
+
+            return;
+        }
+
+        if (
+            currentSuccessAt !==
+            lastSyncSuccessAt
+        ) {
+
+            console.log(
+                "[SYNC] nueva sincronización detectada"
+            );
+
+            lastSyncSuccessAt =
+                currentSuccessAt;
+
+            await updateSummary();
+
+            if (
+                ultimoRegistro
+            ) {
+
+                const hasComparison =
+                    document
+                        .querySelector(
+                            ".comparativo-table"
+                        );
+
+                if (hasComparison) {
+                    mostrarComparativo();
+                }
+            }
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error monitoreando sync-status:",
+            error
+        );
     }
 }
 
