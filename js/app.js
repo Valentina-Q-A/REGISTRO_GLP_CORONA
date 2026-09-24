@@ -1591,18 +1591,27 @@ function initializeForm() {
     
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
+        // Actualizar fecha y hora justo antes de guardar
+        setCurrentDateTime();
+
         // Validar campo obligatorio
-        const encargado = document.getElementById('encargado').value.trim();
+        const encargado =
+            document.getElementById('encargado')
+                .value
+                .trim();
+
         if (!encargado) {
-            showAlert('El campo ENCARGADO es obligatorio', 'error');
+            showAlert(
+                'El campo ENCARGADO es obligatorio',
+                'error'
+            );
             return;
         }
-        
-        // Recopilar todos los datos
-        const data = collectFormData();
-        
-        // Enviar datos al servidor
+
+        const data =
+            collectFormData();
+
         await saveData(data);
     });
 }
@@ -2189,6 +2198,8 @@ async function saveData(data) {
 
         // Actualizar el resumen local inmediatamente
         updateSummaryLocal(record);
+        // Actualiza la hora inmediatamente
+        setCurrentDateTime();
 
         return result;
 

@@ -260,8 +260,15 @@ async function inspectSynchronization({
             hashesAfter.pending
     };
 
-    const unresolvedConflicts =
+   const unresolvedConflicts =
         simulation.unresolvedConflicts.length;
+
+    const orphanRecords =
+        simulation.recordsWithoutOperationalKey.length;
+
+    const validOperationalEvents =
+        simulation.newOperationalEvents.length;
+
     conflictRegistryService
         .registerDetectedConflicts(
             path.resolve(
@@ -270,9 +277,19 @@ async function inspectSynchronization({
             ),
             simulation.unresolvedConflicts
         );
+
     const totalBlockingConditions =
         unresolvedConflicts +
         history.contextConflicts.length;
+
+    const processableOperationalEvents =
+        simulation.newOperationalEvents.length;
+
+    const processableConflicts =
+        simulation.unresolvedConflicts.length;
+
+    const processableOrphans =
+        simulation.recordsWithoutOperationalKey.length;
 
     return {
         mode:
@@ -287,6 +304,17 @@ async function inspectSynchronization({
 
         canApply:
             totalBlockingConditions === 0,
+        
+        partialSynchronization: {
+            operationalEvents:
+                processableOperationalEvents,
+
+            conflicts:
+                processableConflicts,
+
+            orphans:
+                processableOrphans
+        },
 
         cache: {
             records:
@@ -368,6 +396,17 @@ async function inspectSynchronization({
                 resolvedConflicts:
                     simulation.resolvedConflicts
             }
+        },
+        partialSynchronization: {
+
+            validOperationalEvents,
+
+            unresolvedConflicts,
+
+            orphanRecords,
+
+            processable:
+                validOperationalEvents > 0
         },
 
         integrity
@@ -695,14 +734,17 @@ async function synchronizeFromUbidots({
         };
     }
 
-    if (!inspection.canApply) {
+    if (
+        inspection.ubidots
+            .contextConflicts > 0
+    ) {
         return {
             ...inspection,
             mode: "APPLICATION",
             applied: false,
             restored: false,
             reason:
-                "SYNC_CONFLICTS_DETECTED"
+                "CONTEXT_CONFLICTS_DETECTED"
         };
     }
 
@@ -855,14 +897,20 @@ async function synchronizeFromUbidots({
         const pendingUnchanged =
             pendingHashBefore ===
             hashFile(pendingPath);
+        
+        const allowPartialSynchronization =
+            inspection.partialSynchronization
+                ?.processable === true;
 
         const valid =
             validation.cacheRecords ===
                 expectedCacheRecords &&
             validation.duplicateTechnicalTimestampCount ===
                 0 &&
-            validation.unresolvedOperationalCollisions ===
-                0 &&
+            (
+                validation.unresolvedOperationalCollisions === 0 ||
+                allowPartialSynchronization
+            ) &&
             validation.reviewedTimestamps ===
                 expectedReviewedTimestamps &&
             validation.visibleNotReviewed.length ===
