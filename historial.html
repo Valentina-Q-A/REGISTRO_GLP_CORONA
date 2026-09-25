@@ -33,6 +33,62 @@ padding:10px 20px;
 margin:10px;
 cursor:pointer;
 }
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.form-group input {
+    width: 100%;
+}
+
+.historial-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0 25px 0;
+    flex-wrap: wrap;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.pagination-container button {
+    min-width: 110px;
+}
+
+#pageInfo {
+    font-weight: bold;
+    padding: 0 10px;
+}
+
+#resultsInfo {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
 </style>
 
 </head>
@@ -41,11 +97,107 @@ cursor:pointer;
 
 <h1>Histórico Planta GLP</h1>
 
-<input type="date" id="fecha">
+<div class="registro-form">
 
-<button onclick="buscar()">Buscar</button>
-<button onclick="cargarHistorico()">Reset</button>
-<button onclick="exportar()">Exportar Excel</button>
+    <h2>Filtros</h2>
+
+    <div class="form-row">
+
+        <div class="form-group">
+            <label for="fechaDesde">
+                Fecha desde
+            </label>
+
+            <input
+                type="date"
+                id="fechaDesde">
+        </div>
+
+        <div class="form-group">
+            <label for="fechaHasta">
+                Fecha hasta
+            </label>
+
+            <input
+                type="date"
+                id="fechaHasta">
+        </div>
+
+        <div class="form-group">
+            <label for="filtroEncargado">
+                Encargado
+            </label>
+
+            <input
+                type="text"
+                id="filtroEncargado">
+        </div>
+
+        <div class="form-group">
+            <label for="filtroObservacion">
+                Observación
+            </label>
+
+            <input
+                type="text"
+                id="filtroObservacion">
+        </div>
+
+        <div class="form-group">
+            <label for="filtroPlaca">
+                Placa
+            </label>
+
+            <input
+                type="text"
+                id="filtroPlaca">
+        </div>
+
+    </div>
+
+</div>
+
+<div class="historial-actions">
+
+    <button id="btnBuscar">
+        Buscar
+    </button>
+
+    <button id="btnReset">
+        Limpiar
+    </button>
+
+    <button id="btnExportar">
+        Exportar Excel
+    </button>
+
+</div>
+
+<div id="resultsInfo"></div>
+
+<div class="pagination-container">
+
+    <button id="firstPage">
+        ⏮ Primera
+    </button>
+
+    <button id="prevPage">
+        ◀ Anterior
+    </button>
+
+    <span id="pageInfo">
+        Página 1 de 21
+    </span>
+
+    <button id="nextPage">
+        Siguiente ▶
+    </button>
+
+    <button id="lastPage">
+        Última ⏭
+    </button>
+
+</div>
 
 <table>
 
@@ -73,6 +225,9 @@ cursor:pointer;
 
 let DATA_GLOBAL = [];
 
+let PAGINA_ACTUAL = 1;
+
+const PAGE_SIZE = 50;
 
 // ============================================
 // VARIABLES DEL HISTÓRICO
@@ -89,10 +244,21 @@ let DATA_GLOBAL = [];
 function getHistoricalVariables() {
 
     return Object.entries(VARIABLES)
-        .filter(([, variable]) => variable.excelField);
+        .filter(([, variable]) => {
+
+            if (!variable.excelField) {
+                return false;
+            }
+
+            return ![
+                "Fecha",
+                "Hora"
+            ].includes(
+                variable.excelField
+            );
+        });
 
 }
-
 
 // ============================================
 // GENERAR ENCABEZADOS
@@ -124,7 +290,7 @@ function generarEncabezados() {
                 </th>
             `).join("")}
 
-            <th>FechaServidor</th>
+            <th>Registrado en Servidor</th>
 
         </tr>
     `;
@@ -164,7 +330,9 @@ async function cargarHistorico() {
 
         DATA_GLOBAL = data;
 
-        renderTabla(DATA_GLOBAL);
+        PAGINA_ACTUAL = 1;
+
+        renderPagina();
 
     } catch (error) {
 
@@ -181,6 +349,18 @@ async function cargarHistorico() {
 
 }
 
+// ============================================
+// NORMALIZADORES
+// ============================================
+
+function normalizarPlaca(valor) {
+
+    return String(valor || "")
+        .trim()
+        .toUpperCase()
+        .replace(/[-\s]/g, "");
+
+}
 
 // ============================================
 // RENDER TABLA
@@ -269,6 +449,81 @@ function renderTabla(data) {
 
 }
 
+// ============================================
+// RENDER PAGINADOR
+// ============================================
+
+function renderPagina() {
+
+    const inicio =
+        (PAGINA_ACTUAL - 1) * PAGE_SIZE;
+
+    const fin =
+        inicio + PAGE_SIZE;
+
+    const pagina =
+        DATA_GLOBAL.slice(
+            inicio,
+            fin
+        );
+
+    renderTabla(pagina);
+
+    actualizarPaginador();
+}
+
+function actualizarPaginador() {
+
+    const totalPaginas =
+        Math.max(
+            1,
+            Math.ceil(
+                DATA_GLOBAL.length /
+                PAGE_SIZE
+            )
+        );
+    const resultsInfo =
+        document.getElementById(
+            "resultsInfo"
+        );
+
+    if (resultsInfo) {
+        resultsInfo.textContent =
+            `${DATA_GLOBAL.length} registros encontrados`;
+    }
+
+
+    const paginaInfo =
+        document.getElementById(
+            "pageInfo"
+        );
+
+    if (paginaInfo) {
+
+        paginaInfo.textContent =
+            `Página ${PAGINA_ACTUAL} de ${totalPaginas}`;
+    }
+
+    const btnAnterior =
+        document.getElementById(
+            "prevPage"
+        );
+
+    const btnSiguiente =
+        document.getElementById(
+            "nextPage"
+        );
+
+    if (btnAnterior) {
+        btnAnterior.disabled =
+            PAGINA_ACTUAL === 1;
+    }
+
+    if (btnSiguiente) {
+        btnSiguiente.disabled =
+            PAGINA_ACTUAL === totalPaginas;
+    }
+}
 
 // ============================================
 // BUSCAR
@@ -276,21 +531,40 @@ function renderTabla(data) {
 
 async function buscar() {
 
-    const fecha =
-        document.getElementById("fecha").value;
+    const fechaDesde =
+        document.getElementById(
+            "fechaDesde"
+        ).value;
 
-    if (!fecha) {
+    const fechaHasta =
+        document.getElementById(
+            "fechaHasta"
+        ).value;
 
-        await cargarHistorico();
+    const encargado =
+        document.getElementById(
+            "filtroEncargado"
+        ).value
+            .trim()
+            .toLowerCase();
 
-        return;
-    }
+    const observacion =
+        document.getElementById(
+            "filtroObservacion"
+        ).value
+            .trim()
+            .toLowerCase();
+
+    const placa =
+        document.getElementById(
+            "filtroPlaca"
+        ).value;
 
     try {
 
         const response =
             await fetch(
-                `/historial?fecha=${encodeURIComponent(fecha)}&t=${Date.now()}`,
+                `/historial?t=${Date.now()}`,
                 {
                     cache: "no-store"
                 }
@@ -298,18 +572,99 @@ async function buscar() {
 
         if (!response.ok) {
             throw new Error(
-                "No se pudo realizar la búsqueda"
+                "No se pudo cargar el histórico"
             );
         }
 
         const data =
             await response.json();
 
-        DATA_GLOBAL = Array.isArray(data)
-            ? data
-            : [];
+        DATA_GLOBAL =
+            Array.isArray(data)
+                ? data
+                : [];
 
-        renderTabla(DATA_GLOBAL);
+        // ========================================
+        // RANGO DE FECHAS
+        // ========================================
+
+        if (fechaDesde) {
+
+            DATA_GLOBAL =
+                DATA_GLOBAL.filter(
+                    registro =>
+                        registro.Fecha >=
+                        fechaDesde
+                );
+        }
+
+        if (fechaHasta) {
+
+            DATA_GLOBAL =
+                DATA_GLOBAL.filter(
+                    registro =>
+                        registro.Fecha <=
+                        fechaHasta
+                );
+        }
+
+        // ========================================
+        // ENCARGADO
+        // ========================================
+
+        if (encargado) {
+
+            DATA_GLOBAL =
+                DATA_GLOBAL.filter(
+                    registro =>
+                        String(
+                            registro.Encargado || ""
+                        )
+                            .toLowerCase()
+                            .includes(encargado)
+                );
+        }
+
+        // ========================================
+        // OBSERVACIONES
+        // ========================================
+
+        if (observacion) {
+
+            DATA_GLOBAL =
+                DATA_GLOBAL.filter(
+                    registro =>
+                        String(
+                            registro.Observaciones || ""
+                        )
+                            .toLowerCase()
+                            .includes(observacion)
+                );
+        }
+
+        // ========================================
+        // PLACA
+        // ========================================
+
+        if (placa) {
+
+            const placaBuscada =
+                normalizarPlaca(placa);
+
+            DATA_GLOBAL =
+                DATA_GLOBAL.filter(
+                    registro =>
+                        normalizarPlaca(
+                            registro.PlacaCisterna
+                        ).includes(
+                            placaBuscada
+                        )
+                );
+        }
+
+        PAGINA_ACTUAL = 1;
+
+        renderPagina();
 
     } catch (error) {
 
@@ -321,11 +676,8 @@ async function buscar() {
         DATA_GLOBAL = [];
 
         renderTabla([]);
-
     }
-
 }
-
 
 // ============================================
 // EXPORTAR
@@ -430,6 +782,124 @@ window.addEventListener(
 
         cargarHistorico();
 
+        document
+            .getElementById("btnBuscar")
+            .addEventListener(
+                "click",
+                buscar
+            );
+
+        document
+            .getElementById("btnReset")
+            .addEventListener(
+                "click",
+                () => {
+
+                    document.getElementById(
+                        "fechaDesde"
+                    ).value = "";
+
+                    document.getElementById(
+                        "fechaHasta"
+                    ).value = "";
+
+                    document.getElementById(
+                        "filtroEncargado"
+                    ).value = "";
+
+                    document.getElementById(
+                        "filtroObservacion"
+                    ).value = "";
+
+                    document.getElementById(
+                        "filtroPlaca"
+                    ).value = "";
+
+                    cargarHistorico();
+
+                }
+            );
+
+        document
+            .getElementById("btnExportar")
+            .addEventListener(
+                "click",
+                exportar
+            );
+
+        document
+            .getElementById("prevPage")
+            .addEventListener(
+                "click",
+                () => {
+
+                    if (
+                        PAGINA_ACTUAL > 1
+                    ) {
+
+                        PAGINA_ACTUAL--;
+
+                        renderPagina();
+                    }
+                }
+            );
+
+        document
+            .getElementById("nextPage")
+            .addEventListener(
+                "click",
+                () => {
+
+                    const totalPaginas =
+                        Math.ceil(
+                            DATA_GLOBAL.length /
+                            PAGE_SIZE
+                        );
+
+                    if (
+                        PAGINA_ACTUAL <
+                        totalPaginas
+                    ) {
+
+                        PAGINA_ACTUAL++;
+
+                        renderPagina();
+                    }
+                }
+            );
+
+        document
+            .getElementById("firstPage")
+            .addEventListener(
+                "click",
+                () => {
+
+                    PAGINA_ACTUAL = 1;
+
+                    renderPagina();
+
+                }
+            );
+
+        document
+            .getElementById("lastPage")
+            .addEventListener(
+                "click",
+                () => {
+
+                    PAGINA_ACTUAL =
+                        Math.max(
+                            1,
+                            Math.ceil(
+                                DATA_GLOBAL.length /
+                                PAGE_SIZE
+                            )
+                        );
+
+                    renderPagina();
+
+                }
+            );
     }
 );
 
