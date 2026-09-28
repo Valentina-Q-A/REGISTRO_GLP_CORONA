@@ -1005,6 +1005,30 @@ function actualizarUltimaCisterna(registros) {
     }
 }
 
+function formatSummaryDate(fecha) {
+
+    if (!fecha) {
+        return "Sin datos";
+    }
+
+    const partes = fecha.split("-");
+
+    if (partes.length !== 3) {
+        return fecha;
+    }
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatSummaryTime(hora) {
+
+    if (!hora) {
+        return "Sin datos";
+    }
+
+    return hora.substring(0, 5);
+}
+
 function formatSummaryValue(
     value,
     unit = ""
@@ -1015,7 +1039,7 @@ function formatSummaryValue(
         value === undefined ||
         value === ""
     ) {
-        return "—";
+        return "Sin datos";
     }
 
     return `${value}${unit}`;
@@ -1042,17 +1066,19 @@ function buildOperationalVariablesSummary(
                 ];
 
             return `
-                <div>
-                    <span>
-                        ${variable.label}
-                    </span>
+                <div class="summary-item">
 
-                    <strong>
+                    <label>
+                        ${variable.label}
+                    </label>
+
+                    <div class="value">
                         ${formatSummaryValue(
                             value,
                             variable.unit || ""
                         )}
-                    </strong>
+                    </div>
+
                 </div>
             `;
         })
@@ -1150,23 +1176,6 @@ async function updateSummary() {
             );
         }
 
-        const pendientesHTML =
-            pendientes.length
-                ? pendientes
-                    .map(
-                        pendiente => `
-                            <div class="pending-item">
-                                ${pendiente}
-                            </div>
-                        `
-                    )
-                    .join("")
-                : `
-                    <div class="pending-none">
-                        Sin pendientes
-                    </div>
-                `;
-
         const variablesOperacionHTML =
             buildOperationalVariablesSummary(
                 last
@@ -1188,7 +1197,7 @@ async function updateSummary() {
                 `
                 <div class="summary-section">
 
-                    <h4>
+                    <h4 class="summary-subtitle">
                         Datos de cisterna
                     </h4>
 
@@ -1273,47 +1282,61 @@ async function updateSummary() {
         `
             <div class="summary-panel">
 
-                <div class="summary-header">
-
-                    <h3>
-                        Último registro operativo
-                    </h3>
-
-                    <span>
-                        ${last.Fecha || ""}
-                        ·
-                        ${last.Hora || ""}
-                    </span>
-
-                </div>
-
                 <div class="summary-section">
 
-                    <h4>
-                        Estado de operación
-                    </h4>
+                    <div class="summary-grid">
 
-                    <div class="operation-status">
-                        ${estadoOperacion}
+                        <div class="summary-item">
+
+                            <label>
+                                Último registro
+                            </label>
+
+                            <div class="summary-time">
+                                ${formatSummaryDate(last.Fecha)}
+                            </div>
+
+                            <div class="summary-time">
+                                ${formatSummaryTime(last.Hora)}
+                            </div>
+
+                        </div>
+
+                        <div class="summary-item">
+
+                            <label>
+                                Estado de operación
+                            </label>
+
+                            <div class="value">
+                                ${estadoOperacion || "Sin datos"}
+                            </div>
+
+                        </div>
+
+                        <div class="summary-item">
+
+                            <label>
+                                Pendientes
+                            </label>
+
+                            <div class="value">
+                                ${
+                                    pendientes.length
+                                        ? pendientes.length
+                                        : "Sin pendientes"
+                                }
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>
 
                 <div class="summary-section">
 
-                    <h4>
-                        Pendientes
-                    </h4>
-
-                    <div class="pending-list">
-                        ${pendientesHTML}
-                    </div>
-
-                </div>
-
-                <div class="summary-section">
-
-                    <h4>
+                    <h4 class="summary-subtitle">
                         Variables de operación
                     </h4>
 
@@ -1327,34 +1350,38 @@ async function updateSummary() {
 
                 <div class="summary-section">
 
-                    <h4>
+                    <h4 class="summary-subtitle">
                         Información del registro
                     </h4>
 
                     <div class="summary-grid">
 
-                        <div>
-                            <span>
-                                Encargado
-                            </span>
+                        <div class="summary-item">
 
-                            <strong>
+                            <label>
+                                Encargado
+                            </label>
+
+                            <div class="value">
                                 ${formatSummaryValue(
                                     last.Encargado
                                 )}
-                            </strong>
+                            </div>
+
                         </div>
 
-                        <div>
-                            <span>
-                                Observaciones
-                            </span>
+                        <div class="summary-item">
 
-                            <strong>
+                            <label>
+                                Observaciones
+                            </label>
+
+                            <div class="value">
                                 ${formatSummaryValue(
                                     last.Observaciones
                                 )}
-                            </strong>
+                            </div>
+
                         </div>
 
                     </div>
@@ -1542,37 +1569,54 @@ function mostrarComparativo() {
 
         <div class="summary-panel">
 
-            <div class="summary-header">
+            <div class="summary-grid">
 
-                <h3>Comparación con último registro</h3>
+                <div class="summary-item">
 
-                <span>
-                    ${ultimoRegistro.Fecha || ""} ·
-                    ${ultimoRegistro.Hora || ""}
-                </span>
+                    <label>
+                        Último registro comparado
+                    </label>
+
+                    <div class="value">
+                        ${formatSummaryDate(
+                            ultimoRegistro.Fecha
+                        )}
+                    </div>
+
+                    <div class="summary-time">
+                        ${formatSummaryTime(
+                            ultimoRegistro.Hora
+                        )}
+                    </div>
+
+                </div>
 
             </div>
 
             <div class="summary-section">
 
+                <div class="comparison-card">
+
                 <div class="table-container">
 
-                    <table class="registro-table comparativo-table">
+                        <table class="registro-table comparativo-table">
 
-                        <thead>
-                            <tr>
-                                <th>Variable</th>
-                                <th>Actual</th>
-                                <th>Último registro</th>
-                                <th>Cambio</th>
-                            </tr>
-                        </thead>
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Actual</th>
+                                    <th>Último registro</th>
+                                    <th>Cambio</th>
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            ${filas}
-                        </tbody>
+                            <tbody>
+                                ${filas}
+                            </tbody>
 
-                    </table>
+                        </table>
+
+                    </div>
 
                 </div>
 
