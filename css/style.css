@@ -435,7 +435,15 @@ footer {
 
 /* Responsive */
 @media (max-width: 768px) {
+
+    body {
+        padding: 0;
+    }
+    
     .container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
         padding: 1rem;
     }
 
