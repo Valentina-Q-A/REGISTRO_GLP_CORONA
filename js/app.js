@@ -9,6 +9,8 @@
 
 let ultimoRegistro = null;
 
+let registroComparacion = null;
+
 let lastSyncSuccessAt = null;
 
 let ultimaCisterna = {
@@ -1120,10 +1122,16 @@ async function updateSummary() {
                 '/historial'
             );
 
+        let historial = [];
         if (historialResponse.ok) {
 
-            const historial =
+            historial =
                 await historialResponse.json();
+
+            registroComparacion =
+                historial.length > 1
+                    ? historial[1]
+                    : null;
 
             actualizarUltimaCisterna(
                 historial
@@ -1180,6 +1188,107 @@ async function updateSummary() {
             buildOperationalVariablesSummary(
                 last
             );
+        let ultimaReferenciaCisternaHTML =
+            "";
+
+        if (
+            Array.isArray(historial) &&
+            historial.length > 0
+        ) {
+
+            const ultimaReferencia =
+                historial.find(registro =>
+                    esValorCisternaValido(
+                        registro.PlacaCisterna
+                    ) &&
+                    esValorCisternaValido(
+                        registro.CapacidadCisterna
+                    )
+                );
+
+            if (ultimaReferencia) {
+
+                ultimaReferenciaCisternaHTML =
+                    `
+                    <div class="summary-section">
+
+                        <h4 class="summary-subtitle">
+                            Última referencia de cisterna
+                        </h4>
+
+                        <div class="summary-grid">
+
+                            <div class="summary-item">
+                                <label>Placa</label>
+                                <div class="value">
+                                    ${formatSummaryValue(
+                                        ultimaReferencia.PlacaCisterna
+                                    )}
+                                </div>
+                            </div>
+
+                            <div class="summary-item">
+                                <label>Capacidad</label>
+                                <div class="value">
+                                    ${formatSummaryValue(
+                                        ultimaReferencia.CapacidadCisterna,
+                                        " Gal"
+                                    )}
+                                </div>
+                            </div>
+
+                            <div class="summary-item">
+                                <label>Nivel</label>
+                                <div class="value">
+                                    ${formatSummaryValue(
+                                        ultimaReferencia.NivelCisterna,
+                                        "%"
+                                    )}
+                                </div>
+                            </div>
+
+                            <div class="summary-item">
+                                <label>Presión</label>
+                                <div class="value">
+                                    ${formatSummaryValue(
+                                        ultimaReferencia.PresionCisterna,
+                                        " PSI"
+                                    )}
+                                </div>
+                            </div>
+
+                            <div class="summary-item">
+                                <label>Temperatura</label>
+                                <div class="value">
+                                    ${formatSummaryValue(
+                                        ultimaReferencia.TempCisterna,
+                                        " °C"
+                                    )}
+                                </div>
+                            </div>
+
+                            <div class="summary-item">
+                                <label>Registrada</label>
+
+                                <div class="value">
+                                    ${formatSummaryDate(
+                                        ultimaReferencia.Fecha
+                                    )}
+                                </div>
+
+                                <div class="summary-time">
+                                    ${formatSummaryTime(
+                                        ultimaReferencia.Hora
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    `;
+            }
+        }
 
         // ============================================
         // CISTERNA
@@ -1386,6 +1495,8 @@ async function updateSummary() {
 
                     </div>
 
+                    ${ultimaReferenciaCisternaHTML}
+
                 </div>
 
             </div>
@@ -1482,7 +1593,7 @@ async function monitorSyncStatus() {
 
 function mostrarComparativo() {
 
-    if (!ultimoRegistro) {
+    if (!registroComparacion) {
         return;
     }
 
@@ -1499,7 +1610,23 @@ function mostrarComparativo() {
 
         const input = document.getElementById(variable.field);
         const actual = input ? input.value : "";
-        const anterior = ultimoRegistro.Variables?.[variable.excelField] ?? "";
+        const anterior =
+            registroComparacion?.[
+                variable.excelField
+            ] ?? "";
+
+        const cisternaHabilitada =
+            document.getElementById(
+                "cisternaHabilitada"
+            )?.checked === true;
+
+        if (
+            variable.recordGroup === "Cisterna" &&
+            !cisternaHabilitada
+        ) {
+            return "";
+        }
+
         const actualNumero = parseFloat(actual);
         const anteriorNumero = parseFloat(anterior);
 
@@ -1579,13 +1706,13 @@ function mostrarComparativo() {
 
                     <div class="value">
                         ${formatSummaryDate(
-                            ultimoRegistro.Fecha
+                            registroComparacion.Fecha
                         )}
                     </div>
 
                     <div class="summary-time">
                         ${formatSummaryTime(
-                            ultimoRegistro.Hora
+                            registroComparacion.Hora
                         )}
                     </div>
 
@@ -1897,9 +2024,13 @@ function initializeResolucionPendientes() {
                         <input
                             type="checkbox"
                             name="pendientesResolver"
-                            value="${pendiente.ID}"
+                            value="${pendiente.id ?? pendiente.ID}"
                         >
-                        ${pendiente.Descripcion}
+                        ${
+                            pendiente.description ??
+                            pendiente.Descripcion ??
+                            "Sin descripción"
+                        }
                     </label>
                 `)
                 .join('');
@@ -1929,25 +2060,10 @@ async function cargarPendientesActivos() {
         const pendientes =
             await response.json();
 
-        console.log(
-            "RESPUESTA /pendientes:",
-            pendientes
-        );
-
         pendientesActivos =
             Array.isArray(pendientes)
                 ? pendientes
                 : [];
-
-        console.log(
-            "PENDIENTES ACTIVOS:",
-            pendientesActivos
-        );
-
-        console.log(
-            "CANTIDAD:",
-            pendientesActivos.length
-        );
 
     } catch (error) {
 
@@ -1970,11 +2086,6 @@ async function savePendings(pendings) {
 
     for (const pending of pendings) {
 
-        console.log(
-            "PENDIENTE QUE SE ENVÍA AL SERVIDOR:",
-            JSON.stringify(pending, null, 2)
-        );
-
         const response = await fetch("/pendientes", {
             method: "POST",
 
@@ -1986,11 +2097,6 @@ async function savePendings(pendings) {
         });
 
         const result = await response.json();
-
-        console.log(
-            "RESPUESTA DEL SERVIDOR AL GUARDAR PENDIENTE:",
-            result
-        );
 
         if (!response.ok) {
             throw new Error(
@@ -2158,32 +2264,9 @@ function buildPendingRecords(data) {
                         option.descriptionField
                     );
 
-                console.log(
-                    "OTRO - descriptionField:",
-                    option.descriptionField
-                );
-
-                console.log(
-                    "OTRO - input encontrado:",
-                    input
-                );
-
-                console.log(
-                    "OTRO - valor:",
-                    input?.value
-                );
-
                 description =
                     input?.value.trim() || "";
             }
-
-            console.log(
-                "PENDIENTE ANTES DE createPending:",
-                {
-                    type,
-                    description
-                }
-            );
 
             return createPending(
                 type,
@@ -2238,21 +2321,18 @@ async function saveData(data) {
 
     const record = buildRecord(data);
     const pendings = buildPendingRecords(data);
-
     const pendientesResueltos =
         Array.from(
             document.querySelectorAll(
                 'input[name="pendientesResolver"]:checked'
             )
-        ).map(input => input.value);
-
-    console.log(
-        "Pendientes seleccionados para resolver:",
-        pendientesResueltos
-    );
-
-    console.log("Registro preparado:", record);
-    console.log("Pendientes preparados:", pendings);
+        )
+        .map(input => input.value)
+        .filter(
+            value =>
+                value &&
+                value !== "undefined"
+        );
 
     try {
         const response = await fetch("/save", {
@@ -2269,38 +2349,19 @@ async function saveData(data) {
             throw new Error(result.message || "Error guardando el registro");
         }
 
-        console.log("Registro guardado:", result);
-        const savedPendings = await savePendings(pendings);
+        const syncData = {
 
-        console.log(
-            "Pendientes guardados:",
-            savedPendings
-        );
+            ...data,
 
-        console.log("DATA COMPLETA ANTES DE RESOLVER:", data);
-        console.log("FECHA PARA RESOLUCIÓN:", data.Fecha);
-        console.log("ENCARGADO PARA RESOLUCIÓN:", data.encargado);
-        console.log("PENDIENTES A RESOLVER:", pendientesResueltos);
+            pendingCreations:
+                pendings,
 
-        const resolvedPendings =
-            await resolverPendientes(
-                pendientesResueltos,
-                data.Fecha,
-                data.encargado
-            );
-
-        console.log(
-            "Pendientes resueltos:",
-            resolvedPendings
-        );
+            pendingResolutions:
+                pendientesResueltos
+        };
 
         const ubidotsResult =
-            await syncUbidots(data);
-
-        console.log(
-            "Sincronización con Ubidots:",
-            ubidotsResult
-        );
+            await syncUbidots(syncData);
 
         if (
             ubidotsResult?.success === true
@@ -2342,7 +2403,7 @@ async function saveData(data) {
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
-function updateSummaryLocal(data) {
+function updateSummaryLocal() {
 
     // Después de guardar, el registro recién creado
     // pasa a ser el último registro.

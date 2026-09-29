@@ -60,6 +60,12 @@ const captureJournalService =
         "./services/capture-journal-service"
     );
 
+const {
+    serializePendingSnapshot
+} = require(
+    "./services/pending-snapshot-projection-service"
+);
+
 const ubidotsHistoryConfigPath =
     path.resolve(
         __dirname,
@@ -71,6 +77,35 @@ const ubidotsHistoryConfig =
     require(
         ubidotsHistoryConfigPath
     );
+
+const pendingSnapshotUbidotsService =
+    require(
+        "./services/pending-snapshot-ubidots-service"
+    );
+
+const pendingLifecycleOrchestrator =
+    require(
+        "./services/pending-lifecycle-orchestrator"
+    );
+
+const {
+    createPendingSnapshot,
+    resolvePendingSnapshot
+} = require(
+    "./services/pending-snapshot-service"
+);
+
+const ubidotsHistoryService =
+    require(
+        "./services/ubidots-history-service"
+    );
+
+const USE_PENDINGS_SNAPSHOT =
+    String(
+        process.env.USE_PENDINGS_SNAPSHOT ||
+        "false"
+    ).toLowerCase() === "true";
+
 const {
     VARIABLES,
     buildCisternaVariableContract
@@ -1029,6 +1064,93 @@ app.post('/pendientes', (req, res) => {
 });
 
 // ============================================
+// DIAGNÓSTICO DE SNAPSHOT DE PENDIENTES
+// NO modifica Ubidots.
+// Simula la creación sobre el snapshot actual.
+// ============================================
+
+app.post(
+    "/debug/pendientes-snapshot",
+    async (req, res) => {
+
+        try {
+
+            const pending =
+                req.body;
+
+            const token =
+                process.env.UBIDOTS_TOKEN;
+
+            if (!token) {
+                throw new Error(
+                    "UBIDOTS_TOKEN no configurado"
+                );
+            }
+
+            const history =
+                await ubidotsHistoryService
+                    .fetchHistory({
+                        config:
+                            ubidotsHistoryConfig,
+                        token
+                    });
+
+            const snapshotResult =
+                pendingSnapshotUbidotsService
+                    .loadLatestSnapshot({
+                        records:
+                            history.records
+                    });
+
+            const result =
+                await pendingLifecycleOrchestrator
+                    .createPending({
+
+                        snapshot:
+                            snapshotResult.snapshot,
+
+                        pending
+                    });
+
+            res.status(201).json({
+
+                success: true,
+
+                source:
+                    "snapshot",
+
+                previousSnapshotSize:
+                    snapshotResult.snapshot.length,
+
+                currentSnapshotSize:
+                    result.snapshot.length,
+
+                snapshot:
+                    result.snapshot,
+
+                pendientes_json:
+                    result.serializedSnapshot
+            });
+
+        } catch (err) {
+
+            console.error(
+                "Error creando pendiente snapshot:",
+                err
+            );
+
+            res.status(400).json({
+
+                success: false,
+
+                message:
+                    err.message
+            });
+        }
+    }
+);
+
+// ============================================
 // OBTENER VALOR DE UNA VARIABLE
 // ============================================
 
@@ -1360,67 +1482,7 @@ function serializePendingSummary(value) {
     ];
 }
 
-function buildActivePendingsContext(pendientesActivos) {
-    const pendientesConfig =
-        VARIABLES.pendientes;
-
-    const recordFields =
-        pendientesConfig?.record || {};
-
-    const contextFields =
-        pendientesConfig?.context?.fields || {};
-
-    return (Array.isArray(pendientesActivos)
-        ? pendientesActivos
-        : []
-    ).map(pendiente => {
-
-        const resultado = {};
-
-        if (recordFields.id) {
-            resultado.id =
-                pendiente[recordFields.id] ?? null;
-        }
-
-        if (recordFields.type) {
-            resultado.tipo =
-                pendiente[recordFields.type] ?? null;
-        }
-
-        if (recordFields.description) {
-            resultado.descripcion =
-                pendiente[recordFields.description] ?? null;
-        }
-
-        for (
-            const [nombreCampo, nombreFuente]
-            of Object.entries(contextFields)
-        ) {
-
-            const columna =
-                toExcelFieldName(nombreCampo);
-
-            const valor =
-                pendiente[columna] ??
-                pendiente[nombreFuente] ??
-                null;
-
-            if (!hasContextValue(valor)) {
-                continue;
-            }
-
-            if (nombreCampo === "encargadoRegistro") {
-                resultado.encargado = valor;
-            } else if (nombreCampo === "fechaRegistro") {
-                resultado.fecha = valor;
-            }
-        }
-
-        return resultado;
-    });
-}
-
-function buildUbidotsContext(data, pendientesActivos = []) {
+function buildUbidotsContext(data, pendingSnapshot = []) {
     const context = {};
 
     for (const [name, variable] of Object.entries(VARIABLES)) {
@@ -1460,11 +1522,14 @@ function buildUbidotsContext(data, pendientesActivos = []) {
     }
 
     context.pendientes_json =
-        JSON.stringify(
-            buildActivePendingsContext(
-                pendientesActivos
-            )
-        );
+        serializePendingSnapshot({
+
+            snapshot: 
+                pendingSnapshot,
+
+            pendingConfig:
+                VARIABLES.pendientes
+        });
 
     return context;
 }
@@ -1567,27 +1632,128 @@ function buildUbidotsPayload(data) {
 // CONSTRUIR PAYLOAD UBIDOTS + CONTEXTO
 // ============================================
 
-function buildUbidotsPayloadWithContext(data) {
+async function buildUbidotsPayloadWithContext(data) {
 
     const payload =
         buildUbidotsPayload(data);
 
-    let pendientesActivos = [];
+    let pendingSnapshot = [];
 
-    if (fs.existsSync(excelFilePath)) {
+    if (USE_PENDINGS_SNAPSHOT) {
 
-        const workbook =
-            XLSX.readFile(excelFilePath);
+        const token =
+            process.env.UBIDOTS_TOKEN;
 
-        pendientesActivos =
-            getPendientesActivos(workbook);
-    }
+        if (!token) {
+            throw new Error(
+                "UBIDOTS_TOKEN no configurado"
+            );
+        }
 
-    const context =
-        buildUbidotsContext(
-            data,
-            pendientesActivos
-        );
+        const history =
+            await ubidotsHistoryService
+                .fetchHistory({
+                    config:
+                        ubidotsHistoryConfig,
+                    token
+                });
+
+        const snapshotResult =
+            pendingSnapshotUbidotsService
+                .loadLatestSnapshot({
+                    records:
+                        history.records
+                });
+
+        let snapshot =
+            Array.isArray(
+                snapshotResult.snapshot
+            )
+                ? [...snapshotResult.snapshot]
+                : [];
+
+        const pendingCreations =
+            Array.isArray(
+                data.pendingCreations
+            )
+                ? data.pendingCreations
+                : [];
+
+        for (const pending of pendingCreations) {
+
+            try {
+
+                snapshot =
+                    createPendingSnapshot({
+                        snapshot,
+                        pending
+                    });
+
+            } catch (error) {
+
+                console.warn(
+                    "[PENDING CREATE]",
+                    error.message
+                );
+            }
+        }
+
+        const pendingResolutions =
+            Array.isArray(
+                data.pendingResolutions
+            )
+                ? data.pendingResolutions
+                : [];
+
+        for (const pendingId of pendingResolutions) {
+
+            try {
+
+                snapshot =
+                    resolvePendingSnapshot({
+                        snapshot,
+                        pendingId,
+
+                        resolution: {
+                            fechaSolucion:
+                                data.Fecha,
+
+                            encargadoSolucion:
+                                data.encargado
+                        }
+                    });
+
+            } catch (error) {
+
+                console.warn(
+                    "[PENDING RESOLUTION]",
+                    error.message
+                );
+            }
+        }
+
+        // Mantener snapshot completo,
+        // no solamente activos.
+        pendingSnapshot =
+            snapshot;
+
+        } else {
+
+            if (fs.existsSync(excelFilePath)) {
+
+                const workbook =
+                    XLSX.readFile(excelFilePath);
+
+                pendingSnapshot =
+                    getPendientesActivos(workbook);
+            }
+        }
+
+        const context =
+            buildUbidotsContext(
+                data,
+                pendingSnapshot
+            );
 
     for (const variable of Object.values(payload)) {
 
@@ -1806,7 +1972,9 @@ app.post('/sync-ubidots', async (req, res) => {
         );
 
         const payload =
-            buildUbidotsPayloadWithContext(data);
+            await buildUbidotsPayloadWithContext(
+                data
+            );
 
         console.log("");
         console.log("==============================================");
@@ -2256,21 +2424,64 @@ function getPendientesActivos(workbook) {
 // PENDIENTES ACTIVOS
 // ============================================
 
-app.get('/pendientes', (req, res) => {
+app.get('/pendientes', async (req, res) => {
 
     try {
 
-        if (!fs.existsSync(excelFilePath)) {
-            return res.json([]);
+        if (!USE_PENDINGS_SNAPSHOT) {
+
+            if (!fs.existsSync(excelFilePath)) {
+                return res.json([]);
+            }
+
+            const workbook =
+                XLSX.readFile(excelFilePath);
+
+            const pendientesActivos =
+                getPendientesActivos(workbook);
+
+            return res.json(
+                pendientesActivos
+            );
         }
 
-        const workbook =
-            XLSX.readFile(excelFilePath);
+        const token =
+            process.env.UBIDOTS_TOKEN;
+
+        if (!token) {
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "UBIDOTS_TOKEN no configurado"
+            });
+        }
+
+        const history =
+            await ubidotsHistoryService
+                .fetchHistory({
+                    config:
+                        ubidotsHistoryConfig,
+                    token
+                });
+
+        const snapshotResult =
+            pendingSnapshotUbidotsService
+                .loadLatestSnapshot({
+                    records:
+                        history.records
+                });
 
         const pendientesActivos =
-            getPendientesActivos(workbook);
+            pendingLifecycleOrchestrator
+                .activePendings({
+                    snapshot:
+                        snapshotResult.snapshot
+                });
 
-        res.json(pendientesActivos);
+        return res.json(
+            pendientesActivos
+        );
 
     } catch (err) {
 
@@ -2279,13 +2490,119 @@ app.get('/pendientes', (req, res) => {
             err
         );
 
-        res.status(500).json({
-            success: false,
-            message: "Error cargando pendientes activos",
-            error: err.message
-        });
+        return res.json([]);
     }
 });
+
+app.get(
+    "/pendientes-dashboard",
+    async (req, res) => {
+
+        try {
+
+            const token =
+                process.env.UBIDOTS_TOKEN;
+
+            if (!token) {
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "UBIDOTS_TOKEN no configurado"
+                });
+            }
+
+            const history =
+                await ubidotsHistoryService
+                    .fetchHistory({
+                        config:
+                            ubidotsHistoryConfig,
+                        token
+                    });
+
+            const snapshotResult =
+                pendingSnapshotUbidotsService
+                    .loadLatestSnapshot({
+                        records:
+                            history.records
+                    });
+
+            console.log(
+                "[DASHBOARD SOURCE]",
+                snapshotResult.sourceTimestamp
+            );
+
+            console.log(
+                "[DASHBOARD SNAPSHOT]",
+                JSON.stringify(
+                    snapshotResult.snapshot,
+                    null,
+                    2
+                )
+            );
+
+            const snapshot =
+                snapshotResult.snapshot;
+
+            const active =
+                pendingLifecycleOrchestrator
+                    .activePendings({
+                        snapshot
+                    });
+
+            const resolved =
+                pendingLifecycleOrchestrator
+                    .resolvedPendings({
+                        snapshot
+                    });
+
+            res.json({
+
+                success: true,
+
+                source:
+                    "ubidots-snapshot",
+
+                sourceTimestamp:
+                    snapshotResult.sourceTimestamp,
+
+                summary: {
+
+                    total:
+                        snapshot.length,
+
+                    active:
+                        active.length,
+
+                    resolved:
+                        resolved.length
+                },
+
+                active,
+
+                resolved
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando dashboard de pendientes:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error cargando dashboard de pendientes",
+
+                error:
+                    error.message
+            });
+        }
+    }
+);
 
 // ============================================
 // ÚLTIMO REGISTRO
