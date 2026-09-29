@@ -2306,6 +2306,42 @@ async function saveData(data) {
                 6000
             );
 
+            // ==========================================
+            // RESETEAR RESOLUCIÓN DE PENDIENTES
+            // ==========================================
+
+            const pendienteResuelto =
+                document.getElementById(
+                    'pendienteResuelto'
+                );
+
+            if (pendienteResuelto) {
+
+                pendienteResuelto.value = "false";
+
+                pendienteResuelto.dispatchEvent(
+                    new Event('change')
+                );
+            }
+
+            // ==========================================
+            // RESETEAR REPORTE DE PROBLEMAS
+            // ==========================================
+
+            const problemaReportado =
+                document.getElementById(
+                    'problemaReportado'
+                );
+
+            if (problemaReportado) {
+
+                problemaReportado.value = "false";
+
+                problemaReportado.dispatchEvent(
+                    new Event('change')
+                );
+            }
+
         } else {
 
             showAlert(
