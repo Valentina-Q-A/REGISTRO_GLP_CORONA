@@ -827,6 +827,13 @@ function toExcelFieldName(field) {
     return field.charAt(0).toUpperCase() + field.slice(1);
 }
 
+// ============================================
+// LEGACY
+// Mantenido únicamente para compatibilidad
+// y consulta histórica basada en Excel.
+// El flujo operativo actual utiliza snapshots
+// enriquecidos persistidos en Ubidots.
+// ============================================
 const PENDIENTES_SHEET = "Pendientes";
 
 function getPendientesData(workbook) {
@@ -1036,6 +1043,8 @@ function addPending(pending) {
 // CREAR PENDIENTE
 // ============================================
 
+// LEGACY
+// Ya no participa en el flujo principal.
 app.post('/pendientes', (req, res) => {
 
     try {
@@ -2261,6 +2270,8 @@ app.get('/pendientes/historial', (req, res) => {
 // RESOLVER PENDIENTES
 // ============================================
 
+// LEGACY
+// Ya no participa en el flujo principal.
 app.patch('/pendientes/resolver', (req, res) => {
 
     try {
@@ -2424,6 +2435,8 @@ function getPendientesActivos(workbook) {
 // PENDIENTES ACTIVOS
 // ============================================
 
+// LEGACY
+// Historial basado en Excel.
 app.get('/pendientes', async (req, res) => {
 
     try {
