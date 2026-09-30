@@ -35,22 +35,42 @@ const controls = getVariablesByCategory("proceso");
 // ============================================
 
 // Inicializar la aplicación cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    initializeControls();
-    initializeCisterna();
-    initializeProblemas();
-    initializeOtroProblema();
-    initializeResolucionPendientes();
-    setCurrentDateTime();
-    updateSummary();
-    initializeForm();
-    loadCisternaTechnicalReference();
-    monitorSyncStatus();
-    setInterval(
-        monitorSyncStatus,
-        60000
-    );
-});
+document.addEventListener(
+    'DOMContentLoaded',
+    function() {
+
+        initializeControls();
+        initializeCisterna();
+        initializeProblemas();
+        initializeOtroProblema();
+        initializeResolucionPendientes();
+
+        document
+            .querySelectorAll('.help-icon')
+            .forEach(icon => {
+
+                icon.addEventListener(
+                    'click',
+                    event => {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                );
+            });
+
+        setCurrentDateTime();
+        updateSummary();
+        initializeForm();
+        loadCisternaTechnicalReference();
+        monitorSyncStatus();
+
+        setInterval(
+            monitorSyncStatus,
+            60000
+        );
+    }
+);
 
 // ============================================
 // FUNCIONES AUXILIARES

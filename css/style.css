@@ -439,12 +439,13 @@ footer {
     body {
         padding: 0;
     }
-    
+
     .container {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding: 1rem;
+        width: calc(100% - 12px);
+        max-width: calc(100% - 12px);
+
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .main-header h1 {
@@ -465,6 +466,16 @@ footer {
 
     .component-img {
         height: 80px;
+    }
+
+    .tooltip-text {
+
+    width: min(
+    280px,
+    calc(100vw - 40px)
+    );
+    
+    left: -20px;
     }
 }
 
@@ -546,11 +557,12 @@ footer {
     z-index: 1000;
 
     width: 260px;
+    max-width: calc(100vw - 30px);
 
-    left: 50%;
+    right: 0;
+    left: auto;
+
     bottom: 125%;
-
-    transform: translateX(-50%);
 
     background: #1f2937;
     color: white;
@@ -564,6 +576,8 @@ footer {
 
     opacity: 0;
     transition: opacity 0.2s;
+
+    word-break: break-word;
 }
 
 .help-icon:hover .tooltip-text {
@@ -616,4 +630,12 @@ footer {
 
 .decision-block .verification-item {
     justify-content: center;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
 }
