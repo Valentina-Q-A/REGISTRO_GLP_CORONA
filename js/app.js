@@ -1880,6 +1880,134 @@ function initializeForm() {
             );
             return;
         }
+        
+        // ==========================================
+        // VALIDACIÓN PROBLEMAS
+        // ==========================================
+
+        const problemaReportado =
+            document.getElementById(
+                'problemaReportado'
+            )?.value === "true";
+
+        if (problemaReportado) {
+
+            const problemasSeleccionados =
+                document.querySelectorAll(
+                    'input[name="problemas"]:checked'
+                );
+
+            if (
+                problemasSeleccionados.length === 0
+            ) {
+
+                showAlert(
+                    'Seleccione al menos un problema reportado.',
+                    'error'
+                );
+
+                return;
+            }
+
+            const otroProblema =
+                document.getElementById(
+                    'problemaOtro'
+                );
+
+            if (
+                otroProblema?.checked
+            ) {
+
+                const descripcion =
+                    document.getElementById(
+                        'otroProblema'
+                    )?.value
+                        .trim();
+
+                if (!descripcion) {
+
+                    showAlert(
+                        'Describa el problema reportado.',
+                        'error'
+                    );
+
+                    return;
+                }
+            }
+        }
+
+        // ==========================================
+        // VALIDACIÓN PENDIENTES RESUELTOS
+        // ==========================================
+
+        const pendienteResuelto =
+            document.getElementById(
+                'pendienteResuelto'
+            )?.value === "true";
+
+        if (pendienteResuelto) {
+
+            const pendientesSeleccionados =
+                document.querySelectorAll(
+                    'input[name="pendientesResolver"]:checked'
+                );
+
+            if (
+                pendientesSeleccionados.length === 0
+            ) {
+
+                showAlert(
+                    'Seleccione al menos un pendiente resuelto.',
+                    'error'
+                );
+
+                return;
+            }
+        }
+
+        // ==========================================
+        // VALIDACIÓN NUEVA CISTERNA
+        // ==========================================
+
+        const nuevaCisterna =
+            document.getElementById(
+                'mismaCisterna'
+            )?.checked === true;
+
+        if (nuevaCisterna) {
+
+            const placa =
+                document.getElementById(
+                    'placaCisterna'
+                )?.value
+                    .trim();
+
+            const capacidad =
+                document.getElementById(
+                    'capacidadCisterna'
+                )?.value
+                    .trim();
+
+            if (!placa) {
+
+                showAlert(
+                    'La placa de la cisterna es obligatoria.',
+                    'error'
+                );
+
+                return;
+            }
+
+            if (!capacidad) {
+
+                showAlert(
+                    'La capacidad de la cisterna es obligatoria.',
+                    'error'
+                );
+
+                return;
+            }
+        }
 
         const data =
             collectFormData();
