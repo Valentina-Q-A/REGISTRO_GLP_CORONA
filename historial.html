@@ -362,6 +362,33 @@ function normalizarPlaca(valor) {
 
 }
 
+function formatHistoricalValue(value) {
+
+    if (
+        value === true ||
+        value === "true"
+    ) {
+        return "Sí";
+    }
+
+    if (
+        value === false ||
+        value === "false"
+    ) {
+        return "No";
+    }
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "N/A";
+    }
+
+    return value;
+}
+
 // ============================================
 // RENDER TABLA
 // ============================================
@@ -424,7 +451,9 @@ function renderTabla(data) {
                 variable.excelField;
 
             celda.textContent =
-                record[field] ?? "N/A";
+                formatHistoricalValue(
+                    record[field]
+                );
             fila.appendChild(celda);
 
         });
