@@ -2218,6 +2218,41 @@ app.get('/historial', (req, res) => {
     res.json(normalizados);
 });
 
+//=============================================
+// ENDPOINT DE LECTURA HISTORICO UBIDOTS
+//=============================================
+
+app.get('/historial-ubidots', async (req, res) => {
+    try {
+        const token = process.env.UBIDOTS_TOKEN;
+
+        if (!token) {
+            return res.status(500).json({
+                error: 'UBIDOTS_TOKEN no configurado'
+            });
+        }
+
+        const history =
+            await ubidotsHistoryService.fetchHistory({
+                config: ubidotsHistoryConfig,
+                token
+            });
+
+        res.json(history.records || []);
+
+    } catch (error) {
+        console.error(
+            '[historial-ubidots] Error obteniendo histórico:',
+            error
+        );
+
+        res.status(500).json({
+            error: 'No fue posible obtener el histórico desde Ubidots',
+            details: error.message
+        });
+    }
+});
+
 // ============================================
 // HISTÓRICO DE PENDIENTES
 // ============================================

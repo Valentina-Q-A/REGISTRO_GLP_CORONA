@@ -156,6 +156,9 @@ module.exports = {
         Observaciones: "Observaciones",
         Encargado: "Encargado",
         ValvulasCapuchon: "ValvulasCapuchon",
-        FechaServidor: "FechaServidor"
+        FechaServidor: "FechaServidor",
+        HermeticidadConexiones: "HermeticidadConexiones",
+        HermeticidadAccesorios: "HermeticidadAccesorios",
+        HermeticidadInstrumentacion:"HermeticidadInstrumentacion"
     }
 };
