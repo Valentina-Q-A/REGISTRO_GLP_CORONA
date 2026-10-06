@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const {
     loadLatestSnapshot
@@ -34,7 +34,7 @@ const records = [
                                 "otro",
 
                             description:
-                                "Fuga línea vapor",
+                                "Fuga lÃ­nea vapor",
 
                             creation: {
                                 fechaRegistro:
@@ -66,7 +66,7 @@ const records = [
                                 "otro",
 
                             description:
-                                "Fuga línea vapor",
+                                "Fuga lÃ­nea vapor",
 
                             creation: {
                                 fechaRegistro:
@@ -89,10 +89,10 @@ const records = [
                             id: "p-002",
 
                             type:
-                                "sin_cisterna",
+                                "bomba_1_apagada",
 
                             description:
-                                "Sin cisterna",
+                                "Bomba 1 apagada",
 
                             creation: {
                                 fechaRegistro:
@@ -140,6 +140,6 @@ console.log(
 
 console.log("");
 console.log(
-    "✅ PRUEBA EXITOSA"
+    "âœ… PRUEBA EXITOSA"
 );
 console.log("");

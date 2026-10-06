@@ -413,7 +413,13 @@ const VARIABLES = {
 
         label: "Estado de operación",
 
+        defaultValue: "sin_novedad",
+
         options: [
+            {
+                value: "sin_novedad",
+                label: "Sin novedad"
+            },
             {
                 value: "inicia_trasego",
                 label: "Inicia trasego"
@@ -423,8 +429,8 @@ const VARIABLES = {
                 label: "Finaliza trasego"
             },
             {
-                value: "sin_novedad",
-                label: "Sin novedad"
+                value: "sin_cisterna",
+                label: "Sin cisterna"
             }
         ],
         ubidotsContext: {
@@ -453,6 +459,7 @@ const VARIABLES = {
         context: {
             fields: {
                 fechaRegistro: "fecha",
+                horaRegistro: "hora",
                 encargadoRegistro: "encargado"
             },
 
@@ -506,10 +513,6 @@ const VARIABLES = {
             {
                 value: "bomba_2_apagada",
                 label: "Bomba 2 apagada"
-            },
-            {
-                value: "sin_cisterna",
-                label: "Sin cisterna"
             },
             {
                 value: "otro",
@@ -590,7 +593,7 @@ const VARIABLES = {
         ubidotsContext: {
             field: "ValvulasCapuchon",
             required: false,
-            enabled: false
+            enabled: true
         },
         comparison: {
             type: "boolean",
@@ -614,7 +617,7 @@ const VARIABLES = {
         ubidotsContext: {
             field: "HermeticidadConexiones",
             required: false,
-            enabled: false
+            enabled: true
         },
 
         comparison: {
@@ -639,7 +642,7 @@ const VARIABLES = {
         ubidotsContext: {
             field: "HermeticidadAccesorios",
             required: false,
-            enabled: false
+            enabled: true
         },
 
         comparison: {
@@ -664,7 +667,7 @@ const VARIABLES = {
         ubidotsContext: {
             field: "HermeticidadInstrumentacion",
             required: false,
-            enabled: false
+            enabled: true
         },
 
         comparison: {

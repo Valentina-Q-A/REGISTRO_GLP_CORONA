@@ -1972,26 +1972,11 @@ app.post('/sync-ubidots', async (req, res) => {
     }
 
     try {
-        console.log("");
-        console.log("==============================================");
-        console.log("       DATA RECIBIDA EN /sync-ubidots");
-        console.log("==============================================");
-        console.log(
-            JSON.stringify(data, null, 2)
-        );
 
         const payload =
             await buildUbidotsPayloadWithContext(
                 data
             );
-
-        console.log("");
-        console.log("==============================================");
-        console.log("       SYNC UBIDOTS - PAYLOAD");
-        console.log("==============================================");
-        console.log(
-            JSON.stringify(payload, null, 2)
-        );
 
         let queuedForRetry = false;
 
@@ -2266,6 +2251,85 @@ app.get('/pendientes/historial', (req, res) => {
     }
 });
 
+app.get(
+    '/pendientes/descripciones',
+    async (req, res) => {
+
+        try {
+
+            const token =
+                process.env.UBIDOTS_TOKEN;
+
+            const history =
+                await ubidotsHistoryService
+                    .fetchHistory({
+                        config:
+                            ubidotsHistoryConfig,
+                        token
+                    });
+
+            const index = {};
+
+            for (
+                const record of history.records
+            ) {
+
+                const snapshot =
+                    pendingSnapshotUbidotsService
+                        .extractSnapshotFromRecord(
+                            record
+                        );
+
+                for (
+                    const pending of snapshot
+                ) {
+
+                    const fecha =
+                        pending.creation
+                            ?.fechaRegistro;
+
+                    const hora =
+                        pending.creation
+                            ?.horaRegistro;
+
+                    if (
+                        !fecha ||
+                        !hora ||
+                        !pending.description
+                    ) {
+                        continue;
+                    }
+
+                    const key =
+                        `${fecha}|${hora}`;
+
+                    index[key] = {
+                        description:
+                            pending.description,
+
+                        type:
+                            pending.type,
+
+                        id:
+                            pending.id
+                    };
+                }
+            }
+
+            res.json(index);
+
+        } catch (error) {
+
+            console.error(
+                "Error construyendo índice de pendientes:",
+                error
+            );
+
+            res.status(500).json({});
+        }
+    }
+);
+
 // ============================================
 // RESOLVER PENDIENTES
 // ============================================
@@ -2539,20 +2603,6 @@ app.get(
                         records:
                             history.records
                     });
-
-            console.log(
-                "[DASHBOARD SOURCE]",
-                snapshotResult.sourceTimestamp
-            );
-
-            console.log(
-                "[DASHBOARD SNAPSHOT]",
-                JSON.stringify(
-                    snapshotResult.snapshot,
-                    null,
-                    2
-                )
-            );
 
             const snapshot =
                 snapshotResult.snapshot;

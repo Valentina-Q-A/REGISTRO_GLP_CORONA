@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const fs = require("fs");
 const crypto = require("crypto");
@@ -544,7 +544,7 @@ async function runSimulation({
             pendingCreations: [
                 {
                     id: pendingId,
-                    type: "sin_cisterna",
+                    type: "bomba_1_apagada",
 
                     description: [
                         "Pendiente E2E",
@@ -1177,7 +1177,7 @@ async function runRealExecution({
                 pendingCreations: [
                     {
                         id: pendingId,
-                        type: "sin_cisterna",
+                        type: "bomba_1_apagada",
 
                         description: [
                             "Pendiente E2E",
@@ -1495,8 +1495,8 @@ async function runRealExecution({
             resolutionWritten,
             instruction:
                 creationWritten && !resolutionWritten
-                    ? "El pendiente E2E pudo quedar activo. Conserva estos identificadores para ejecutar una resolución de recuperación."
-                    : "Revisa el último evento confirmado antes de repetir la prueba."
+                    ? "El pendiente E2E pudo quedar activo. Conserva estos identificadores para ejecutar una resoluciÃ³n de recuperaciÃ³n."
+                    : "Revisa el Ãºltimo evento confirmado antes de repetir la prueba."
         };
 
         throw error;
@@ -1599,3 +1599,4 @@ main().catch(error => {
 
     process.exitCode = 1;
 });
+

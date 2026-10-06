@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const {
     VARIABLES
@@ -17,7 +17,7 @@ const snapshot = [
         type: "otro",
 
         description:
-            "Fuga línea vapor",
+            "Fuga lÃ­nea vapor",
 
         creation: {
             fechaRegistro:
@@ -33,10 +33,10 @@ const snapshot = [
     {
         id: "p-002",
 
-        type: "sin_cisterna",
+        type: "bomba_1_apagada",
 
         description:
-            "Sin cisterna",
+            "Bomba 1 apagada",
 
         creation: {
             fechaRegistro:

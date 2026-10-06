@@ -38,6 +38,423 @@
         "promotedAt": "2026-09-21T16:57:48.648Z",
         "note": null
       }
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-28|10:42:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-28|10:42:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790610120000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-28|10:47:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-28|10:47:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790610420000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-28|10:49:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-28|10:49:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790610540000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-28|14:50:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-28|14:50:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790625000000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-28|14:54:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-28|14:54:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790625240000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-29|08:06:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-29|08:06:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790687160000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-29|08:28:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-29|08:28:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790688480000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-29|10:12:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-29|10:12:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790694720000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-29|11:26:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-29|11:26:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790699160000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-29|14:13:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-29|14:13:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790709180000
+      ],
+      "differentFields": [
+        "CapacidadCisterna",
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.397Z",
+      "createdAt": "2026-10-06T15:38:13.397Z",
+      "updatedAt": "2026-10-06T15:38:13.397Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-09-29|14:14:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-09-29|14:14:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790709240000
+      ],
+      "differentFields": [
+        "CapacidadCisterna"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-02|11:17:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-02|11:17:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790957820000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-02|11:32:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-02|11:32:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790958720000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-02|13:56:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-02|13:56:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790967360000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-02|13:58:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-02|13:58:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790967480000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-02|14:00:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-02|14:00:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790967600000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-02|14:02:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-02|14:02:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1790967720000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|12:15:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|12:15:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791220500000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|12:22:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|12:22:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791220920000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|12:44:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|12:44:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791222240000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|12:57:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|12:57:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791223020000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|13:05:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|13:05:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791223500000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|14:25:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|14:25:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791228300000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|14:29:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|14:29:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791228540000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-05|15:01:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-05|15:01:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791230460000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
+    },
+    {
+      "conflictId": "COLISION_CON_CACHE|2026-10-06|10:24:00",
+      "status": "DETECTED",
+      "operationalKey": "2026-10-06|10:24:00",
+      "type": "COLISION_CON_CACHE",
+      "timestamps": [
+        1791300240000
+      ],
+      "differentFields": [
+        "Pendientes"
+      ],
+      "detectedAt": "2026-10-06T15:38:13.398Z",
+      "createdAt": "2026-10-06T15:38:13.398Z",
+      "updatedAt": "2026-10-06T15:38:13.398Z",
+      "review": null
     }
   ]
 }

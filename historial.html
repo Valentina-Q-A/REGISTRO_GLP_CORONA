@@ -225,6 +225,8 @@ cursor:pointer;
 
 let DATA_GLOBAL = [];
 
+let PENDING_DESCRIPTIONS = {};
+
 let PAGINA_ACTUAL = 1;
 
 const PAGE_SIZE = 50;
@@ -312,6 +314,19 @@ async function cargarHistorico() {
                     cache: "no-store"
                 }
             );
+        
+        const pendingResponse =
+            await fetch(
+                `/pendientes/descripciones?t=${Date.now()}`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+        PENDING_DESCRIPTIONS =
+            pendingResponse.ok
+                ? await pendingResponse.json()
+                : {};
 
         if (!response.ok) {
             throw new Error(
@@ -368,14 +383,14 @@ function formatHistoricalValue(value) {
         value === true ||
         value === "true"
     ) {
-        return "Sí";
+        return "SÍ";
     }
 
     if (
         value === false ||
         value === "false"
     ) {
-        return "No";
+        return "NO";
     }
 
     if (
@@ -450,10 +465,35 @@ function renderTabla(data) {
             const field =
                 variable.excelField;
 
-            celda.textContent =
+            let value =
                 formatHistoricalValue(
                     record[field]
                 );
+
+            if (
+                field === "Pendientes" &&
+                typeof value === "string" &&
+                value.toLowerCase().includes("otro")
+            ) {
+
+                const key =
+                    `${record.Fecha}|${record.Hora}`;
+
+                const pending =
+                    PENDING_DESCRIPTIONS[key];
+
+                if (
+                    pending &&
+                    pending.description
+                ) {
+
+                    value =
+                        `Otro: ${pending.description}`;
+                }
+            }
+
+            celda.textContent =
+                value;
             fila.appendChild(celda);
 
         });

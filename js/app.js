@@ -2499,6 +2499,8 @@ async function saveData(data) {
             );
         }
 
+        //Resetea el formulario después de guardar
+        resetForm();
         // Actualizar el resumen local inmediatamente
         updateSummaryLocal(record);
         // Actualiza la hora inmediatamente

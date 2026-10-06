@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const orchestrator =
     require(
@@ -38,7 +38,7 @@ async function main() {
                 type: "otro",
 
                 description:
-                    "Fuga línea vapor",
+                    "Fuga lÃ­nea vapor",
 
                 creation: {
                     fechaRegistro:
@@ -79,10 +79,10 @@ async function main() {
             pending: {
                 id: "p-002",
 
-                type: "sin_cisterna",
+                type: "bomba_1_apagada",
 
                 description:
-                    "Sin cisterna disponible",
+                    "Bomba 1 apagada",
 
                 creation: {
                     fechaRegistro:
@@ -250,7 +250,7 @@ async function main() {
 
     console.log("");
     console.log(
-        "✅ ORCHESTRATOR VALIDADO"
+        "âœ… ORCHESTRATOR VALIDADO"
     );
     console.log("");
 }
@@ -260,7 +260,7 @@ main()
 
         console.error("");
         console.error(
-            "❌ ERROR:"
+            "âŒ ERROR:"
         );
 
         console.error(

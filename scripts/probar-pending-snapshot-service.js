@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const snapshotService =
     require(
@@ -41,7 +41,7 @@ try {
                     type: "otro",
 
                     description:
-                        "Fuga línea vapor",
+                        "Fuga lÃ­nea vapor",
 
                     creation: {
                         fechaRegistro:
@@ -54,7 +54,7 @@ try {
             });
 
     print(
-        "DESPUÉS DE CREAR p-001",
+        "DESPUÃ‰S DE CREAR p-001",
         snapshot
     );
 
@@ -67,10 +67,10 @@ try {
                 pending: {
                     id: "p-002",
 
-                    type: "sin_cisterna",
+                    type: "bomba_1_apagada",
 
                     description:
-                        "Sin cisterna",
+                        "Bomba 1 apagada",
 
                     creation: {
                         fechaRegistro:
@@ -83,7 +83,7 @@ try {
             });
 
     print(
-        "DESPUÉS DE CREAR p-002",
+        "DESPUÃ‰S DE CREAR p-002",
         snapshot
     );
 
@@ -106,7 +106,7 @@ try {
             });
 
     print(
-        "DESPUÉS DE RESOLVER p-001",
+        "DESPUÃ‰S DE RESOLVER p-001",
         snapshot
     );
 
@@ -135,14 +135,14 @@ try {
     );
 
     console.log(
-        "\n✅ PRUEBA EXITOSA\n"
+        "\nâœ… PRUEBA EXITOSA\n"
     );
 
 }
 catch (error) {
 
     console.error(
-        "\n❌ ERROR:",
+        "\nâŒ ERROR:",
         error.message
     );
 
