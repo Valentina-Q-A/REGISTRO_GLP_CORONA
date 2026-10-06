@@ -1,5 +1,8 @@
 node_modules/
+# Entornos locales
 .env
+.env.*
+!.env.example
 
 # Respaldos locales de trabajo
 backups/
