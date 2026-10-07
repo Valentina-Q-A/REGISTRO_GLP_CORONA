@@ -215,6 +215,7 @@ cursor:pointer;
      ============================================ -->
 
 <script src="js/variables.js"></script>
+<script src="services/variable-display-service.js"></script>
 
 
 <script>
@@ -387,33 +388,6 @@ function normalizarPlaca(valor) {
 
 }
 
-function formatHistoricalValue(value) {
-
-    if (
-        value === true ||
-        value === "true"
-    ) {
-        return "SÍ";
-    }
-
-    if (
-        value === false ||
-        value === "false"
-    ) {
-        return "NO";
-    }
-
-    if (
-        value === null ||
-        value === undefined ||
-        value === ""
-    ) {
-        return "N/A";
-    }
-
-    return value;
-}
-
 // ============================================
 // RENDER TABLA
 // ============================================
@@ -476,37 +450,24 @@ function renderTabla(data) {
                 variable.excelField;
 
             let value =
-                formatHistoricalValue(
-                    record[field]
-                );
+                VariableDisplayService
+                    .formatVariableDisplay(
+                        variable,
+                        record[field]
+                    );
 
             // ========================================
             // DISTINGUIR VACÍO CONOCIDO VS NO INFORMADO
             // ========================================
 
-            if (
-                field === "Pendientes" &&
-                Array.isArray(record[field]) &&
-                record[field].length === 0
-            ) {
-                value = "Sin pendientes";
-            }
-
-            if (
-                field === "Observaciones" &&
-                (
-                    record[field] === null ||
-                    record[field] === undefined ||
-                    record[field] === ""
-                )
-            ) {
-                value = "Sin observaciones";
-            }
-
             const pendingValues =
                 Array.isArray(record[field])
                     ? record[field]
                     : [];
+                
+            // ========================================
+            // OPCIONES DE CATÁLOGO
+            // ========================================
 
             if (
                 field === "Pendientes" &&

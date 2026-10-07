@@ -456,6 +456,8 @@ const VARIABLES = {
 
         label: "Pendientes",
 
+        emptyDisplay: "Sin pendientes",
+
         context: {
             fields: {
                 fechaRegistro: "fecha",
@@ -545,6 +547,9 @@ const VARIABLES = {
         recordField: "Observaciones",
 
         label: "Observaciones",
+
+        emptyDisplay: "Sin observaciones",
+
         ubidotsContext: {
             field: "Observaciones",
             required: false

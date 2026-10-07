@@ -1051,18 +1051,6 @@ function formatSummaryTime(hora) {
     return hora.substring(0, 5);
 }
 
-function formatSummaryObservacion(observacion) {
-
-    if (
-        observacion === null ||
-        observacion === undefined ||
-        observacion === "") {
-        return "Sin observaciones";
-    }
-
-    return `${observacion}`;
-}
-
 function formatSummaryValue(
     value,
     unit = ""
@@ -1177,11 +1165,11 @@ async function updateSummary() {
         // ============================================
 
         const estadoOperacion =
-            ESTADOS_OPERACION[
-                last.EstadoOperacion
-            ] ||
-            last.EstadoOperacion ||
-            "";
+            VariableDisplayService
+                .formatVariableDisplay(
+                    VARIABLES.estado_operacion,
+                    last.EstadoOperacion
+                );
 
         // ============================================
         // PENDIENTES
@@ -1518,9 +1506,12 @@ async function updateSummary() {
                             </label>
 
                             <div class="value">
-                                ${formatSummaryObservacion(
-                                    last.Observaciones
-                                    )
+                                ${
+                                    VariableDisplayService
+                                        .formatVariableDisplay(
+                                            VARIABLES.observaciones,
+                                            last.Observaciones
+                                        )
                                 }
                             </div>
 
