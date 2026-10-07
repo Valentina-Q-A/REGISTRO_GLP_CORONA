@@ -20,6 +20,13 @@ function formatBooleanValue(value) {
         return "NO";
     }
 
+    if(
+        value === null ||
+        value === undefined
+    ) {
+        return "N/A";
+    }
+
     return value;
 }
 

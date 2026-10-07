@@ -49,3 +49,19 @@ console.log(
         false
     )
 );
+
+console.log(
+    "CAPUCHONES NULL:",
+    formatVariableDisplay(
+        VARIABLES.valvulas_capuchon,
+        null
+    )
+);
+
+console.log(
+    "CAPUCHONES UNDEFINED:",
+    formatVariableDisplay(
+        VARIABLES.valvulas_capuchon,
+        undefined
+    )
+);

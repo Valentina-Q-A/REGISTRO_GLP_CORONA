@@ -38,6 +38,22 @@ console.log(
     )
 );
 
+console.log(
+    "BOOLEAN NULL:",
+    formatVariableDisplay(
+        VARIABLES.valvulas_capuchon,
+        null
+    )
+);
+
+console.log(
+    "BOOLEAN UNDEFINED:",
+    formatVariableDisplay(
+        VARIABLES.valvulas_capuchon,
+        undefined
+    )
+);
+
 // ============================================
 // SELECT
 // ============================================
