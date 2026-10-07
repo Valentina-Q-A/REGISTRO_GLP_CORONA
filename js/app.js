@@ -1051,6 +1051,18 @@ function formatSummaryTime(hora) {
     return hora.substring(0, 5);
 }
 
+function formatSummaryObservacion(observacion) {
+
+    if (
+        observacion === null ||
+        observacion === undefined ||
+        observacion === "") {
+        return "Sin observaciones";
+    }
+
+    return `${observacion}`;
+}
+
 function formatSummaryValue(
     value,
     unit = ""
@@ -1506,9 +1518,10 @@ async function updateSummary() {
                             </label>
 
                             <div class="value">
-                                ${formatSummaryValue(
+                                ${formatSummaryObservacion(
                                     last.Observaciones
-                                )}
+                                    )
+                                }
                             </div>
 
                         </div>
