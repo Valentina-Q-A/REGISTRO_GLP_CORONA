@@ -309,7 +309,7 @@ async function cargarHistorico() {
 
         const response =
             await fetch(
-                `/historial?t=${Date.now()}`,
+                `/historial-ubidots?t=${Date.now()}`,
                 {
                     cache: "no-store"
                 }
@@ -343,7 +343,17 @@ async function cargarHistorico() {
             );
         }
 
-        DATA_GLOBAL = data;
+        DATA_GLOBAL = [...data].sort((a, b) => {
+
+            const claveA =
+                `${a.Fecha || ""} ${a.Hora || ""}`;
+
+            const claveB =
+                `${b.Fecha || ""} ${b.Hora || ""}`;
+
+            return claveB.localeCompare(claveA);
+
+        });
 
         PAGINA_ACTUAL = 1;
 
@@ -470,25 +480,102 @@ function renderTabla(data) {
                     record[field]
                 );
 
+            // ========================================
+            // DISTINGUIR VACÍO CONOCIDO VS NO INFORMADO
+            // ========================================
+
             if (
                 field === "Pendientes" &&
-                typeof value === "string" &&
-                value.toLowerCase().includes("otro")
+                Array.isArray(record[field]) &&
+                record[field].length === 0
             ) {
+                value = "Sin pendientes";
+            }
+
+            if (
+                field === "Observaciones" &&
+                (
+                    record[field] === null ||
+                    record[field] === undefined ||
+                    record[field] === ""
+                )
+            ) {
+                value = "Sin observaciones";
+            }
+
+            const pendingValues =
+                Array.isArray(record[field])
+                    ? record[field]
+                    : [];
+
+            if (
+                field === "Pendientes" &&
+                pendingValues.includes("otro")
+            )
+            {
+                const horaNormalizada =
+                    String(record.Hora || "")
+                        .substring(0, 5);
 
                 const key =
-                    `${record.Fecha}|${record.Hora}`;
+                    `${record.Fecha}|${horaNormalizada}`;
 
                 const pending =
                     PENDING_DESCRIPTIONS[key];
+
+                // ========================================
+                // 1. Resolver por índice Fecha+Hora
+                // ========================================
 
                 if (
                     pending &&
                     pending.description
                 ) {
-
                     value =
                         `Otro: ${pending.description}`;
+                }
+
+                // ========================================
+                // 2. Fallback:
+                //    ContextoCompletoJSON
+                // ========================================
+
+                else if (
+                    record.ContextoCompletoJSON
+                ) {
+                    try {
+
+                        const contexto =
+                            JSON.parse(
+                                record.ContextoCompletoJSON
+                            );
+
+                        const snapshot =
+                            JSON.parse(
+                                contexto.pendientes_json || "[]"
+                            );
+
+                        const pendienteActivo =
+                            snapshot.find(
+                                item =>
+                                    item.type === "otro"
+                            );
+
+                        if (
+                            pendienteActivo &&
+                            pendienteActivo.description
+                        ) {
+                            value =
+                                `Otro: ${pendienteActivo.description}`;
+                        }
+
+                    } catch (error) {
+
+                        console.warn(
+                            "No se pudo reconstruir pendiente desde ContextoCompletoJSON",
+                            error
+                        );
+                    }
                 }
             }
 
@@ -633,7 +720,7 @@ async function buscar() {
 
         const response =
             await fetch(
-                `/historial?t=${Date.now()}`,
+                `/historial-ubidots?t=${Date.now()}`,
                 {
                     cache: "no-store"
                 }
